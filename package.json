@@ -1,0 +1,41 @@
+{
+  "name": "ttfx-monorepo",
+  "private": true,
+  "description": "Compile-time macros for TypeScript -- inspired by Rust, Scala 3, and Zig",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:watch": "pnpm -r --parallel build:watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
+  },
+  "keywords": [
+    "typescript",
+    "macros",
+    "metaprogramming",
+    "compile-time",
+    "codegen",
+    "transform",
+    "comptime",
+    "derive",
+    "reflection"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.2.14",
+    "react": "^19.2.4",
+    "ts-patch": "^3.3.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.2"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "name": "ttfx",
+  "version": "0.1.0",
+  "description": "TypeScript compile-time macros - Scala 3-style metaprogramming for TypeScript",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "ttfx": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js",
+      "require": "./dist/core.cjs"
+    },
+    "./transformer": {
+      "types": "./dist/transformer.d.ts",
+      "import": "./dist/transformer.js",
+      "require": "./dist/transformer.cjs"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js",
+      "require": "./dist/vite.cjs"
+    },
+    "./webpack": {
+      "types": "./dist/webpack.d.ts",
+      "import": "./dist/webpack.js",
+      "require": "./dist/webpack.cjs"
+    },
+    "./esbuild": {
+      "types": "./dist/esbuild.d.ts",
+      "import": "./dist/esbuild.js",
+      "require": "./dist/esbuild.cjs"
+    },
+    "./rollup": {
+      "types": "./dist/rollup.d.ts",
+      "import": "./dist/rollup.js",
+      "require": "./dist/rollup.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "typescript",
+    "macros",
+    "metaprogramming",
+    "compile-time",
+    "transformer",
+    "scala3"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@ttfx/core": "workspace:*",
+    "@ttfx/transformer": "workspace:*",
+    "@ttfx/comptime": "workspace:*",
+    "@ttfx/reflect": "workspace:*",
+    "@ttfx/derive": "workspace:*",
+    "@ttfx/operators": "workspace:*",
+    "@ttfx/typeclass": "workspace:*",
+    "@ttfx/specialize": "workspace:*",
+    "@ttfx/integrations": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "files": [
+    "dist",
+    "src"
+  ]
+}

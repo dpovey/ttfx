@@ -1,0 +1,235 @@
+# ttfx
+
+**TypeScript that F\*cks! Compile-time macros. Zero runtime. Full type safety.**
+
+> _What if TypeScript had `comptime`? What if `@derive` just worked? What if your tagged templates ran at build time?_
+
+ttfx brings compile-time metaprogramming to TypeScript, drawing from the best ideas in Rust, Scala 3, and Zig -- and making them feel native to the TypeScript ecosystem.
+
+```typescript
+import { comptime, derive, ops } from "ttfx";
+
+// Evaluate at compile time -- gone before your code ships
+const LOOKUP = comptime(() => {
+  const table: Record<string, number> = {};
+  for (let i = 0; i < 256; i++) table[String.fromCharCode(i)] = i;
+  return table;
+});
+
+// Auto-derive common implementations
+@derive(Eq, Ord, Clone, Debug, Json)
+class Point {
+  constructor(
+    public x: number,
+    public y: number,
+  ) {}
+}
+
+// Operator overloading that compiles away
+@operators({ "+": "add", "*": "scale" })
+class Vec2 {
+  constructor(
+    public x: number,
+    public y: number,
+  ) {}
+  add(other: Vec2) {
+    return new Vec2(this.x + other.x, this.y + other.y);
+  }
+  scale(other: Vec2) {
+    return new Vec2(this.x * other.x, this.y * other.y);
+  }
+}
+const v = ops(a + b * c); // compiles to: a.add(b.scale(c))
+```
+
+## Why ttfx?
+
+| Feature                  | ttfx                              | ts-macros               | Babel macros |
+| ------------------------ | --------------------------------- | ----------------------- | ------------ |
+| **Type-aware**           | Yes -- reads the type checker     | No                      | No           |
+| **Compile-time eval**    | Full JS via `vm` sandbox          | `$comptime` (similar)   | No           |
+| **Derive macros**        | `@derive(Eq, Ord, Debug, ...)`    | Manual                  | No           |
+| **Tagged templates**     | First-class macro category        | Via expression macros   | No           |
+| **Reflection**           | `typeInfo<T>()`, `validator<T>()` | No                      | No           |
+| **Typeclasses**          | Scala 3-style `@typeclass`        | No                      | No           |
+| **Operator overloading** | `@operators` + `ops()`            | No                      | No           |
+| **Safety**               | Sandboxed, timeout, loud failures | `$raw` runs unsandboxed | N/A          |
+
+### The key difference
+
+**ts-macros** gives you token-level expansion -- think C preprocessor macros with types. You write `$macro!()` calls that inline code.
+
+**ttfx** gives you _semantic_ macros. The transformer has access to the TypeScript type checker, so macros can introspect types, generate code based on structure, and validate at compile time. This is the difference between `#define` and Rust's `proc_macro`.
+
+## Features
+
+### Compile-Time Evaluation
+
+Zig-style `comptime` that runs real JavaScript in a sandboxed `vm`:
+
+```typescript
+const fib10 = comptime(() => {
+  const fib = (n: number): number => (n <= 1 ? n : fib(n - 1) + fib(n - 2));
+  return fib(10);
+}); // compiles to: const fib10 = 55;
+```
+
+- Full JS semantics: closures, recursion, all built-ins
+- Sandboxed: no `fs`, `net`, or `process` access
+- 5-second timeout prevents infinite loops
+- Errors surface through the TypeScript diagnostic pipeline
+
+### Derive Macros
+
+Rust-inspired `@derive` that auto-generates implementations:
+
+```typescript
+@derive(Eq, Ord, Clone, Debug, Hash, Default, Json, Builder)
+class User {
+  constructor(
+    public id: number,
+    public name: string,
+    public email: string,
+  ) {}
+}
+// Generates: userEq(), userCompare(), cloneUser(), debugUser(), ...
+```
+
+### Compile-Time Reflection
+
+Introspect types at compile time -- no decorators needed:
+
+```typescript
+const fields = fieldNames<User>(); // ["id", "name", "email"]
+const meta = typeInfo<User>(); // Full type metadata
+const validate = validator<User>(); // Runtime validator from types
+```
+
+### Tagged Template Macros
+
+First-class support for compile-time tagged templates:
+
+```typescript
+const query = sql`SELECT * FROM ${table} WHERE id = ${id}`;
+const pattern = regex`^[a-zA-Z]+$`; // Validated at compile time
+const markup = html`<div>${userInput}</div>`; // XSS-safe escaping
+const speed = units`5 meters`.div(units`2 seconds`); // Dimensional analysis
+```
+
+### Typeclass System
+
+Scala 3-style typeclasses with auto-derivation:
+
+```typescript
+@typeclass
+interface Show<A> {
+  show(a: A): string;
+}
+
+@deriving(Show, Eq, Ord)
+class Point {
+  constructor(public x: number, public y: number) {}
+}
+
+const s = summon<Show<Point>>();
+s.show(new Point(1, 2)); // "Point(x = 1, y = 2)"
+```
+
+### Operator Overloading
+
+Make `+`, `-`, `*`, `/` work on your types:
+
+```typescript
+@operators({ "+": "add", "-": "sub", "*": "mul" })
+class Complex {
+  constructor(
+    public real: number,
+    public imag: number,
+  ) {}
+  add(other: Complex) {
+    return new Complex(this.real + other.real, this.imag + other.imag);
+  }
+}
+
+const result = ops(a + b * c); // compiles to: a.add(b.mul(c))
+```
+
+## Getting Started
+
+```bash
+npm install ttfx
+npm install -D ts-patch
+```
+
+Add to your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "transform": "ttfx/transformer",
+        "type": "program"
+      }
+    ]
+  }
+}
+```
+
+Compile with ts-patch:
+
+```bash
+npx tspc
+```
+
+## How It Works
+
+ttfx is a TypeScript transformer that plugs into the compilation pipeline via [ts-patch](https://github.com/nonara/ts-patch). During compilation:
+
+1. **Identify** -- the transformer walks the AST looking for macro invocations (function calls, decorators, tagged templates)
+2. **Resolve** -- each invocation is matched against the macro registry
+3. **Expand** -- the macro runs with full access to the type checker and AST factory
+4. **Validate** -- the expanded code is type-checked by `tsc` as normal
+5. **Emit** -- clean JavaScript output with no macro runtime
+
+```
+TypeScript Source → ttfx Transformer → tsc → JavaScript Output
+                         ↑
+                    Type Checker access
+                    AST manipulation
+                    vm sandbox (comptime)
+```
+
+## Safety
+
+- **Sandboxed** -- `comptime` runs in a restricted `vm` context (no filesystem, network, or process access)
+- **Timeout** -- 5-second limit on compile-time evaluation
+- **Loud failures** -- failed expansions emit `throw new Error(...)` so bugs are never silent
+- **Diagnostics** -- all errors flow through the TypeScript diagnostic pipeline
+- **Deterministic** -- same input always produces same output
+
+## Extending ttfx
+
+Define your own macros:
+
+```typescript
+import {
+  defineExpressionMacro,
+  defineDeriveMacro,
+  defineTaggedTemplateMacro,
+} from "ttfx";
+
+const myMacro = defineExpressionMacro({
+  name: "myMacro",
+  expand(ctx, callExpr, args) {
+    // ctx.typeChecker -- full access to TypeScript's type system
+    // ctx.factory -- AST node factory
+    // ctx.reportError() -- emit diagnostics
+    return ctx.factory.createStringLiteral("hello from a macro!");
+  },
+});
+```
+
+## License
+
+MIT

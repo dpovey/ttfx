@@ -1,0 +1,568 @@
+/**
+ * @ttfx/adapter-effect
+ *
+ * Effect-TS adapter providing do-notation via labeled blocks.
+ *
+ * ## Usage
+ *
+ * ```ts
+ * import { effectDo } from "@ttfx/adapter-effect";
+ *
+ * // Labeled block syntax (compiles to Effect.flatMap chain)
+ * let: {
+ *   user << getUserById(id)
+ * }
+ * yield: {
+ *   user,
+ *   posts,
+ *   comments,
+ * }
+ *
+ * // Compiles to:
+ * Effect.flatMap(getUserById(id), (user) =>
+ *   Effect.succeed({ user, posts, comments })
+ * );
+ *
+ * // Generator-based syntax (for complex control flow)
+ * const program = Effect.gen(function* () {
+ *   const user = yield* getUserById(id);
+ *   const posts = yield* getPostsForUser(user.id);
+ *   return { user, posts };
+ * });
+ * ```
+ *
+ * @module
+ */
+
+import * as ts from "typescript";
+import {
+  type LabeledBlockMacro,
+  type ExpressionMacro,
+  type MacroContext,
+  defineLabeledBlockMacro,
+  defineExpressionMacro,
+  globalRegistry,
+} from "@ttfx/core";
+
+// ============================================================================
+// Effect Do-Notation Macro (Labeled Block)
+// ============================================================================
+
+/**
+ * effectDo labeled block macro
+ *
+ * Transforms labeled block syntax into Effect.flatMap chains:
+ *
+ * ```ts
+ * let: {
+ *   x << getX()
+ * }
+ * yield: {
+ *   result: x + y
+ * }
+ * ```
+ *
+ * Becomes:
+ *
+ * ```ts
+ * Effect.flatMap(getX(), (x) =>
+ *   Effect.succeed({ result: x + y })
+ * )
+ * ```
+ */
+export const effectLetMacro: LabeledBlockMacro = defineLabeledBlockMacro({
+  name: "effectLet",
+  label: "let",
+  continuationLabels: ["yield", "pure", "return"],
+  expand(
+    ctx: MacroContext,
+    mainBlock: ts.LabeledStatement,
+    continuation: ts.LabeledStatement | undefined,
+  ): ts.Statement | ts.Statement[] {
+    const { factory } = ctx;
+
+    if (!continuation) {
+      ctx.reportError(
+        mainBlock,
+        "effectLet requires a 'yield', 'pure', or 'return' block after the 'let' block",
+      );
+      return mainBlock;
+    }
+
+    // Parse bindings from the let block
+    const bindings = parseBindingsFromBlock(mainBlock.statement, ctx);
+
+    if (bindings.length === 0) {
+      ctx.reportError(
+        mainBlock,
+        "effectLet 'let' block must contain at least one binding (x << effect)",
+      );
+      return mainBlock;
+    }
+
+    // Get the yield expression
+    const yieldExpr = extractYieldExpression(continuation.statement, ctx);
+    if (!yieldExpr) {
+      ctx.reportError(
+        continuation,
+        "effectLet yield block must contain an expression",
+      );
+      return mainBlock;
+    }
+
+    // Build the flatMap chain from inside out
+    // Start with the innermost: Effect.succeed(yieldExpr)
+    let result: ts.Expression = factory.createCallExpression(
+      factory.createPropertyAccessExpression(
+        factory.createIdentifier("Effect"),
+        factory.createIdentifier("succeed"),
+      ),
+      undefined,
+      [yieldExpr],
+    );
+
+    // Wrap each binding from last to first
+    for (let i = bindings.length - 1; i >= 0; i--) {
+      const { name, effect } = bindings[i];
+      result = factory.createCallExpression(
+        factory.createPropertyAccessExpression(
+          factory.createIdentifier("Effect"),
+          factory.createIdentifier("flatMap"),
+        ),
+        undefined,
+        [
+          effect,
+          factory.createArrowFunction(
+            undefined,
+            undefined,
+            [
+              factory.createParameterDeclaration(
+                undefined,
+                undefined,
+                factory.createIdentifier(name),
+                undefined,
+                undefined,
+                undefined,
+              ),
+            ],
+            undefined,
+            factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+            result,
+          ),
+        ],
+      );
+    }
+
+    return factory.createExpressionStatement(result);
+  },
+});
+
+// ============================================================================
+// Effect Gen Macro (Expression Macro)
+// ============================================================================
+
+/**
+ * gen$ macro - shorthand for Effect.gen with yield* syntax
+ *
+ * ```ts
+ * const result = gen$((function* () {
+ *   const x = yield* getX();
+ *   const y = yield* getY(x);
+ *   return { x, y };
+ * }));
+ * ```
+ *
+ * Compiles to:
+ *
+ * ```ts
+ * const result = Effect.gen(function* () {
+ *   const x = yield* getX();
+ *   const y = yield* getY(x);
+ *   return { x, y };
+ * });
+ * ```
+ */
+export const genMacro: ExpressionMacro = defineExpressionMacro({
+  name: "gen$",
+  expand(
+    ctx: MacroContext,
+    node: ts.CallExpression,
+    args: readonly ts.Expression[],
+  ): ts.Expression {
+    const { factory } = ctx;
+
+    if (args.length !== 1) {
+      ctx.reportError(
+        node,
+        "gen$ expects exactly one argument: a generator function",
+      );
+      return node;
+    }
+
+    let genFn = args[0];
+    // Unwrap if it's a parenthesized expression
+    if (ts.isParenthesizedExpression(genFn)) {
+      genFn = genFn.expression;
+    }
+
+    // Wrap in Effect.gen
+    return factory.createCallExpression(
+      factory.createPropertyAccessExpression(
+        factory.createIdentifier("Effect"),
+        factory.createIdentifier("gen"),
+      ),
+      undefined,
+      [genFn],
+    );
+  },
+});
+
+// ============================================================================
+// Effect Map Macro (Expression Macro)
+// ============================================================================
+
+/**
+ * map$ macro - Effect.map shorthand
+ *
+ * ```ts
+ * const result = map$(getUser(), user => user.name);
+ * ```
+ *
+ * Compiles to:
+ *
+ * ```ts
+ * const result = Effect.map(getUser(), user => user.name);
+ * ```
+ */
+export const mapMacro: ExpressionMacro = defineExpressionMacro({
+  name: "map$",
+  expand(
+    ctx: MacroContext,
+    node: ts.CallExpression,
+    args: readonly ts.Expression[],
+  ): ts.Expression {
+    const { factory } = ctx;
+
+    if (args.length !== 2) {
+      ctx.reportError(
+        node,
+        "map$ expects exactly two arguments: effect and mapper function",
+      );
+      return node;
+    }
+
+    return factory.createCallExpression(
+      factory.createPropertyAccessExpression(
+        factory.createIdentifier("Effect"),
+        factory.createIdentifier("map"),
+      ),
+      undefined,
+      [args[0], args[1]],
+    );
+  },
+});
+
+// ============================================================================
+// Effect FlatMap Macro (Expression Macro)
+// ============================================================================
+
+/**
+ * flatMap$ macro - Effect.flatMap shorthand
+ *
+ * ```ts
+ * const result = flatMap$(getUser(), user => getPosts(user.id));
+ * ```
+ *
+ * Compiles to:
+ *
+ * ```ts
+ * const result = Effect.flatMap(getUser(), user => getPosts(user.id));
+ * ```
+ */
+export const flatMapMacro: ExpressionMacro = defineExpressionMacro({
+  name: "flatMap$",
+  expand(
+    ctx: MacroContext,
+    node: ts.CallExpression,
+    args: readonly ts.Expression[],
+  ): ts.Expression {
+    const { factory } = ctx;
+
+    if (args.length !== 2) {
+      ctx.reportError(
+        node,
+        "flatMap$ expects exactly two arguments: effect and flatMapper function",
+      );
+      return node;
+    }
+
+    return factory.createCallExpression(
+      factory.createPropertyAccessExpression(
+        factory.createIdentifier("Effect"),
+        factory.createIdentifier("flatMap"),
+      ),
+      undefined,
+      [args[0], args[1]],
+    );
+  },
+});
+
+// ============================================================================
+// Effect Pipe Macro (Expression Macro)
+// ============================================================================
+
+/**
+ * pipe$ macro - Effect.pipe shorthand
+ *
+ * ```ts
+ * const result = pipe$(
+ *   getUser(),
+ *   Effect.flatMap(user => getPosts(user.id)),
+ *   Effect.map(posts => posts.length)
+ * );
+ * ```
+ *
+ * Compiles to:
+ *
+ * ```ts
+ * const result = Effect.pipe(
+ *   getUser(),
+ *   Effect.flatMap(user => getPosts(user.id)),
+ *   Effect.map(posts => posts.length)
+ * );
+ * ```
+ */
+export const pipeMacro: ExpressionMacro = defineExpressionMacro({
+  name: "pipe$",
+  expand(
+    ctx: MacroContext,
+    node: ts.CallExpression,
+    args: readonly ts.Expression[],
+  ): ts.Expression {
+    const { factory } = ctx;
+
+    if (args.length < 2) {
+      ctx.reportError(
+        node,
+        "pipe$ expects at least two arguments: initial value and pipe functions",
+      );
+      return node;
+    }
+
+    return factory.createCallExpression(
+      factory.createPropertyAccessExpression(
+        factory.createIdentifier("Effect"),
+        factory.createIdentifier("pipe"),
+      ),
+      undefined,
+      [...args],
+    );
+  },
+});
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+interface Binding {
+  name: string;
+  effect: ts.Expression;
+}
+
+/**
+ * Parse bindings from a block statement.
+ * Expects variable declarations with << operator as initializer:
+ *   { x << getX(); y << getY(x); }
+ * Or expression statements:
+ *   { x << getX() }
+ */
+function parseBindingsFromBlock(
+  stmt: ts.Statement,
+  ctx: MacroContext,
+): Binding[] {
+  const bindings: Binding[] = [];
+
+  if (ts.isBlock(stmt)) {
+    for (const s of stmt.statements) {
+      const binding = parseBindingStatement(s, ctx);
+      if (binding) {
+        bindings.push(binding);
+      }
+    }
+  } else if (ts.isExpressionStatement(stmt)) {
+    const binding = parseBindingFromExpression(stmt.expression, ctx);
+    if (binding) {
+      bindings.push(binding);
+    }
+  }
+
+  return bindings;
+}
+
+/**
+ * Parse a single binding from a statement
+ */
+function parseBindingStatement(
+  stmt: ts.Statement,
+  ctx: MacroContext,
+): Binding | undefined {
+  if (ts.isExpressionStatement(stmt)) {
+    return parseBindingFromExpression(stmt.expression, ctx);
+  }
+
+  if (ts.isVariableStatement(stmt)) {
+    const decl = stmt.declarationList.declarations[0];
+    if (decl && decl.initializer && ts.isIdentifier(decl.name)) {
+      // Check if initializer is x << effect
+      if (
+        ts.isBinaryExpression(decl.initializer) &&
+        decl.initializer.operatorToken.kind ===
+          ts.SyntaxKind.LessThanLessThanToken
+      ) {
+        const left = decl.initializer.left;
+        if (ts.isIdentifier(left)) {
+          return {
+            name: left.text,
+            effect: decl.initializer.right,
+          };
+        }
+      }
+      // Or just a regular expression (use var name as binding name)
+      return {
+        name: decl.name.text,
+        effect: decl.initializer,
+      };
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Parse binding from expression (x << effect format)
+ */
+function parseBindingFromExpression(
+  expr: ts.Expression,
+  ctx: MacroContext,
+): Binding | undefined {
+  if (
+    ts.isBinaryExpression(expr) &&
+    expr.operatorToken.kind === ts.SyntaxKind.LessThanLessThanToken
+  ) {
+    const left = expr.left;
+    if (ts.isIdentifier(left)) {
+      return {
+        name: left.text,
+        effect: expr.right,
+      };
+    } else {
+      ctx.reportError(left, "Left side of << must be an identifier");
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Extract the yield expression from a block
+ */
+function extractYieldExpression(
+  stmt: ts.Statement,
+  ctx: MacroContext,
+): ts.Expression | undefined {
+  if (ts.isBlock(stmt)) {
+    // Return the last expression in the block, or wrap all statements
+    const lastStmt = stmt.statements[stmt.statements.length - 1];
+    if (lastStmt && ts.isExpressionStatement(lastStmt)) {
+      return lastStmt.expression;
+    }
+    if (lastStmt && ts.isReturnStatement(lastStmt) && lastStmt.expression) {
+      return lastStmt.expression;
+    }
+    // If block has multiple expressions, create object literal
+    ctx.reportError(
+      stmt,
+      "yield block should contain a single expression or object literal",
+    );
+    return undefined;
+  }
+
+  if (ts.isExpressionStatement(stmt)) {
+    return stmt.expression;
+  }
+
+  return undefined;
+}
+
+// ============================================================================
+// Registration
+// ============================================================================
+
+/**
+ * Register all Effect adapter macros with the global registry.
+ */
+export function register(): void {
+  globalRegistry.register(effectLetMacro);
+  globalRegistry.register(genMacro);
+  globalRegistry.register(mapMacro);
+  globalRegistry.register(flatMapMacro);
+  globalRegistry.register(pipeMacro);
+}
+
+// Auto-register on import
+register();
+
+// ============================================================================
+// Type Helpers (for use in user code)
+// ============================================================================
+
+/**
+ * Marker type for binding expressions using <<
+ * This helps with IDE support even before macro transformation.
+ */
+export type Bind<T> = T;
+
+/**
+ * Runtime placeholder for gen$ (should be transformed at compile time)
+ */
+export function gen$<T>(_fn: () => Generator<unknown, T, unknown>): never {
+  throw new Error(
+    "gen$ was not transformed at compile time. " +
+      "Make sure @ttfx/adapter-effect is registered with the transformer.",
+  );
+}
+
+/**
+ * Runtime placeholder for map$ (should be transformed at compile time)
+ */
+export function map$<A, B>(_effect: unknown, _fn: (a: A) => B): never {
+  throw new Error(
+    "map$ was not transformed at compile time. " +
+      "Make sure @ttfx/adapter-effect is registered with the transformer.",
+  );
+}
+
+/**
+ * Runtime placeholder for flatMap$ (should be transformed at compile time)
+ */
+export function flatMap$<A, B>(
+  _effect: unknown,
+  _fn: (a: A) => unknown,
+): never {
+  throw new Error(
+    "flatMap$ was not transformed at compile time. " +
+      "Make sure @ttfx/adapter-effect is registered with the transformer.",
+  );
+}
+
+/**
+ * Runtime placeholder for pipe$ (should be transformed at compile time)
+ */
+export function pipe$<A>(
+  _initial: A,
+  ..._fns: Array<(a: unknown) => unknown>
+): never {
+  throw new Error(
+    "pipe$ was not transformed at compile time. " +
+      "Make sure @ttfx/adapter-effect is registered with the transformer.",
+  );
+}

@@ -1,0 +1,17 @@
+{
+  "name": "ttfx-example-basic",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Basic example of ttfx usage",
+  "type": "module",
+  "scripts": {
+    "build": "ttfx build",
+    "check": "ttfx check",
+    "build:tsc": "tspc"
+  },
+  "dependencies": {
+    "ttfx": "workspace:*",
+    "ts-patch": "^3.3.0",
+    "typescript": "^5.8.3"
+  }
+}

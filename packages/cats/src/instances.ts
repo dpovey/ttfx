@@ -1,0 +1,395 @@
+/**
+ * Typeclass Instances for Cats Data Types
+ *
+ * This module provides concrete typeclass instances (Functor, Monad, Foldable,
+ * Traverse, etc.) for all Cats data types, using the zero-cost HKT system.
+ *
+ * ## Zero-Cost Option
+ *
+ * Option<A> is now represented as `A | null` at runtime:
+ * - Some(42) → 42
+ * - None → null
+ * - No wrapper objects, no tags, truly zero-cost
+ *
+ * ## Usage
+ *
+ * ```typescript
+ * import { optionMonad, arrayMonad } from "./instances.js";
+ * import { specialize } from "@ttfx/specialize";
+ *
+ * // Generic function
+ * function double<F>(F: Monad<F>, fa: $<F, number>): $<F, number> {
+ *   return F.map(fa, x => x * 2);
+ * }
+ *
+ * // Zero-cost specialized version (macro eliminates dictionary at compile time)
+ * const doubleOption = specialize(double, optionMonad);
+ * // Compiles to: (fa) => fa !== null ? fa * 2 : null
+ * ```
+ */
+
+import type { $ } from "./hkt.js";
+import type { OptionF, ArrayF, PromiseF, EitherF } from "./hkt.js";
+import type { Functor } from "./typeclasses/functor.js";
+import type { Applicative } from "./typeclasses/applicative.js";
+import type { Monad } from "./typeclasses/monad.js";
+import { makeMonad } from "./typeclasses/monad.js";
+import type { Foldable } from "./typeclasses/foldable.js";
+import type { Traverse } from "./typeclasses/traverse.js";
+import type { MonadError } from "./typeclasses/monad-error.js";
+import type {
+  SemigroupK,
+  MonoidK,
+  Alternative,
+} from "./typeclasses/alternative.js";
+
+import type { Option } from "./data/option.js";
+// Note: With null-based Option, isSome(opt) = opt !== null, isNone(opt) = opt === null
+// Some(x) = x, None = null
+import type { Either } from "./data/either.js";
+import { Left, Right, isLeft, isRight } from "./data/either.js";
+
+// Note: registerInstanceMethods is from @ttfx/specialize package
+// For now, registration is done separately in the macro package
+// import { registerInstanceMethods } from "@ttfx/specialize";
+
+// ============================================================================
+// Option Instances (Zero-Cost: Option<A> = A | null)
+// ============================================================================
+
+/**
+ * Functor instance for Option
+ *
+ * With null-based Option, Some(x) is just x and None is null.
+ * Uses `unknown` casts to completely break TypeScript's HKT recursion.
+ */
+export const optionFunctor: Functor<OptionF> = {
+  map: ((fa: unknown, f: unknown) => {
+    const opt = fa as Option<unknown>;
+    const fn = f as (a: unknown) => unknown;
+    // Zero-cost: opt !== null ? fn(opt) : null
+    return opt !== null ? fn(opt) : null;
+  }) as Functor<OptionF>["map"],
+};
+
+/**
+ * Monad instance for Option
+ */
+export const optionMonad: Monad<OptionF> = makeMonad<OptionF>(
+  optionFunctor.map,
+  ((fa: unknown, f: unknown) => {
+    const opt = fa as Option<unknown>;
+    const fn = f as (a: unknown) => Option<unknown>;
+    // Zero-cost: opt !== null ? fn(opt) : null
+    return opt !== null ? fn(opt) : null;
+  }) as <A, B>(fa: Option<A>, f: (a: A) => Option<B>) => Option<B>,
+  // Zero-cost pure: just return the value (Some(a) = a)
+  ((a: unknown) => a) as <A>(a: A) => Option<A>,
+);
+
+/**
+ * Foldable instance for Option
+ */
+export const optionFoldable: Foldable<OptionF> = {
+  foldLeft: ((fa: unknown, b: unknown, f: unknown) => {
+    const opt = fa as Option<unknown>;
+    const fn = f as (b: unknown, a: unknown) => unknown;
+    return opt !== null ? fn(b, opt) : b;
+  }) as Foldable<OptionF>["foldLeft"],
+  foldRight: ((fa: unknown, b: unknown, f: unknown) => {
+    const opt = fa as Option<unknown>;
+    const fn = f as (a: unknown, b: unknown) => unknown;
+    return opt !== null ? fn(opt, b) : b;
+  }) as Foldable<OptionF>["foldRight"],
+};
+
+/**
+ * Traverse instance for Option
+ */
+export const optionTraverse: Traverse<OptionF> = {
+  ...optionFunctor,
+  ...optionFoldable,
+  traverse: ((G: Applicative<unknown>) => (fa: unknown, f: unknown) => {
+    const opt = fa as Option<unknown>;
+    const fn = f as (a: unknown) => unknown;
+    if (opt !== null) {
+      // G.map(fn(opt), identity) since Some(b) = b
+      return G.map(fn(opt), (b: unknown) => b);
+    }
+    // G.pure(null) since None = null
+    return G.pure(null);
+  }) as Traverse<OptionF>["traverse"],
+};
+
+/**
+ * SemigroupK instance for Option (first Some wins)
+ */
+export const optionSemigroupK: SemigroupK<OptionF> = {
+  combineK: ((x: unknown, y: unknown) => {
+    return x !== null ? x : y;
+  }) as SemigroupK<OptionF>["combineK"],
+};
+
+/**
+ * MonoidK instance for Option
+ */
+export const optionMonoidK: MonoidK<OptionF> = {
+  ...optionSemigroupK,
+  // emptyK returns null (None)
+  emptyK: (() => null) as MonoidK<OptionF>["emptyK"],
+};
+
+/**
+ * Alternative instance for Option
+ */
+export const optionAlternative: Alternative<OptionF> = {
+  ...optionMonad,
+  ...optionMonoidK,
+};
+
+// ============================================================================
+// Array Instances
+// ============================================================================
+
+/**
+ * Functor instance for Array
+ */
+export const arrayFunctor: Functor<ArrayF> = {
+  map: ((fa: unknown, f: unknown) => {
+    const arr = fa as unknown[];
+    const fn = f as (a: unknown) => unknown;
+    return arr.map(fn);
+  }) as Functor<ArrayF>["map"],
+};
+
+/**
+ * Monad instance for Array
+ */
+export const arrayMonad: Monad<ArrayF> = makeMonad<ArrayF>(
+  arrayFunctor.map,
+  ((fa: unknown, f: unknown) => {
+    const arr = fa as unknown[];
+    const fn = f as (a: unknown) => unknown[];
+    return arr.flatMap(fn);
+  }) as <A, B>(fa: A[], f: (a: A) => B[]) => B[],
+  ((a: unknown) => [a]) as <A>(a: A) => A[],
+);
+
+/**
+ * Foldable instance for Array
+ */
+export const arrayFoldable: Foldable<ArrayF> = {
+  foldLeft: ((fa: unknown, b: unknown, f: unknown) => {
+    const arr = fa as unknown[];
+    const fn = f as (b: unknown, a: unknown) => unknown;
+    return arr.reduce(fn, b);
+  }) as Foldable<ArrayF>["foldLeft"],
+  foldRight: ((fa: unknown, b: unknown, f: unknown) => {
+    const arr = fa as unknown[];
+    const fn = f as (a: unknown, b: unknown) => unknown;
+    return arr.reduceRight((acc, a) => fn(a, acc), b);
+  }) as Foldable<ArrayF>["foldRight"],
+};
+
+/**
+ * Traverse instance for Array
+ */
+export const arrayTraverse: Traverse<ArrayF> = {
+  ...arrayFunctor,
+  ...arrayFoldable,
+  traverse: ((G: Applicative<unknown>) => (fa: unknown, f: unknown) => {
+    const arr = fa as unknown[];
+    const fn = f as (a: unknown) => unknown;
+    return arr.reduce(
+      (acc: unknown, a: unknown) =>
+        G.ap(
+          G.map(acc, (bs: unknown) => (b: unknown) => [
+            ...(bs as unknown[]),
+            b,
+          ]),
+          fn(a),
+        ),
+      G.pure([] as unknown[]),
+    );
+  }) as Traverse<ArrayF>["traverse"],
+};
+
+/**
+ * SemigroupK instance for Array
+ */
+export const arraySemigroupK: SemigroupK<ArrayF> = {
+  combineK: ((x: unknown, y: unknown) => {
+    return [...(x as unknown[]), ...(y as unknown[])];
+  }) as SemigroupK<ArrayF>["combineK"],
+};
+
+/**
+ * MonoidK instance for Array
+ */
+export const arrayMonoidK: MonoidK<ArrayF> = {
+  ...arraySemigroupK,
+  emptyK: (() => []) as MonoidK<ArrayF>["emptyK"],
+};
+
+/**
+ * Alternative instance for Array
+ */
+export const arrayAlternative: Alternative<ArrayF> = {
+  ...arrayMonad,
+  ...arrayMonoidK,
+};
+
+// ============================================================================
+// Promise Instances
+// ============================================================================
+
+/**
+ * Functor instance for Promise
+ */
+export const promiseFunctor: Functor<PromiseF> = {
+  map: ((fa: unknown, f: unknown) => {
+    const p = fa as Promise<unknown>;
+    const fn = f as (a: unknown) => unknown;
+    return p.then(fn);
+  }) as Functor<PromiseF>["map"],
+};
+
+/**
+ * Monad instance for Promise
+ */
+export const promiseMonad: Monad<PromiseF> = makeMonad<PromiseF>(
+  promiseFunctor.map,
+  ((fa: unknown, f: unknown) => {
+    const p = fa as Promise<unknown>;
+    const fn = f as (a: unknown) => Promise<unknown>;
+    return p.then(fn);
+  }) as <A, B>(fa: Promise<A>, f: (a: A) => Promise<B>) => Promise<B>,
+  ((a: unknown) => Promise.resolve(a)) as <A>(a: A) => Promise<A>,
+);
+
+// ============================================================================
+// Either Instances
+// ============================================================================
+
+/**
+ * Create a Functor for Either with a fixed error type E.
+ *
+ * Note: Uses `unknown` casts to completely break TypeScript's HKT recursion.
+ */
+export function eitherFunctor<E>(): Functor<EitherF<E>> {
+  return {
+    map: ((fa: unknown, f: unknown) => {
+      const eth = fa as Either<E, unknown>;
+      const fn = f as (a: unknown) => unknown;
+      return isRight(eth) ? Right(fn(eth.right)) : eth;
+    }) as Functor<EitherF<E>>["map"],
+  };
+}
+
+/**
+ * Create a Monad for Either with a fixed error type E.
+ */
+export function eitherMonad<E>(): Monad<EitherF<E>> {
+  const functor = eitherFunctor<E>();
+  return makeMonad<EitherF<E>>(
+    functor.map,
+    ((fa: unknown, f: unknown) => {
+      const eth = fa as Either<E, unknown>;
+      const fn = f as (a: unknown) => Either<E, unknown>;
+      return isRight(eth) ? fn(eth.right) : eth;
+    }) as <A, B>(fa: Either<E, A>, f: (a: A) => Either<E, B>) => Either<E, B>,
+    ((a: unknown) => Right(a)) as <A>(a: A) => Either<E, A>,
+  );
+}
+
+/**
+ * Create a MonadError for Either with a fixed error type E.
+ */
+export function eitherMonadError<E>(): MonadError<EitherF<E>, E> {
+  const monad = eitherMonad<E>();
+  return {
+    ...monad,
+    raiseError: ((e: unknown) => Left(e)) as MonadError<
+      EitherF<E>,
+      E
+    >["raiseError"],
+    handleErrorWith: ((fa: unknown, f: unknown) => {
+      const eth = fa as Either<E, unknown>;
+      const fn = f as (e: E) => Either<E, unknown>;
+      return isLeft(eth) ? fn(eth.left) : eth;
+    }) as MonadError<EitherF<E>, E>["handleErrorWith"],
+  };
+}
+
+/**
+ * Create a Foldable for Either with a fixed error type E.
+ */
+export function eitherFoldable<E>(): Foldable<EitherF<E>> {
+  return {
+    foldLeft: ((fa: unknown, b: unknown, f: unknown) => {
+      const eth = fa as Either<E, unknown>;
+      const fn = f as (b: unknown, a: unknown) => unknown;
+      return isRight(eth) ? fn(b, eth.right) : b;
+    }) as Foldable<EitherF<E>>["foldLeft"],
+    foldRight: ((fa: unknown, b: unknown, f: unknown) => {
+      const eth = fa as Either<E, unknown>;
+      const fn = f as (a: unknown, b: unknown) => unknown;
+      return isRight(eth) ? fn(eth.right, b) : b;
+    }) as Foldable<EitherF<E>>["foldRight"],
+  };
+}
+
+/**
+ * Create a Traverse for Either with a fixed error type E.
+ */
+export function eitherTraverse<E>(): Traverse<EitherF<E>> {
+  const functor = eitherFunctor<E>();
+  const foldable = eitherFoldable<E>();
+  return {
+    ...functor,
+    ...foldable,
+    traverse: ((G: Applicative<unknown>) => (fa: unknown, f: unknown) => {
+      const eth = fa as Either<E, unknown>;
+      const fn = f as (a: unknown) => unknown;
+      if (isRight(eth)) {
+        return G.map(fn(eth.right), (b: unknown) => Right(b));
+      }
+      return G.pure(Left(eth.left));
+    }) as Traverse<EitherF<E>>["traverse"],
+  };
+}
+
+/**
+ * Create a SemigroupK for Either with a fixed error type E.
+ */
+export function eitherSemigroupK<E>(): SemigroupK<EitherF<E>> {
+  return {
+    combineK: ((x: unknown, y: unknown) => {
+      const eth = x as Either<E, unknown>;
+      return isRight(eth) ? x : y;
+    }) as SemigroupK<EitherF<E>>["combineK"],
+  };
+}
+
+// ============================================================================
+// Specialization templates
+// ============================================================================
+// These templates are used by @ttfx/specialize to inline typeclass
+// operations at compile time. They should be registered separately in the
+// macro package. See src/macros/specialize.ts for registration.
+//
+// Option templates (zero-cost null-based):
+//   optionFunctor.map:   '(fa, f) => fa !== null ? f(fa) : null'
+//   optionMonad.pure:    '(a) => a'
+//   optionMonad.flatMap: '(fa, f) => fa !== null ? f(fa) : null'
+//   optionMonad.ap:      '(fab, fa) => fab !== null && fa !== null ? fab(fa) : null'
+//
+// Array templates:
+//   arrayFunctor.map:    '(fa, f) => fa.map(f)'
+//   arrayMonad.pure:     '(a) => [a]'
+//   arrayMonad.flatMap:  '(fa, f) => fa.flatMap(f)'
+//
+// Either templates:
+//   eitherFunctor.map:   '(fa, f) => fa._tag === "Right" ? { _tag: "Right", right: f(fa.right) } : fa'
+//   eitherMonad.pure:    '(a) => ({ _tag: "Right", right: a })'
+//   eitherMonad.flatMap: '(fa, f) => fa._tag === "Right" ? f(fa.right) : fa'

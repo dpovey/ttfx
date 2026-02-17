@@ -1,0 +1,18 @@
+/**
+ * typemacro Rollup plugin
+ *
+ * @example
+ * ```ts
+ * // rollup.config.js
+ * import typemacro from "@ttfx/integrations/rollup";
+ *
+ * export default {
+ *   plugins: [typemacro()],
+ * };
+ * ```
+ */
+
+import { unplugin, type TypeMacroPluginOptions } from "./unplugin.js";
+
+export default unplugin.rollup;
+export type { TypeMacroPluginOptions };
