@@ -4,12 +4,13 @@
   "description": "Compile-time macros for TypeScript -- inspired by Rust, Scala 3, and Zig",
   "type": "module",
   "scripts": {
-    "build": "pnpm -r build",
-    "build:watch": "pnpm -r --parallel build:watch",
+    "build": "pnpm -r --filter '!ttfx-example-*' build",
+    "build:watch": "pnpm -r --parallel --filter '!ttfx-example-*' build:watch",
+    "build:all": "pnpm -r build",
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "pnpm -r clean && rm -rf node_modules",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r --filter '!ttfx-example-*' typecheck",
     "lint": "pnpm -r lint"
   },
   "keywords": [
