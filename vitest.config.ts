@@ -1,6 +1,8 @@
 import { defineConfig } from "vitest/config";
+import typemacro from "@ttfx/integrations/vite";
 
 export default defineConfig({
+  plugins: [typemacro()],
   test: {
     // Run tests sequentially for more predictable output
     pool: "forks",
