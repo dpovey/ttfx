@@ -7,6 +7,13 @@ export default defineConfig({
     // Run tests sequentially for more predictable output
     pool: "forks",
 
+    // Increase pool timeout for CI environments
+    poolOptions: {
+      forks: {
+        singleFork: true, // Run all tests in a single fork to avoid worker timeout issues
+      },
+    },
+
     // Test file patterns
     include: ["tests/**/*.test.ts"],
 
