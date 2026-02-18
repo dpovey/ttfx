@@ -77,5 +77,5 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Pack (dry run)
-        run: pnpm pack --dry-run
+      - name: Publish (dry run)
+        run: pnpm -r publish --dry-run --no-git-checks
