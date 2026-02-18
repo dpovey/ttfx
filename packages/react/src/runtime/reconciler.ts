@@ -248,7 +248,8 @@ export function keyedList<T, K>(
   render: ListRenderFn<T>,
   keyFn: KeyFn<T, K>,
 ): React.ReactElement {
-  return React.createElement(KeyedList, { items, keyFn, render });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return React.createElement(KeyedList as any, { items, keyFn, render });
 }
 
 /**
@@ -281,7 +282,8 @@ export function SignalList<T, K>({
     return items.subscribe(setCurrentItems);
   }, [items]);
 
-  return React.createElement(KeyedList, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return React.createElement(KeyedList as any, {
     items: currentItems,
     keyFn,
     render,

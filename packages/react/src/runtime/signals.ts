@@ -39,7 +39,8 @@ export type Cleanup = () => void;
 // ============================================================================
 
 /** Currently executing computed (for automatic dependency tracking) */
-let currentComputed: ComputedImpl<unknown> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let currentComputed: ComputedImpl<any> | null = null;
 
 /** Currently executing effect (for automatic dependency tracking) */
 let currentEffect: EffectImpl | null = null;
@@ -55,7 +56,8 @@ let batchDepth = 0;
 class SignalImpl<T> implements Signal<T> {
   private value: T;
   private subscribers = new Set<(value: T) => void>();
-  private computedDependents = new Set<ComputedImpl<unknown>>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private computedDependents = new Set<ComputedImpl<any>>();
   private effectDependents = new Set<EffectImpl>();
 
   constructor(initialValue: T) {
@@ -130,7 +132,8 @@ class SignalImpl<T> implements Signal<T> {
   }
 
   /** @internal */
-  removeDependentComputed(computed: ComputedImpl<unknown>): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  removeDependentComputed(computed: ComputedImpl<any>): void {
     this.computedDependents.delete(computed);
   }
 
@@ -148,7 +151,8 @@ class ComputedImpl<T> implements Computed<T> {
   private value!: T;
   private computation: () => T;
   private subscribers = new Set<(value: T) => void>();
-  private dependencies = new Set<SignalImpl<unknown>>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private dependencies = new Set<SignalImpl<any>>();
   private dirty = true;
 
   constructor(computation: () => T) {
@@ -204,7 +208,8 @@ class ComputedImpl<T> implements Computed<T> {
   }
 
   /** @internal */
-  addDependency(signal: SignalImpl<unknown>): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addDependency(signal: SignalImpl<any>): void {
     this.dependencies.add(signal);
   }
 }
@@ -215,8 +220,9 @@ class ComputedImpl<T> implements Computed<T> {
 
 class EffectImpl {
   private effectFn: () => void | Cleanup;
-  private cleanup: Cleanup | void;
-  private dependencies = new Set<SignalImpl<unknown>>();
+  private cleanup: Cleanup | void = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private dependencies = new Set<SignalImpl<any>>();
   private disposed = false;
 
   constructor(effectFn: () => void | Cleanup) {
@@ -252,7 +258,8 @@ class EffectImpl {
   }
 
   /** @internal */
-  addDependency(signal: SignalImpl<unknown>): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addDependency(signal: SignalImpl<any>): void {
     this.dependencies.add(signal);
   }
 
@@ -384,10 +391,10 @@ import { useState, useEffect, useRef, useMemo } from "react";
  */
 export function useSignal<T>(initialValue: T): Signal<T> {
   const [, forceUpdate] = useState({});
-  const signalRef = useRef<Signal<T>>();
+  const signalRef = useRef<SignalImpl<T>>();
 
   if (!signalRef.current) {
-    signalRef.current = createSignal(initialValue);
+    signalRef.current = new SignalImpl(initialValue);
   }
 
   useEffect(() => {
@@ -405,10 +412,10 @@ export function useSignal<T>(initialValue: T): Signal<T> {
  */
 export function useComputed<T>(computation: () => T): T {
   const [, forceUpdate] = useState({});
-  const computedRef = useRef<Computed<T>>();
+  const computedRef = useRef<ComputedImpl<T>>();
 
   if (!computedRef.current) {
-    computedRef.current = createComputed(computation);
+    computedRef.current = new ComputedImpl(computation);
   }
 
   useEffect(() => {

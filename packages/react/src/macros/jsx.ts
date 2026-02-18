@@ -88,7 +88,7 @@ export const eachMacro = defineExpressionMacro({
     // Standard React mode: items.map() with injected key
 
     // If we have a key function, inject the key into the JSX
-    if (keyFn && ts.isArrowFunction(keyFn)) {
+    if (keyFn && ts.isArrowFunction(keyFn) && ts.isArrowFunction(renderFn)) {
       const body = renderFn.body;
 
       // If the body is a JSX element, we can inject the key
