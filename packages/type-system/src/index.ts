@@ -122,6 +122,20 @@ export {
   MinLength,
   refineMacro,
   unsafeRefineMacro,
+  // Predicate exports for @ttfx/contracts-refined
+  type RefinementPredicate,
+  REFINEMENT_PREDICATES,
+  // Decidability annotations (Coq-inspired)
+  type Decidability,
+  type ProofStrategy,
+  // Subtyping coercions (Coq-inspired)
+  type SubtypingDeclaration,
+  declareSubtyping,
+  isSubtype,
+  getSubtypingDeclaration,
+  getAllSubtypingDeclarations,
+  widen,
+  widenTo,
 } from "./refined.js";
 
 // GADTs - REMOVED
@@ -225,3 +239,7 @@ export {
   pureAttribute,
   effectAttribute,
 } from "./effects.js";
+
+// Length-Indexed Vectors (Coq-inspired Dependent Types)
+// Vec is both a type alias (Vec<T, N>) and a namespace object (Vec.empty(), Vec.from(), etc.)
+export * from "./vec.js";

@@ -88,11 +88,11 @@ const mkEmail = validatedNewtype<Email>(s => s.includes("@"));
 
 This module provides three levels of type branding:
 
-| Level | Type | Runtime Cost | Use Case |
-|-------|------|--------------|----------|
-| **Newtype** | `Newtype<Base, Brand>` | Zero | Type discrimination (UserId, Meters) |
-| **Opaque** | `Opaque<Base, Brand>` | Minimal | Hidden representation (Password, Token) |
-| **Refined** | `Refined<Base, R>` | Validation | Runtime constraints (Email, Port) |
+| Level       | Type                   | Runtime Cost | Use Case                                |
+| ----------- | ---------------------- | ------------ | --------------------------------------- |
+| **Newtype** | `Newtype<Base, Brand>` | Zero         | Type discrimination (UserId, Meters)    |
+| **Opaque**  | `Opaque<Base, Brand>`  | Minimal      | Hidden representation (Password, Token) |
+| **Refined** | `Refined<Base, R>`     | Validation   | Runtime constraints (Email, Port)       |
 
 ### Higher-Kinded Types (HKT)
 
@@ -179,6 +179,44 @@ type Quotient = Div<20, 4>; // 5
 type Remainder = Mod<17, 5>; // 2
 type Power = Pow<2, 8>; // 256
 ```
+
+### Length-Indexed Arrays (Vec)
+
+Arrays with compile-time known length — type-safe head/tail, concatenation, zip.
+
+```typescript
+import { Vec, type Add, type Sub } from "@ttfx/type-system";
+
+// Create length-indexed vectors
+const v3: Vec<number, 3> = Vec.from([1, 2, 3]);
+const v0: Vec<string, 0> = Vec.empty();
+const v5: Vec<number, 5> = Vec.fill(0, 5);
+
+// Length is part of the type
+const len: 3 = Vec.length(v3); // Type is literal 3, not number
+
+// Safe head/tail (compile error on empty)
+const first: number = Vec.head(v3); // ✓
+const rest: Vec<number, 2> = Vec.tail(v3); // ✓
+// Vec.head(v0);  // ✗ Compile error: Vec<string, 0> has no head
+
+// Type-preserving operations
+const v4: Vec<number, 4> = Vec.cons(0, v3); // Add<3, 1> = 4
+const v6: Vec<number, 6> = Vec.concat(v3, v3); // Add<3, 3> = 6
+const pairs: Vec<[number, string], 3> = Vec.zip(v3, Vec.from(["a", "b", "c"]));
+
+// Use with contracts: length is provable
+function processTriple(v: Vec<number, 3>): number {
+  requires(Vec.length(v) === 3); // PROVEN: type fact
+  return Vec.head(v) + Vec.last(v);
+}
+```
+
+Key properties for contract proofs:
+
+- `Vec<T, N>.length === N` (type fact)
+- `Vec.head(v)` is safe when `N > 0` (non-empty)
+- `Vec.concat(a, b)` produces `Vec<T, Add<N, M>>`
 
 ### Opaque Type Modules
 
@@ -267,6 +305,20 @@ assertPure(() => log("hello"));   // ✗ Compile error: log has IO effect
 - `Add`, `Sub`, `Mul`, `Div`, `Mod`, `Pow` — Operations
 - `Lt`, `Lte`, `Gt`, `Gte`, `Eq` — Comparisons
 - `Inc`, `Dec`, `Negate`, `Abs` — Unary operations
+
+### Length-Indexed Arrays
+
+- `Vec<T, N>` — Array of T with exactly N elements
+- `Vec.from(arr)` — Create from array (validates length at runtime)
+- `Vec.empty()` — Create empty Vec<T, 0>
+- `Vec.fill(value, n)` — Create Vec<T, N> filled with value
+- `Vec.cons(head, tail)` — Prepend element (N+1)
+- `Vec.snoc(init, last)` — Append element (N+1)
+- `Vec.concat(a, b)` — Concatenate (Add<N, M>)
+- `Vec.head(v)`, `Vec.last(v)` — First/last element (error on empty)
+- `Vec.tail(v)`, `Vec.init(v)` — Rest/prefix (Sub<N, 1>)
+- `Vec.zip(a, b)` — Zip two vectors of same length
+- `Vec.length(v)` — Get length as literal type N
 
 ### Opaque Types
 

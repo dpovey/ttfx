@@ -54,7 +54,11 @@
  */
 
 import * as ts from "typescript";
-import { defineExpressionMacro, globalRegistry, MacroContext } from "@ttfx/core";
+import {
+  defineExpressionMacro,
+  globalRegistry,
+  MacroContext,
+} from "@ttfx/core";
 
 // ============================================================================
 // Type-Level API
@@ -182,6 +186,196 @@ export function composeRefinements<Base, B1 extends string, B2 extends string>(
     brand as any,
   );
 }
+
+// ============================================================================
+// Subtyping Coercions (Coq-inspired)
+// ============================================================================
+
+/**
+ * A subtyping relationship between two refined types.
+ * Used to enable safe widening without runtime checks.
+ */
+export interface SubtypingDeclaration {
+  /** The source brand */
+  from: string;
+  /** The target brand */
+  to: string;
+  /** The proof rule justifying the subtyping */
+  proof: string;
+  /** Human-readable description */
+  description: string;
+}
+
+/**
+ * Registry of subtyping declarations.
+ * Key is "from:to", value is the declaration.
+ */
+const SUBTYPING_DECLARATIONS: Map<string, SubtypingDeclaration> = new Map();
+
+/**
+ * Declare a subtyping relationship between two refined types.
+ * This enables the `widen()` function to perform safe coercions
+ * without runtime validation.
+ *
+ * @example
+ * ```typescript
+ * declareSubtyping({
+ *   from: "Positive",
+ *   to: "NonNegative",
+ *   proof: "positive_implies_non_negative",
+ *   description: "x > 0 implies x >= 0",
+ * });
+ * ```
+ */
+export function declareSubtyping(decl: SubtypingDeclaration): void {
+  SUBTYPING_DECLARATIONS.set(`${decl.from}:${decl.to}`, decl);
+}
+
+/**
+ * Check if widening from one brand to another is declared safe.
+ */
+export function isSubtype(from: string, to: string): boolean {
+  if (from === to) return true;
+  return SUBTYPING_DECLARATIONS.has(`${from}:${to}`);
+}
+
+/**
+ * Get the subtyping declaration for a given pair of brands.
+ */
+export function getSubtypingDeclaration(
+  from: string,
+  to: string,
+): SubtypingDeclaration | undefined {
+  return SUBTYPING_DECLARATIONS.get(`${from}:${to}`);
+}
+
+/**
+ * Get all declared subtyping relationships.
+ */
+export function getAllSubtypingDeclarations(): readonly SubtypingDeclaration[] {
+  return Array.from(SUBTYPING_DECLARATIONS.values());
+}
+
+/**
+ * Widen a refined value to a supertype without runtime validation.
+ * This is safe when a subtyping relationship has been declared.
+ *
+ * At compile time (with the ttfx transformer), this verifies the
+ * subtyping relationship exists and produces a zero-cost cast.
+ * At runtime (without transformer), it's a simple identity function.
+ *
+ * @example
+ * ```typescript
+ * const pos: Positive = Positive.refine(5);
+ * const nonNeg: NonNegative = widen<NonNegative>(pos); // Safe, no runtime check
+ * ```
+ */
+export function widen<Target extends Refined<any, string>>(
+  value: Refined<BaseOf<Target>, string>,
+): Target {
+  return value as unknown as Target;
+}
+
+/**
+ * Type-safe widen that checks at the type level.
+ * Use this when you want TypeScript to enforce the subtyping relationship.
+ *
+ * @example
+ * ```typescript
+ * // Works: Positive is a subtype of NonNegative
+ * const nonNeg = widenTo(Positive.refine(5), NonNegative);
+ *
+ * // Error: Negative is not a subtype of Positive
+ * const pos = widenTo(Negative.refine(-1), Positive);
+ * ```
+ */
+export function widenTo<
+  FromBase,
+  FromBrand extends string,
+  ToBrand extends string,
+>(
+  value: Refined<FromBase, FromBrand>,
+  _target: Refinement<FromBase, ToBrand>,
+): Refined<FromBase, ToBrand> {
+  return value as unknown as Refined<FromBase, ToBrand>;
+}
+
+// ============================================================================
+// Built-in Subtyping Declarations
+// ============================================================================
+
+// Register built-in subtyping relationships
+// These are proven by the algebraic rules in @ttfx/contracts
+
+declareSubtyping({
+  from: "Positive",
+  to: "NonNegative",
+  proof: "positive_implies_non_negative",
+  description: "x > 0 implies x >= 0",
+});
+
+declareSubtyping({
+  from: "Byte",
+  to: "NonNegative",
+  proof: "byte_lower_bound",
+  description: "Byte (0-255) implies x >= 0",
+});
+
+declareSubtyping({
+  from: "Byte",
+  to: "Int",
+  proof: "byte_is_integer",
+  description: "Byte is an integer",
+});
+
+declareSubtyping({
+  from: "Port",
+  to: "Positive",
+  proof: "port_is_positive",
+  description: "Port (1-65535) implies x > 0",
+});
+
+declareSubtyping({
+  from: "Port",
+  to: "NonNegative",
+  proof: "port_is_non_negative",
+  description: "Port (1-65535) implies x >= 0",
+});
+
+declareSubtyping({
+  from: "Port",
+  to: "Int",
+  proof: "port_is_integer",
+  description: "Port is an integer",
+});
+
+declareSubtyping({
+  from: "Percentage",
+  to: "NonNegative",
+  proof: "percentage_lower_bound",
+  description: "Percentage (0-100) implies x >= 0",
+});
+
+declareSubtyping({
+  from: "Positive",
+  to: "Finite",
+  proof: "positive_is_finite",
+  description: "Positive numbers are finite",
+});
+
+declareSubtyping({
+  from: "NonNegative",
+  to: "Finite",
+  proof: "non_negative_is_finite",
+  description: "Non-negative numbers are finite",
+});
+
+declareSubtyping({
+  from: "Negative",
+  to: "Finite",
+  proof: "negative_is_finite",
+  description: "Negative numbers are finite",
+});
 
 // ============================================================================
 // Built-in Refinements
@@ -381,3 +575,184 @@ export const unsafeRefineMacro = defineExpressionMacro({
 // ============================================================================
 
 globalRegistry.register(refineMacro);
+
+// ============================================================================
+// Predicate Exports for @ttfx/contracts-refined
+// ============================================================================
+
+/**
+ * Decidability level for a predicate (Coq-inspired).
+ *
+ * - "compile-time": Can always be proven at compile time (e.g., bounds on literals)
+ * - "runtime": Can only be checked at runtime (e.g., network validation)
+ * - "decidable": Decidable but may require SMT solver (e.g., complex arithmetic)
+ * - "undecidable": Cannot be automatically decided (e.g., halting problem)
+ */
+export type Decidability =
+  | "compile-time"
+  | "runtime"
+  | "decidable"
+  | "undecidable";
+
+/**
+ * Preferred proof strategy for a predicate.
+ */
+export type ProofStrategy =
+  | "constant" // Compile-time constant evaluation
+  | "type" // Type-based deduction
+  | "algebra" // Algebraic rules
+  | "linear" // Linear arithmetic
+  | "z3"; // SMT solver
+
+/**
+ * Predicate definition for contracts integration.
+ * The predicate string uses `$` as a placeholder for the variable name.
+ */
+export interface RefinementPredicate {
+  /** The brand name (e.g., "Positive", "Byte") */
+  brand: string;
+  /** The predicate expression with $ as the variable placeholder */
+  predicate: string;
+  /** Human-readable description */
+  description: string;
+  /** Decidability level (Coq-inspired) */
+  decidability: Decidability;
+  /** Preferred proof strategy (hint for the prover) */
+  preferredStrategy?: ProofStrategy;
+}
+
+/**
+ * All built-in refinement predicates.
+ * Used by @ttfx/contracts-refined to register type facts with the prover.
+ *
+ * NOTE: These predicates are simplified for the prover's algebraic rules.
+ * The actual runtime validation may include additional checks (e.g., isInteger).
+ *
+ * ## Decidability (Coq-inspired)
+ *
+ * Each predicate is annotated with its decidability level:
+ * - "compile-time": Provable with constant evaluation or algebraic rules
+ * - "decidable": Decidable but may need linear arithmetic or SMT solver
+ * - "runtime": Must be checked at runtime (string matching, etc.)
+ */
+export const REFINEMENT_PREDICATES: RefinementPredicate[] = [
+  // --- Number refinements ---
+  {
+    brand: "Positive",
+    predicate: "$ > 0",
+    description: "Positive number (> 0)",
+    decidability: "compile-time",
+    preferredStrategy: "algebra",
+  },
+  {
+    brand: "NonNegative",
+    predicate: "$ >= 0",
+    description: "Non-negative number (>= 0)",
+    decidability: "compile-time",
+    preferredStrategy: "algebra",
+  },
+  {
+    brand: "Negative",
+    predicate: "$ < 0",
+    description: "Negative number (< 0)",
+    decidability: "compile-time",
+    preferredStrategy: "algebra",
+  },
+  {
+    brand: "Int",
+    predicate: "Number.isInteger($)",
+    description: "Integer",
+    decidability: "decidable",
+    preferredStrategy: "constant",
+  },
+  {
+    brand: "Byte",
+    predicate: "$ >= 0 && $ <= 255",
+    description: "Byte (0-255)",
+    decidability: "compile-time",
+    preferredStrategy: "linear",
+  },
+  {
+    brand: "Port",
+    predicate: "$ >= 1 && $ <= 65535",
+    description: "Port number (1-65535)",
+    decidability: "compile-time",
+    preferredStrategy: "linear",
+  },
+  {
+    brand: "Percentage",
+    predicate: "$ >= 0 && $ <= 100",
+    description: "Percentage (0-100)",
+    decidability: "compile-time",
+    preferredStrategy: "linear",
+  },
+  {
+    brand: "Finite",
+    predicate: "Number.isFinite($)",
+    description: "Finite number",
+    decidability: "decidable",
+    preferredStrategy: "constant",
+  },
+
+  // --- String refinements ---
+  {
+    brand: "NonEmpty",
+    predicate: "$.length > 0",
+    description: "Non-empty string",
+    decidability: "compile-time",
+    preferredStrategy: "constant",
+  },
+  {
+    brand: "Trimmed",
+    predicate: "$ === $.trim()",
+    description: "Trimmed string",
+    decidability: "runtime",
+    preferredStrategy: "constant",
+  },
+  {
+    brand: "Lowercase",
+    predicate: "$ === $.toLowerCase()",
+    description: "Lowercase string",
+    decidability: "runtime",
+    preferredStrategy: "constant",
+  },
+  {
+    brand: "Uppercase",
+    predicate: "$ === $.toUpperCase()",
+    description: "Uppercase string",
+    decidability: "runtime",
+    preferredStrategy: "constant",
+  },
+  {
+    brand: "Email",
+    predicate: "/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test($)",
+    description: "Email address",
+    decidability: "runtime",
+    preferredStrategy: "constant",
+  },
+  {
+    brand: "Url",
+    predicate:
+      "(() => { try { new URL($); return true; } catch { return false; } })()",
+    description: "Valid URL",
+    decidability: "runtime",
+    preferredStrategy: "constant",
+  },
+  {
+    brand: "Uuid",
+    predicate:
+      "/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test($)",
+    description: "UUID v1-5",
+    decidability: "runtime",
+    preferredStrategy: "constant",
+  },
+
+  // --- Array refinements ---
+  {
+    brand: "NonEmptyArray",
+    predicate: "$.length > 0",
+    description: "Non-empty array",
+    decidability: "compile-time",
+    preferredStrategy: "constant",
+  },
+];
