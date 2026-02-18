@@ -55,32 +55,42 @@
 export * from "@ttfx/core";
 
 // ============================================================================
-// Built-in macros (imported as namespaces to avoid conflicts)
+// Built-in macros (namespaces)
 // ============================================================================
 
 // Compile-time evaluation
-import * as comptime from "@ttfx/comptime";
-export { comptime };
+import * as comptimeNs from "@ttfx/comptime";
+export { comptimeNs as comptime };
 
 // Reflection and introspection
-import * as reflect from "@ttfx/reflect";
-export { reflect };
+import * as reflectNs from "@ttfx/reflect";
+export { reflectNs as reflect };
 
 // Derive macros (@derive(Eq, Ord, Debug, ...))
-import * as derive from "@ttfx/derive";
-export { derive };
+import * as deriveNs from "@ttfx/derive";
+export { deriveNs as derive };
 
 // Operator overloading (@operators, ops, pipe, compose)
-import * as operators from "@ttfx/operators";
-export { operators };
+import * as operatorsNs from "@ttfx/operators";
+export { operatorsNs as operators };
 
 // Scala 3-style typeclasses (@typeclass, @instance, @deriving, summon, extend)
-import * as typeclass from "@ttfx/typeclass";
-export { typeclass };
+import * as typeclassNs from "@ttfx/typeclass";
+export { typeclassNs as typeclass };
 
 // Zero-cost specialization (specialize, mono, inlineCall)
-import * as specialize from "@ttfx/specialize";
-export { specialize };
+import * as specializeNs from "@ttfx/specialize";
+export { specializeNs as specialize };
+
+// ============================================================================
+// Direct exports of commonly used callable macros
+// ============================================================================
+
+// Re-export the callable comptime function directly
+export { comptime as comptimeEval } from "@ttfx/comptime";
+
+// Re-export operator functions directly
+export { ops, pipe, compose } from "@ttfx/operators";
 
 // ============================================================================
 // Register all macros function
@@ -91,10 +101,10 @@ export { specialize };
  * Call this at the start of your build to enable all built-in macros.
  */
 export function registerAllMacros(): void {
-  comptime.register();
-  reflect.register();
-  derive.register();
-  operators.register();
-  typeclass.register();
-  specialize.register();
+  comptimeNs.register();
+  reflectNs.register();
+  deriveNs.register();
+  operatorsNs.register();
+  typeclassNs.register();
+  specializeNs.register();
 }

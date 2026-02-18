@@ -352,5 +352,34 @@ export function register(): void {
   globalRegistry.register(comptimeMacro);
 }
 
+/**
+ * Compile-time evaluation macro.
+ *
+ * Evaluates the given expression or function at compile time and replaces
+ * the call with the computed result.
+ *
+ * @example
+ * ```ts
+ * const factorial5 = comptime(() => {
+ *   let result = 1;
+ *   for (let i = 1; i <= 5; i++) result *= i;
+ *   return result;
+ * }); // becomes: const factorial5 = 120;
+ * ```
+ *
+ * Note: This function is a placeholder that gets replaced by the macro
+ * transformer. If you see a runtime error from this function, the
+ * transformer is not configured correctly.
+ */
+export function comptime<T>(expr: () => T): T;
+export function comptime<T>(expr: T): T;
+export function comptime<T>(expr: T | (() => T)): T {
+  throw new Error(
+    "comptime() was called at runtime. " +
+    "This indicates the ttfx transformer is not configured correctly. " +
+    "Please ensure your build tool is configured to use the ttfx transformer.",
+  );
+}
+
 // Auto-register when this module is imported
 register();
