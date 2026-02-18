@@ -5,11 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as ts from "typescript";
 import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
-import {
-  config,
-  defineConfig,
-  type TtfxConfig,
-} from "../src/core/config.js";
+import { config, defineConfig, type TtfxConfig } from "../src/core/config.js";
 
 // ============================================================================
 // Test Helpers
@@ -230,14 +226,18 @@ describe("config.evaluate", () => {
   });
 
   it("should handle complex nested expressions", () => {
-    config.set({ 
-      debug: true, 
+    config.set({
+      debug: true,
       contracts: { mode: "full" },
-      features: { experimental: true }
+      features: { experimental: true },
     });
     expect(config.evaluate("debug && contracts.mode == 'full'")).toBe(true);
     expect(config.evaluate("!debug || features.experimental")).toBe(true);
-    expect(config.evaluate("(debug && features.experimental) || contracts.mode == 'none'")).toBe(true);
+    expect(
+      config.evaluate(
+        "(debug && features.experimental) || contracts.mode == 'none'",
+      ),
+    ).toBe(true);
   });
 });
 
@@ -286,8 +286,14 @@ describe("config.when", () => {
     let elseCalled = false;
     const result = config.when(
       "debug",
-      () => { thenCalled = true; return "then"; },
-      () => { elseCalled = true; return "else"; }
+      () => {
+        thenCalled = true;
+        return "then";
+      },
+      () => {
+        elseCalled = true;
+        return "else";
+      },
     );
     expect(thenCalled).toBe(false);
     expect(elseCalled).toBe(true);
@@ -297,17 +303,18 @@ describe("config.when", () => {
   it("should not call factory when not needed", () => {
     config.set({ debug: true });
     let elseCalled = false;
-    config.when(
-      "debug",
-      "yes",
-      () => { elseCalled = true; return "no"; }
-    );
+    config.when("debug", "yes", () => {
+      elseCalled = true;
+      return "no";
+    });
     expect(elseCalled).toBe(false);
   });
 
   it("should work with complex conditions", () => {
     config.set({ debug: true, contracts: { mode: "full" } });
-    expect(config.when("debug && contracts.mode == 'full'", "both", "not")).toBe("both");
+    expect(
+      config.when("debug && contracts.mode == 'full'", "both", "not"),
+    ).toBe("both");
   });
 });
 
@@ -418,9 +425,9 @@ describe("config.reset", () => {
     config.set({ debug: true, custom: "value" });
     expect(config.get("debug")).toBe(true);
     expect(config.get("custom")).toBe("value");
-    
+
     config.reset();
-    
+
     expect(config.get("debug")).toBe(false);
     expect(config.get("custom")).toBeUndefined();
   });
@@ -450,14 +457,14 @@ describe("edge cases", () => {
   });
 
   it("should handle deeply nested config", () => {
-    config.set({ 
-      a: { 
-        b: { 
-          c: { 
-            d: true 
-          } 
-        } 
-      } 
+    config.set({
+      a: {
+        b: {
+          c: {
+            d: true,
+          },
+        },
+      },
     });
     expect(config.get("a.b.c.d")).toBe(true);
     expect(config.has("a.b.c.d")).toBe(true);

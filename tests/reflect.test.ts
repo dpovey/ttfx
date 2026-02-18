@@ -1,8 +1,13 @@
 /**
  * Tests for compile-time reflection macros
+ *
+ * This test file demonstrates dogfooding @ttfx/testing macros:
+ * - assert() for power assertions with sub-expression capture
+ * - typeAssert<>() for compile-time type checks
  */
 
 import { describe, it, expect } from "vitest";
+import { assert, typeAssert, type Equal, type Extends } from "@ttfx/testing";
 import type { TypeInfo, FieldInfo, MethodInfo } from "../src/macros/reflect.js";
 
 describe("TypeInfo structure", () => {
@@ -16,8 +21,8 @@ describe("TypeInfo structure", () => {
         typeParameters: [],
       };
 
-      expect(info.name).toBe("User");
-      expect(info.kind).toBe("interface");
+      assert(info.name === "User");
+      assert(info.kind === "interface");
     });
 
     it("should capture fields with types", () => {
@@ -33,10 +38,10 @@ describe("TypeInfo structure", () => {
         typeParameters: [],
       };
 
-      expect(info.fields).toHaveLength(3);
-      expect(info.fields[0].name).toBe("id");
-      expect(info.fields[0].type).toBe("number");
-      expect(info.fields[2].optional).toBe(true);
+      assert(info.fields.length === 3);
+      assert(info.fields[0].name === "id");
+      assert(info.fields[0].type === "number");
+      assert(info.fields[2].optional === true);
     });
 
     it("should capture methods with signatures", () => {
@@ -59,9 +64,9 @@ describe("TypeInfo structure", () => {
         typeParameters: [],
       };
 
-      expect(info.methods).toHaveLength(2);
-      expect(info.methods[0].name).toBe("findById");
-      expect(info.methods[0].parameters[0].name).toBe("id");
+      assert(info.methods.length === 2);
+      assert(info.methods[0].name === "findById");
+      assert(info.methods[0].parameters[0].name === "id");
     });
 
     it("should capture type parameters", () => {
@@ -73,6 +78,7 @@ describe("TypeInfo structure", () => {
         typeParameters: ["T", "E"],
       };
 
+      // Use toEqual for deep array comparison
       expect(info.typeParameters).toEqual(["T", "E"]);
     });
   });
@@ -86,7 +92,7 @@ describe("FieldInfo structure", () => {
       optional: false,
     };
 
-    expect(field.optional).toBe(false);
+    assert(field.optional === false);
   });
 
   it("should represent optional fields", () => {
@@ -96,7 +102,7 @@ describe("FieldInfo structure", () => {
       optional: true,
     };
 
-    expect(field.optional).toBe(true);
+    assert(field.optional === true);
   });
 
   it("should capture readonly modifier", () => {
@@ -107,7 +113,7 @@ describe("FieldInfo structure", () => {
       readonly: true,
     };
 
-    expect(field.readonly).toBe(true);
+    assert(field.readonly === true);
   });
 });
 
@@ -119,8 +125,8 @@ describe("MethodInfo structure", () => {
       returnType: "string",
     };
 
-    expect(method.parameters).toHaveLength(0);
-    expect(method.returnType).toBe("string");
+    assert(method.parameters.length === 0);
+    assert(method.returnType === "string");
   });
 
   it("should capture method with multiple parameters", () => {
@@ -133,8 +139,8 @@ describe("MethodInfo structure", () => {
       returnType: "boolean",
     };
 
-    expect(method.parameters).toHaveLength(2);
-    expect(method.parameters[1].name).toBe("max");
+    assert(method.parameters.length === 2);
+    assert(method.parameters[1].name === "max");
   });
 });
 
@@ -147,10 +153,10 @@ describe("Reflection use cases", () => {
         boolean: (v) => typeof v === "boolean",
       };
 
-      expect(fieldValidators.number(42)).toBe(true);
-      expect(fieldValidators.number("42")).toBe(false);
-      expect(fieldValidators.string("hello")).toBe(true);
-      expect(fieldValidators.boolean(false)).toBe(true);
+      assert(fieldValidators.number(42) === true);
+      assert(fieldValidators.number("42") === false);
+      assert(fieldValidators.string("hello") === true);
+      assert(fieldValidators.boolean(false) === true);
     });
 
     it("should validate objects against TypeInfo", () => {
@@ -185,9 +191,9 @@ describe("Reflection use cases", () => {
         return true;
       };
 
-      expect(validate({ id: 1, name: "John" }, userInfo)).toBe(true);
-      expect(validate({ id: "1", name: "John" }, userInfo)).toBe(false);
-      expect(validate({ name: "John" }, userInfo)).toBe(false); // missing id
+      assert(validate({ id: 1, name: "John" }, userInfo) === true);
+      assert(validate({ id: "1", name: "John" }, userInfo) === false);
+      assert(validate({ name: "John" }, userInfo) === false); // missing id
     });
   });
 
@@ -215,7 +221,7 @@ describe("Reflection use cases", () => {
       const extracted = extractFields(obj, fields);
 
       expect(extracted).toEqual({ id: 1, name: "John" });
-      expect("password" in extracted).toBe(false);
+      assert(!("password" in extracted));
     });
   });
 
@@ -286,7 +292,7 @@ describe("Reflection for different type kinds", () => {
         typeParameters: [],
       };
 
-      expect(info.kind).toBe("interface");
+      assert(info.kind === "interface");
     });
   });
 
@@ -307,8 +313,8 @@ describe("Reflection for different type kinds", () => {
         typeParameters: [],
       };
 
-      expect(info.kind).toBe("class");
-      expect(info.methods).toHaveLength(2);
+      assert(info.kind === "class");
+      assert(info.methods.length === 2);
     });
   });
 
@@ -322,7 +328,7 @@ describe("Reflection for different type kinds", () => {
         typeParameters: [],
       };
 
-      expect(info.kind).toBe("type");
+      assert(info.kind === "type");
     });
   });
 
@@ -343,8 +349,25 @@ describe("Reflection for different type kinds", () => {
         typeParameters: ["T"],
       };
 
-      expect(info.typeParameters).toContain("T");
-      expect(info.fields[0].type).toBe("T");
+      assert(info.typeParameters.includes("T"));
+      assert(info.fields[0].type === "T");
     });
+  });
+});
+
+// Type-level assertions
+describe("type-level assertions", () => {
+  it("TypeInfo has expected shape", () => {
+    typeAssert<Extends<TypeInfo, { name: string; kind: string }>>();
+  });
+
+  it("FieldInfo has expected shape", () => {
+    typeAssert<
+      Extends<FieldInfo, { name: string; type: string; optional: boolean }>
+    >();
+  });
+
+  it("MethodInfo has expected shape", () => {
+    typeAssert<Extends<MethodInfo, { name: string; returnType: string }>>();
   });
 });
