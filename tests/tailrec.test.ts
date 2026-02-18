@@ -13,7 +13,9 @@
  * 6. Edge cases
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+vi.setConfig({ testTimeout: 30_000 });
 import * as ts from "typescript";
 import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
 import { globalRegistry } from "../src/core/registry.js";

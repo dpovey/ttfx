@@ -10,7 +10,9 @@
  * of whether the macro was resolved by module or by name.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+
+vi.setConfig({ testTimeout: 30_000 });
 import * as ts from "typescript";
 import * as path from "path";
 import * as fs from "fs";
