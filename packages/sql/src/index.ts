@@ -1,32 +1,152 @@
 /**
- * @ttfx/sql - Doobie-like Type-Safe SQL DSL
+ * @ttfx/sql — Doobie-like Type-Safe SQL DSL
  *
- * This module provides:
- * - Fragment class for composable SQL building
- * - Query and Update wrappers with type branding
- * - ConnectionIO for pure database operation descriptions
- * - Transactor for interpreting ConnectionIO programs
- * - sql`` macro for compile-time SQL validation
+ * A comprehensive SQL library for TypeScript with:
+ *
+ * ## Fragment System
+ * - Composable SQL fragments with typed parameters
+ * - Zero-cost abstractions via compile-time specialization
+ * - AND/OR combinators, IN lists, VALUES clauses, conditional fragments
+ *
+ * ## Type Inference
+ * - `sql$` macro for compile-time type derivation from SQL
+ * - `@derive(Meta)` for automatic encoder/decoder generation
+ * - Schema-based result type inference
+ *
+ * ## Pure Database Operations
+ * - `ConnectionIO` free monad for composable, pure database code
+ * - Transaction support with automatic rollback
+ * - Error handling combinators
+ *
+ * ## Meta/Get/Put Typeclasses
+ * - Type-safe SQL ↔ TypeScript mapping
+ * - Primitive instances (string, number, boolean, Date, etc.)
+ * - Composite constructors (nullable, optional, array)
  *
  * @example
  * ```typescript
- * import { sql, Fragment, Query, Transactor } from "@ttfx/sql";
+ * import { sql$, ConnectionIO, Transactor } from "@ttfx/sql";
  *
- * const name = "Alice";
- * const age = 30;
+ * // Type-safe query with inferred types
+ * const findUser = sql$<User>`
+ *   SELECT id, name, email FROM users WHERE id = ${userId}
+ * `;
  *
- * const query = sql`SELECT * FROM users WHERE name = ${name} AND age > ${age}`;
- * console.log(query.text);   // "SELECT * FROM users WHERE name = $1 AND age > $2"
- * console.log(query.params); // ["Alice", 30]
+ * // Pure database program
+ * const program = ConnectionIO.query(findUser.query(), UserMeta)
+ *   .flatMap(user => user
+ *     ? ConnectionIO.pure(user)
+ *     : ConnectionIO.execute(insertDefaultUser));
+ *
+ * // Execute with transaction
+ * const result = await transactor.transact(program);
  * ```
+ *
+ * @module
  */
 
-// Re-export types and classes
-export type { SqlParam, DbConnection } from "./types.js";
-export { Fragment, Query, Update, ConnectionIO, Transactor } from "./types.js";
+// ============================================================================
+// Core Types (Basic Fragment System)
+// ============================================================================
 
-// Re-export macro
+export type { SqlParam } from "./types.js";
+export { Fragment, Query, Update } from "./types.js";
+
+// Legacy ConnectionIO/Transactor (simple, lightweight)
+export {
+  ConnectionIO as SimpleConnectionIO,
+  Transactor as SimpleTransactor,
+} from "./types.js";
+export type { DbConnection as SimpleDbConnection } from "./types.js";
+
+// ============================================================================
+// Meta/Get/Put Typeclasses — Doobie-style type mapping
+// ============================================================================
+
+export type {
+  Get,
+  Put,
+  Meta,
+  Read,
+  Write,
+  SqlRow,
+  SqlTypeName,
+  MetaType,
+  GetType,
+  PutType,
+  ReadType,
+  WriteType,
+} from "./meta.js";
+
+export {
+  makeGet,
+  makePut,
+  makeMeta,
+  stringMeta,
+  numberMeta,
+  intMeta,
+  bigintMeta,
+  booleanMeta,
+  dateMeta,
+  dateOnlyMeta,
+  uuidMeta,
+  jsonMeta,
+  bufferMeta,
+  nullable,
+  optional,
+  arrayMeta,
+} from "./meta.js";
+
+// ============================================================================
+// Typed Fragments — Type-tracked SQL composition
+// ============================================================================
+
+export type { Concat, Empty, Unit } from "./typed-fragment.js";
+
+export {
+  TypedFragment,
+  TypedQuery,
+  TypedUpdate,
+  emptyTyped,
+  intercalateTyped,
+  andTyped,
+  orTyped,
+  commasTyped,
+  inListTyped,
+  valuesTyped,
+  valuesManyTyped,
+  setTyped,
+  whenTyped,
+  whereAndTyped,
+} from "./typed-fragment.js";
+
+// ============================================================================
+// ConnectionIO — Enhanced Pure Database Operations (Free Monad)
+// ============================================================================
+
+export type { ConnectionOp, Either, DbConnection } from "./connection-io.js";
+
+export {
+  ConnectionIO,
+  Transactor,
+  Left,
+  Right,
+  sequence,
+  traverse,
+  parZip,
+  parSequence,
+  when,
+  whenA,
+  unfold,
+} from "./connection-io.js";
+
+// ============================================================================
+// Macros — Compile-time SQL transformation
+// ============================================================================
+
 export { sqlMacro, register } from "./macro.js";
+export { sql$Macro, schemaMacro, select, registerSchema } from "./infer-macro.js";
+export { deriveMetaMacro } from "./derive-meta.js";
 
 // ============================================================================
 // Runtime Helper (used by the sql macro)
