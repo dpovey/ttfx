@@ -68,7 +68,7 @@ export function foldableLaws<F, A, M>(
         return EqM.eqv(viaFoldRight, viaFoldLeft);
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 /**
@@ -97,5 +97,5 @@ export function foldableOrderLaws<F, A>(Fld: Foldable<F>, EqA: Eq<A>): LawSet {
         return leftList.every((a, i) => EqA.eqv(a, rightList[i]));
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

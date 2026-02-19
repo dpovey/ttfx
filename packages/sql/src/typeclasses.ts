@@ -58,10 +58,9 @@
  * @module
  */
 
-import {
-  registerInstanceMethods,
-  registerInstanceMethodsFromAST,
-} from "../../../src/macros/specialize.js";
+// Note: specialize integration (registerInstanceMethods) is handled by the
+// derive macros at compile time. The primitive instances are registered
+// via the @instance decorator pattern in the macro system.
 
 // ============================================================================
 // SQL Types
@@ -130,200 +129,169 @@ export interface Get<A> {
   readonly sqlTypes: readonly SqlTypeName[];
 }
 
+// Helper function to create Get instances (defined before companion to avoid circular reference)
+function makeGet<A>(
+  decode: (value: unknown) => A | null,
+  sqlTypes: readonly SqlTypeName[],
+): Get<A> {
+  return {
+    _tag: "Get",
+    get: decode,
+    unsafeGet: (value: unknown): A => {
+      const result = decode(value);
+      if (result === null) {
+        throw new Error(`Unexpected NULL value`);
+      }
+      return result;
+    },
+    sqlTypes,
+  };
+}
+
+// Pre-create primitive instances to avoid circular reference in companion object
+const _getString: Get<string> = makeGet(
+  (v: unknown) => (typeof v === "string" ? v : v === null ? null : String(v)),
+  ["TEXT", "VARCHAR", "CHAR"],
+);
+
+const _getNumber: Get<number> = makeGet(
+  (v: unknown) => (typeof v === "number" ? v : v === null ? null : Number(v)),
+  [
+    "INTEGER",
+    "INT",
+    "BIGINT",
+    "SMALLINT",
+    "REAL",
+    "DOUBLE PRECISION",
+    "NUMERIC",
+    "DECIMAL",
+  ],
+);
+
+const _getInt: Get<number> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isInteger(n) ? n : Math.trunc(n);
+}, ["INTEGER", "INT", "BIGINT", "SMALLINT"]);
+
+const _getBigint: Get<bigint> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  if (typeof v === "bigint") return v;
+  if (typeof v === "number") return BigInt(Math.trunc(v));
+  if (typeof v === "string") return BigInt(v);
+  return null;
+}, ["BIGINT"]);
+
+const _getBoolean: Get<boolean> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  if (typeof v === "boolean") return v;
+  if (v === "t" || v === "true" || v === 1) return true;
+  if (v === "f" || v === "false" || v === 0) return false;
+  return Boolean(v);
+}, ["BOOLEAN"]);
+
+const _getDate: Get<Date> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  if (v instanceof Date) return v;
+  if (typeof v === "string" || typeof v === "number") {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}, ["DATE", "TIME", "TIMESTAMP", "TIMESTAMPTZ"]);
+
+const _getDateOnly: Get<Date> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  if (v instanceof Date) return v;
+  if (typeof v === "string") {
+    const d = new Date(v + "T00:00:00Z");
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}, ["DATE"]);
+
+const _getUuid: Get<string> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  if (typeof v === "string") {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(v) ? v : null;
+  }
+  return null;
+}, ["UUID"]);
+
+const _getJson: Get<unknown> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  if (typeof v === "string") {
+    try {
+      return JSON.parse(v);
+    } catch {
+      return null;
+    }
+  }
+  return v;
+}, ["JSON", "JSONB"]);
+
+const _getBuffer: Get<Buffer> = makeGet((v: unknown) => {
+  if (v === null) return null;
+  if (Buffer.isBuffer(v)) return v;
+  if (typeof v === "string") {
+    return Buffer.from(v.replace(/^\\x/, ""), "hex");
+  }
+  return null;
+}, ["BYTEA"]);
+
 /** Get typeclass companion with constructors and combinators */
 export const Get = {
-  /**
-   * Create a Get instance from a decoder function.
-   */
-  make<A>(
-    decode: (value: unknown) => A | null,
-    sqlTypes: readonly SqlTypeName[],
-  ): Get<A> {
-    return {
-      _tag: "Get",
-      get: decode,
-      unsafeGet: (value: unknown) => {
-        const result = decode(value);
-        if (result === null) {
-          throw new Error(`Unexpected NULL value`);
-        }
-        return result;
-      },
-      sqlTypes,
-    };
-  },
+  /** Create a Get instance from a decoder function. */
+  make: makeGet,
 
-  /**
-   * Functor map — transform the output type.
-   * Used to derive Get instances for newtypes.
-   */
+  /** Functor map — transform the output type. */
   map<A, B>(ga: Get<A>, f: (a: A) => B): Get<B> {
-    return Get.make((v) => {
+    return makeGet((v: unknown) => {
       const a = ga.get(v);
       return a === null ? null : f(a);
     }, ga.sqlTypes);
   },
 
-  /**
-   * Make a Get nullable — handle SQL NULL explicitly.
-   */
+  /** Make a Get nullable — handle SQL NULL explicitly. */
   nullable<A>(ga: Get<A>): Get<A | null> {
-    return Get.make(
-      (v) => (v === null ? null : ga.get(v)),
+    return makeGet(
+      (v: unknown) => (v === null ? null : ga.get(v)),
       [...ga.sqlTypes, "NULL"],
     );
   },
 
-  /**
-   * Make a Get optional — map NULL to undefined.
-   */
+  /** Make a Get optional — map NULL to undefined. */
   optional<A>(ga: Get<A>): Get<A | undefined> {
-    return Get.make(
-      (v) =>
+    return makeGet(
+      (v: unknown) =>
         v === null || v === undefined ? undefined : (ga.get(v) ?? undefined),
       [...ga.sqlTypes, "NULL"],
     );
   },
 
-  // --------------------------------------------------------------------------
   // Primitive Instances
-  // --------------------------------------------------------------------------
-
-  /** Get instance for strings */
-  string: Get.make(
-    (v) => (typeof v === "string" ? v : v === null ? null : String(v)),
-    ["TEXT", "VARCHAR", "CHAR"],
-  ),
-
-  /** Get instance for numbers */
-  number: Get.make(
-    (v) => (typeof v === "number" ? v : v === null ? null : Number(v)),
-    [
-      "INTEGER",
-      "INT",
-      "BIGINT",
-      "SMALLINT",
-      "REAL",
-      "DOUBLE PRECISION",
-      "NUMERIC",
-      "DECIMAL",
-    ],
-  ),
-
-  /** Get instance for integers */
-  int: Get.make(
-    (v) => {
-      if (v === null) return null;
-      const n = typeof v === "number" ? v : Number(v);
-      return Number.isInteger(n) ? n : Math.trunc(n);
-    },
-    ["INTEGER", "INT", "BIGINT", "SMALLINT"],
-  ),
-
-  /** Get instance for bigints */
-  bigint: Get.make(
-    (v) => {
-      if (v === null) return null;
-      if (typeof v === "bigint") return v;
-      if (typeof v === "number") return BigInt(Math.trunc(v));
-      if (typeof v === "string") return BigInt(v);
-      return null;
-    },
-    ["BIGINT"],
-  ),
-
-  /** Get instance for booleans */
-  boolean: Get.make(
-    (v) => {
-      if (v === null) return null;
-      if (typeof v === "boolean") return v;
-      if (v === "t" || v === "true" || v === 1) return true;
-      if (v === "f" || v === "false" || v === 0) return false;
-      return Boolean(v);
-    },
-    ["BOOLEAN"],
-  ),
-
-  /** Get instance for Date */
-  date: Get.make(
-    (v) => {
-      if (v === null) return null;
-      if (v instanceof Date) return v;
-      if (typeof v === "string" || typeof v === "number") {
-        const d = new Date(v);
-        return isNaN(d.getTime()) ? null : d;
-      }
-      return null;
-    },
-    ["DATE", "TIME", "TIMESTAMP", "TIMESTAMPTZ"],
-  ),
-
-  /** Get instance for date-only (no time component) */
-  dateOnly: Get.make(
-    (v) => {
-      if (v === null) return null;
-      if (v instanceof Date) return v;
-      if (typeof v === "string") {
-        const d = new Date(v + "T00:00:00Z");
-        return isNaN(d.getTime()) ? null : d;
-      }
-      return null;
-    },
-    ["DATE"],
-  ),
-
-  /** Get instance for UUIDs */
-  uuid: Get.make(
-    (v) => {
-      if (v === null) return null;
-      if (typeof v === "string") {
-        const uuidRegex =
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        return uuidRegex.test(v) ? v : null;
-      }
-      return null;
-    },
-    ["UUID"],
-  ),
-
-  /** Get instance for JSON */
-  json: Get.make(
-    (v) => {
-      if (v === null) return null;
-      if (typeof v === "string") {
-        try {
-          return JSON.parse(v);
-        } catch {
-          return null;
-        }
-      }
-      return v;
-    },
-    ["JSON", "JSONB"],
-  ),
+  string: _getString,
+  number: _getNumber,
+  int: _getInt,
+  bigint: _getBigint,
+  boolean: _getBoolean,
+  date: _getDate,
+  dateOnly: _getDateOnly,
+  uuid: _getUuid,
+  json: _getJson,
+  buffer: _getBuffer,
 
   /** Get instance for typed JSON */
   jsonAs<A>(): Get<A> {
-    return Get.json as Get<A>;
+    return _getJson as Get<A>;
   },
-
-  /** Get instance for Buffer */
-  buffer: Get.make(
-    (v) => {
-      if (v === null) return null;
-      if (Buffer.isBuffer(v)) return v;
-      if (typeof v === "string") {
-        return Buffer.from(v.replace(/^\\x/, ""), "hex");
-      }
-      return null;
-    },
-    ["BYTEA"],
-  ),
 
   /** Get instance for arrays */
   array<A>(element: Get<A>): Get<A[]> {
-    return Get.make(
-      (v) => {
+    return makeGet(
+      (v: unknown) => {
         if (v === null) return null;
         if (!Array.isArray(v)) return null;
         const result: A[] = [];
@@ -366,83 +334,67 @@ export interface Put<A> {
   readonly sqlType: SqlTypeName;
 }
 
+// Helper function to create Put instances (defined before companion to avoid circular reference)
+function makePut<A>(encode: (value: A) => unknown, sqlType: SqlTypeName): Put<A> {
+  return {
+    _tag: "Put",
+    put: encode,
+    sqlType,
+  };
+}
+
+// Pre-create primitive Put instances
+const _putString: Put<string> = makePut((v: string) => v, "TEXT");
+const _putNumber: Put<number> = makePut((v: number) => v, "NUMERIC");
+const _putInt: Put<number> = makePut((v: number) => Math.trunc(v), "INTEGER");
+const _putBigint: Put<bigint> = makePut((v: bigint) => v.toString(), "BIGINT");
+const _putBoolean: Put<boolean> = makePut((v: boolean) => v, "BOOLEAN");
+const _putDate: Put<Date> = makePut((v: Date) => v.toISOString(), "TIMESTAMPTZ");
+const _putDateOnly: Put<Date> = makePut((v: Date) => v.toISOString().split("T")[0], "DATE");
+const _putUuid: Put<string> = makePut((v: string) => v, "UUID");
+const _putJson: Put<unknown> = makePut((v: unknown) => JSON.stringify(v), "JSONB");
+const _putBuffer: Put<Buffer> = makePut((v: Buffer) => v, "BYTEA");
+
 /** Put typeclass companion with constructors and combinators */
 export const Put = {
-  /**
-   * Create a Put instance from an encoder function.
-   */
-  make<A>(encode: (value: A) => unknown, sqlType: SqlTypeName): Put<A> {
-    return {
-      _tag: "Put",
-      put: encode,
-      sqlType,
-    };
-  },
+  /** Create a Put instance from an encoder function. */
+  make: makePut,
 
-  /**
-   * Contravariant contramap — transform the input type.
-   * Used to derive Put instances for newtypes.
-   */
+  /** Contravariant contramap — transform the input type. */
   contramap<A, B>(pa: Put<A>, f: (b: B) => A): Put<B> {
-    return Put.make((b) => pa.put(f(b)), pa.sqlType);
+    return makePut((b: B) => pa.put(f(b)), pa.sqlType);
   },
 
-  /**
-   * Make a Put nullable.
-   */
+  /** Make a Put nullable. */
   nullable<A>(pa: Put<A>): Put<A | null> {
-    return Put.make((v) => (v === null ? null : pa.put(v)), pa.sqlType);
+    return makePut((v: A | null) => (v === null ? null : pa.put(v)), pa.sqlType);
   },
 
-  /**
-   * Make a Put optional.
-   */
+  /** Make a Put optional. */
   optional<A>(pa: Put<A>): Put<A | undefined> {
-    return Put.make((v) => (v === undefined ? null : pa.put(v)), pa.sqlType);
+    return makePut((v: A | undefined) => (v === undefined ? null : pa.put(v)), pa.sqlType);
   },
 
-  // --------------------------------------------------------------------------
   // Primitive Instances
-  // --------------------------------------------------------------------------
-
-  /** Put instance for strings */
-  string: Put.make((v: string) => v, "TEXT"),
-
-  /** Put instance for numbers */
-  number: Put.make((v: number) => v, "NUMERIC"),
-
-  /** Put instance for integers */
-  int: Put.make((v: number) => Math.trunc(v), "INTEGER"),
-
-  /** Put instance for bigints */
-  bigint: Put.make((v: bigint) => v.toString(), "BIGINT"),
-
-  /** Put instance for booleans */
-  boolean: Put.make((v: boolean) => v, "BOOLEAN"),
-
-  /** Put instance for Date */
-  date: Put.make((v: Date) => v.toISOString(), "TIMESTAMPTZ"),
-
-  /** Put instance for date-only */
-  dateOnly: Put.make((v: Date) => v.toISOString().split("T")[0], "DATE"),
-
-  /** Put instance for UUIDs */
-  uuid: Put.make((v: string) => v, "UUID"),
-
-  /** Put instance for JSON */
-  json: Put.make((v: unknown) => JSON.stringify(v), "JSONB"),
+  string: _putString,
+  number: _putNumber,
+  int: _putInt,
+  bigint: _putBigint,
+  boolean: _putBoolean,
+  date: _putDate,
+  dateOnly: _putDateOnly,
+  uuid: _putUuid,
+  json: _putJson,
+  buffer: _putBuffer,
 
   /** Put instance for typed JSON */
   jsonAs<A>(): Put<A> {
-    return Put.json as Put<A>;
+    return _putJson as Put<A>;
   },
-
-  /** Put instance for Buffer */
-  buffer: Put.make((v: Buffer) => v, "BYTEA"),
 
   /** Put instance for arrays */
   array<A>(element: Put<A>): Put<A[]> {
-    return Put.make((v) => v.map((item) => element.put(item)), "ARRAY");
+    return makePut((v: A[]) => v.map((item: A) => element.put(item)), "ARRAY");
   },
 } as const;
 
@@ -468,87 +420,86 @@ export const Put = {
  * );
  * ```
  */
-export interface Meta<A> extends Get<A>, Put<A> {
+export interface Meta<A> extends Omit<Get<A>, '_tag'>, Omit<Put<A>, '_tag'> {
   readonly _tag: "Meta";
 }
 
+// Helper function to create Meta instances (defined before companion to avoid circular reference)
+function metaFromGetPut<A>(get: Get<A>, put: Put<A>): Meta<A> {
+  return {
+    _tag: "Meta",
+    get: get.get,
+    unsafeGet: get.unsafeGet,
+    sqlTypes: get.sqlTypes,
+    put: put.put,
+    sqlType: put.sqlType,
+  };
+}
+
+// Pre-create primitive Meta instances
+const _metaString: Meta<string> = metaFromGetPut(_getString, _putString);
+const _metaNumber: Meta<number> = metaFromGetPut(_getNumber, _putNumber);
+const _metaInt: Meta<number> = metaFromGetPut(_getInt, _putInt);
+const _metaBigint: Meta<bigint> = metaFromGetPut(_getBigint, _putBigint);
+const _metaBoolean: Meta<boolean> = metaFromGetPut(_getBoolean, _putBoolean);
+const _metaDate: Meta<Date> = metaFromGetPut(_getDate, _putDate);
+const _metaDateOnly: Meta<Date> = metaFromGetPut(_getDateOnly, _putDateOnly);
+const _metaUuid: Meta<string> = metaFromGetPut(_getUuid, _putUuid);
+const _metaJson: Meta<unknown> = metaFromGetPut(_getJson, _putJson);
+const _metaBuffer: Meta<Buffer> = metaFromGetPut(_getBuffer, _putBuffer);
+
 /** Meta typeclass companion with constructors and combinators */
 export const Meta = {
-  /**
-   * Create a Meta instance from Get and Put.
-   */
-  fromGetPut<A>(get: Get<A>, put: Put<A>): Meta<A> {
-    return {
-      _tag: "Meta",
-      get: get.get,
-      unsafeGet: get.unsafeGet,
-      sqlTypes: get.sqlTypes,
-      put: put.put,
-      sqlType: put.sqlType,
-    };
-  },
+  /** Create a Meta instance from Get and Put. */
+  fromGetPut: metaFromGetPut,
 
-  /**
-   * Create a Meta instance from decoder/encoder functions.
-   */
+  /** Create a Meta instance from decoder/encoder functions. */
   make<A>(
     decode: (value: unknown) => A | null,
     encode: (value: A) => unknown,
     sqlType: SqlTypeName,
     readTypes?: readonly SqlTypeName[],
   ): Meta<A> {
-    const get = Get.make(decode, readTypes ?? [sqlType]);
-    const put = Put.make(encode, sqlType);
-    return Meta.fromGetPut(get, put);
+    const get = makeGet(decode, readTypes ?? [sqlType]);
+    const put = makePut(encode, sqlType);
+    return metaFromGetPut(get, put);
   },
 
-  /**
-   * Invariant functor imap — transform both directions.
-   * Used to derive Meta instances for newtypes.
-   */
+  /** Invariant functor imap — transform both directions. */
   imap<A, B>(ma: Meta<A>, f: (a: A) => B, g: (b: B) => A): Meta<B> {
-    return Meta.fromGetPut(Get.map(ma, f), Put.contramap(ma, g));
+    return metaFromGetPut(Get.map(ma as unknown as Get<A>, f), Put.contramap(ma as unknown as Put<A>, g));
   },
 
-  /**
-   * Make a Meta nullable.
-   */
+  /** Make a Meta nullable. */
   nullable<A>(ma: Meta<A>): Meta<A | null> {
-    return Meta.fromGetPut(Get.nullable(ma), Put.nullable(ma));
+    return metaFromGetPut(Get.nullable(ma as unknown as Get<A>), Put.nullable(ma as unknown as Put<A>));
   },
 
-  /**
-   * Make a Meta optional.
-   */
+  /** Make a Meta optional. */
   optional<A>(ma: Meta<A>): Meta<A | undefined> {
-    return Meta.fromGetPut(Get.optional(ma), Put.optional(ma));
+    return metaFromGetPut(Get.optional(ma as unknown as Get<A>), Put.optional(ma as unknown as Put<A>));
   },
 
-  /**
-   * Meta for arrays.
-   */
+  /** Meta for arrays. */
   array<A>(element: Meta<A>): Meta<A[]> {
-    return Meta.fromGetPut(Get.array(element), Put.array(element));
+    return metaFromGetPut(Get.array(element as unknown as Get<A>), Put.array(element as unknown as Put<A>));
   },
 
-  // --------------------------------------------------------------------------
   // Primitive Instances
-  // --------------------------------------------------------------------------
-
-  string: Meta.fromGetPut(Get.string, Put.string),
-  number: Meta.fromGetPut(Get.number, Put.number),
-  int: Meta.fromGetPut(Get.int, Put.int),
-  bigint: Meta.fromGetPut(Get.bigint, Put.bigint),
-  boolean: Meta.fromGetPut(Get.boolean, Put.boolean),
-  date: Meta.fromGetPut(Get.date, Put.date),
-  dateOnly: Meta.fromGetPut(Get.dateOnly, Put.dateOnly),
-  uuid: Meta.fromGetPut(Get.uuid, Put.uuid),
-  json: Meta.fromGetPut(Get.json, Put.json),
-  buffer: Meta.fromGetPut(Get.buffer, Put.buffer),
+  string: _metaString,
+  number: _metaNumber,
+  int: _metaInt,
+  bigint: _metaBigint,
+  boolean: _metaBoolean,
+  date: _metaDate,
+  dateOnly: _metaDateOnly,
+  uuid: _metaUuid,
+  json: _metaJson,
+  buffer: _metaBuffer,
 
   /** Meta for typed JSON */
   jsonAs<A>(): Meta<A> {
-    return Meta.json as Meta<A>;
+    return _metaJson as Meta<A>;
   },
 } as const;
 
@@ -850,7 +801,7 @@ export const Write = {
  *
  * This is the row-level equivalent of Meta.
  */
-export interface Codec<A> extends Read<A>, Write<A> {
+export interface Codec<A> extends Omit<Read<A>, '_tag'>, Omit<Write<A>, '_tag'> {
   readonly _tag: "Codec";
 }
 
@@ -873,7 +824,7 @@ export const Codec = {
    * Invariant functor imap.
    */
   imap<A, B>(ca: Codec<A>, f: (a: A) => B, g: (b: B) => A): Codec<B> {
-    return Codec.fromReadWrite(Read.map(ca, f), Write.contramap(ca, g));
+    return Codec.fromReadWrite(Read.map(ca as unknown as Read<A>, f), Write.contramap(ca as unknown as Write<A>, g));
   },
 } as const;
 
@@ -946,7 +897,8 @@ export function deriveRead<A extends Record<string, unknown>>(config: {
       return {
         field,
         column: c.column ?? toSnakeCase(field),
-        get: c.meta,
+        // Cast Meta to Get since they share the decode/sqlTypes structure
+        get: c.meta as unknown as Get<unknown>,
         nullable: c.nullable ?? false,
       };
     },
@@ -995,80 +947,6 @@ export function deriveCodec<A extends Record<string, unknown>>(config: {
 }
 
 // ============================================================================
-// Register instances for specialize integration
-// ============================================================================
-
-// These enable zero-cost specialization when used with the specialize macro
-
-registerInstanceMethods("Get.string", "Get", {
-  get: {
-    source:
-      '(v) => (typeof v === "string" ? v : v === null ? null : String(v))',
-    params: ["v"],
-  },
-  unsafeGet: {
-    source:
-      '(v) => { const r = typeof v === "string" ? v : String(v); if (v === null) throw new Error("NULL"); return r; }',
-    params: ["v"],
-  },
-});
-
-registerInstanceMethods("Get.number", "Get", {
-  get: {
-    source:
-      '(v) => (typeof v === "number" ? v : v === null ? null : Number(v))',
-    params: ["v"],
-  },
-  unsafeGet: {
-    source:
-      '(v) => { if (v === null) throw new Error("NULL"); return typeof v === "number" ? v : Number(v); }',
-    params: ["v"],
-  },
-});
-
-registerInstanceMethods("Get.boolean", "Get", {
-  get: {
-    source:
-      '(v) => { if (v === null) return null; if (typeof v === "boolean") return v; return v === "t" || v === "true" || v === 1; }',
-    params: ["v"],
-  },
-  unsafeGet: {
-    source:
-      '(v) => { if (v === null) throw new Error("NULL"); if (typeof v === "boolean") return v; return v === "t" || v === "true" || v === 1; }',
-    params: ["v"],
-  },
-});
-
-registerInstanceMethods("Get.date", "Get", {
-  get: {
-    source:
-      "(v) => { if (v === null) return null; if (v instanceof Date) return v; return new Date(v); }",
-    params: ["v"],
-  },
-  unsafeGet: {
-    source:
-      '(v) => { if (v === null) throw new Error("NULL"); if (v instanceof Date) return v; return new Date(v); }',
-    params: ["v"],
-  },
-});
-
-registerInstanceMethods("Put.string", "Put", {
-  put: { source: "(v) => v", params: ["v"] },
-});
-
-registerInstanceMethods("Put.number", "Put", {
-  put: { source: "(v) => v", params: ["v"] },
-});
-
-registerInstanceMethods("Put.boolean", "Put", {
-  put: { source: "(v) => v", params: ["v"] },
-});
-
-registerInstanceMethods("Put.date", "Put", {
-  put: { source: "(v) => v.toISOString()", params: ["v"] },
-});
-
-// ============================================================================
 // Implicit Resolution Registry — Doobie-style auto-derivation
 // ============================================================================
 
@@ -1108,181 +986,34 @@ getRegistry.set("Buffer", Get.buffer);
 getRegistry.set("json", Get.json);
 getRegistry.set("uuid", Get.uuid);
 
-putRegistry.set("string", Put.string);
-putRegistry.set("number", Put.number);
-putRegistry.set("int", Put.int);
-putRegistry.set("bigint", Put.bigint);
-putRegistry.set("boolean", Put.boolean);
-putRegistry.set("Date", Put.date);
-putRegistry.set("Buffer", Put.buffer);
-putRegistry.set("json", Put.json);
-putRegistry.set("uuid", Put.uuid);
+putRegistry.set("string", Put.string as Put<unknown>);
+putRegistry.set("number", Put.number as Put<unknown>);
+putRegistry.set("int", Put.int as Put<unknown>);
+putRegistry.set("bigint", Put.bigint as Put<unknown>);
+putRegistry.set("boolean", Put.boolean as Put<unknown>);
+putRegistry.set("Date", Put.date as Put<unknown>);
+putRegistry.set("Buffer", Put.buffer as Put<unknown>);
+putRegistry.set("json", Put.json as Put<unknown>);
+putRegistry.set("uuid", Put.uuid as Put<unknown>);
 
-metaRegistry.set("string", Meta.string);
-metaRegistry.set("number", Meta.number);
-metaRegistry.set("int", Meta.int);
-metaRegistry.set("bigint", Meta.bigint);
-metaRegistry.set("boolean", Meta.boolean);
-metaRegistry.set("Date", Meta.date);
-metaRegistry.set("Buffer", Meta.buffer);
-metaRegistry.set("json", Meta.json);
-metaRegistry.set("uuid", Meta.uuid);
-
-// ============================================================================
-// Summon Functions — Implicit Instance Resolution
-// ============================================================================
-
-/**
- * Summon a Get instance by type name.
- * Returns the registered instance or undefined.
- */
-Get.summon = function <A>(typeName: string): Get<A> | undefined {
-  return getRegistry.get(typeName) as Get<A> | undefined;
-};
-
-/**
- * Register a Get instance for implicit resolution.
- */
-Get.registerInstance = function <A>(typeName: string, instance: Get<A>): void {
-  getRegistry.set(typeName, instance as Get<unknown>);
-};
-
-/**
- * Summon a Put instance by type name.
- * Returns the registered instance or undefined.
- */
-Put.summon = function <A>(typeName: string): Put<A> | undefined {
-  return putRegistry.get(typeName) as Put<A> | undefined;
-};
-
-/**
- * Register a Put instance for implicit resolution.
- */
-Put.registerInstance = function <A>(typeName: string, instance: Put<A>): void {
-  putRegistry.set(typeName, instance as Put<unknown>);
-};
-
-/**
- * Summon a Meta instance by type name.
- * Returns the registered instance or undefined.
- */
-Meta.summon = function <A>(typeName: string): Meta<A> | undefined {
-  return metaRegistry.get(typeName) as Meta<A> | undefined;
-};
-
-/**
- * Register a Meta instance for implicit resolution.
- */
-Meta.registerInstance = function <A>(
-  typeName: string,
-  instance: Meta<A>,
-): void {
-  metaRegistry.set(typeName, instance as Meta<unknown>);
-};
-
-/**
- * Summon a Read instance by type name.
- * Returns the registered instance or undefined.
- *
- * For auto-derivation at compile time, use the @deriving(Read) macro
- * or the summon<Read<T>>() expression macro which can derive instances
- * when all field Get instances are available.
- */
-Read.summon = function <A>(typeName: string): Read<A> | undefined {
-  return readRegistry.get(typeName) as Read<A> | undefined;
-};
-
-/**
- * Register a Read instance for implicit resolution.
- */
-Read.registerInstance = function <A>(
-  typeName: string,
-  instance: Read<A>,
-): void {
-  readRegistry.set(typeName, instance as Read<unknown>);
-};
-
-/**
- * Summon a Write instance by type name.
- * Returns the registered instance or undefined.
- */
-Write.summon = function <A>(typeName: string): Write<A> | undefined {
-  return writeRegistry.get(typeName) as Write<A> | undefined;
-};
-
-/**
- * Register a Write instance for implicit resolution.
- */
-Write.registerInstance = function <A>(
-  typeName: string,
-  instance: Write<A>,
-): void {
-  writeRegistry.set(typeName, instance as Write<unknown>);
-};
-
-/**
- * Summon a Codec instance by type name.
- * Returns the registered instance or undefined.
- */
-Codec.summon = function <A>(typeName: string): Codec<A> | undefined {
-  return codecRegistry.get(typeName) as Codec<A> | undefined;
-};
-
-/**
- * Register a Codec instance for implicit resolution.
- */
-Codec.registerInstance = function <A>(
-  typeName: string,
-  instance: Codec<A>,
-): void {
-  codecRegistry.set(typeName, instance as Codec<unknown>);
-};
+metaRegistry.set("string", Meta.string as Meta<unknown>);
+metaRegistry.set("number", Meta.number as Meta<unknown>);
+metaRegistry.set("int", Meta.int as Meta<unknown>);
+metaRegistry.set("bigint", Meta.bigint as Meta<unknown>);
+metaRegistry.set("boolean", Meta.boolean as Meta<unknown>);
+metaRegistry.set("Date", Meta.date as Meta<unknown>);
+metaRegistry.set("Buffer", Meta.buffer as Meta<unknown>);
+metaRegistry.set("json", Meta.json as Meta<unknown>);
+metaRegistry.set("uuid", Meta.uuid as Meta<unknown>);
 
 // ============================================================================
-// Type augmentation for summon/registerInstance methods
+// Instance Registries — exported for macro integration
 // ============================================================================
-
-declare module "./typeclasses.js" {
-  // Get companion augmentation
-  interface GetCompanion {
-    summon<A>(typeName: string): Get<A> | undefined;
-    registerInstance<A>(typeName: string, instance: Get<A>): void;
-  }
-
-  // Put companion augmentation
-  interface PutCompanion {
-    summon<A>(typeName: string): Put<A> | undefined;
-    registerInstance<A>(typeName: string, instance: Put<A>): void;
-  }
-
-  // Meta companion augmentation
-  interface MetaCompanion {
-    summon<A>(typeName: string): Meta<A> | undefined;
-    registerInstance<A>(typeName: string, instance: Meta<A>): void;
-  }
-
-  // Read companion augmentation
-  interface ReadCompanion {
-    summon<A>(typeName: string): Read<A> | undefined;
-    registerInstance<A>(typeName: string, instance: Read<A>): void;
-  }
-
-  // Write companion augmentation
-  interface WriteCompanion {
-    summon<A>(typeName: string): Write<A> | undefined;
-    registerInstance<A>(typeName: string, instance: Write<A>): void;
-  }
-
-  // Codec companion augmentation
-  interface CodecCompanion {
-    summon<A>(typeName: string): Codec<A> | undefined;
-    registerInstance<A>(typeName: string, instance: Codec<A>): void;
-  }
-}
-
-// ============================================================================
-// Export registries for macro integration
-// ============================================================================
+// Note: Summon and registerInstance functionality should use the registries directly.
+// Example: const instance = getRegistry.get("MyType") as Get<MyType>;
+// Example: putRegistry.set("MyType", myPutInstance as Put<unknown>);
+// The @deriving(Read), @deriving(Write), @deriving(Codec) macros will
+// generate code that uses these registries.
 
 export {
   getRegistry,

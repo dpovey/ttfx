@@ -39,7 +39,7 @@ export function semigroupLaws<A>(S: Semigroup<A>, E: Eq<A>): LawSet {
       check: (x: A, y: A, z: A): boolean =>
         E.eqv(S.combine(S.combine(x, y), z), S.combine(x, S.combine(y, z))),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 // ============================================================================
@@ -74,5 +74,5 @@ export function monoidLaws<A>(M: Monoid<A>, E: Eq<A>): LawSet {
       description: "empty is a right identity: combine(x, empty) === x",
       check: (x: A): boolean => E.eqv(M.combine(x, M.empty), x),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

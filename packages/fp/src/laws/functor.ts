@@ -57,7 +57,7 @@ export function functorLaws<F, A>(Fn: Functor<F>, EqFA: EqFA<F, A>): LawSet {
           Fn.map(fa, (a: A) => g(f(a))),
         ),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 /**
@@ -88,5 +88,5 @@ export function functorCompositionLaws<F, A, B, C>(
           Fn.map(fa, (a: A) => g(f(a))),
         ),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

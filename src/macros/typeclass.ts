@@ -455,6 +455,13 @@ interface TypeclassInfo {
    * Used to dynamically generate concrete types by substituting $<F, A> → ConcreteType<A>.
    */
   fullSignatureText?: string;
+  /**
+   * Operator syntax mappings: operator string → method name.
+   * Declares which operators can be used as sugar for typeclass methods.
+   * E.g., { "+": "concat" } means `a + b` rewrites to `Semigroup.concat(a, b)`
+   * when a Semigroup instance exists for the operand type.
+   */
+  syntax?: Map<string, string>;
 }
 
 interface TypeclassMethod {
@@ -498,6 +505,55 @@ interface ExtensionMethodInfo {
 const typeclassRegistry = new Map<string, TypeclassInfo>();
 const instanceRegistry: InstanceInfo[] = [];
 const extensionMethodRegistry: ExtensionMethodInfo[] = [];
+
+// ============================================================================
+// Syntax Registry — operator → typeclass method mappings
+// ============================================================================
+
+interface SyntaxEntry {
+  typeclass: string;
+  method: string;
+}
+
+/**
+ * Maps operator strings (e.g., "+", "==") to the typeclasses that provide
+ * syntax for them. Multiple typeclasses may map the same operator — ambiguity
+ * is resolved at the call site by checking which typeclass has an instance
+ * for the operand type.
+ */
+const syntaxRegistry = new Map<string, SyntaxEntry[]>();
+
+/**
+ * Register operator syntax for a typeclass.
+ * Called when a typeclass with `static syntax = { ... }` is registered.
+ */
+function registerTypeclassSyntax(
+  tcName: string,
+  syntax: Map<string, string>,
+): void {
+  for (const [op, method] of syntax) {
+    let entries = syntaxRegistry.get(op);
+    if (!entries) {
+      entries = [];
+      syntaxRegistry.set(op, entries);
+    }
+    entries.push({ typeclass: tcName, method });
+  }
+}
+
+/**
+ * Get all syntax entries for a given operator.
+ */
+function getSyntaxForOperator(op: string): SyntaxEntry[] | undefined {
+  return syntaxRegistry.get(op);
+}
+
+/**
+ * Clear syntax registry (for testing).
+ */
+function clearSyntaxRegistry(): void {
+  syntaxRegistry.clear();
+}
 
 /**
  * Register extension methods for a type based on its derived typeclasses.
@@ -794,11 +850,45 @@ export const typeclassAttribute = defineAttributeMacro({
 
     const typeParam = typeParams[0].name.text;
 
+    // Extract operator syntax from decorator arguments:
+    //   @typeclass({ syntax: { "+": "concat" } })
+    const syntax = parseSyntaxFromDecoratorArgs(_args);
+
     // Extract methods from the interface (handles both MethodSignature and PropertySignature)
     const methods: TypeclassMethod[] = [];
     const memberTexts: string[] = [];
 
     for (const member of target.members) {
+      // Skip the `syntax` property — it's metadata, not part of the contract
+      if (
+        ts.isPropertySignature(member) &&
+        member.name &&
+        ts.isIdentifier(member.name) &&
+        member.name.text === "syntax"
+      ) {
+        // Also try to extract syntax from the interface body as a fallback:
+        //   syntax: { "+": "concat" }
+        // The type literal's property names are the operators, values are methods.
+        if (!syntax && member.type && ts.isTypeLiteralNode(member.type)) {
+          const bodySyntax = parseSyntaxFromTypeLiteral(member.type);
+          if (bodySyntax.size > 0) {
+            syntax?.clear();
+            for (const [k, v] of bodySyntax) {
+              (syntax || bodySyntax).set(k, v);
+            }
+            if (!syntax) {
+              // Use bodySyntax directly below
+              Object.defineProperty(
+                parseSyntaxFromDecoratorArgs,
+                "_bodySyntax",
+                { value: bodySyntax },
+              );
+            }
+          }
+        }
+        continue;
+      }
+
       // Capture raw source text of each member for HKT expansion
       const sourceFile = member.getSourceFile();
       if (sourceFile) {
@@ -821,7 +911,6 @@ export const typeclassAttribute = defineAttributeMacro({
             : param.name.getText();
           const paramType = param.type ? param.type.getText() : "unknown";
 
-          // Check if this parameter uses the typeclass's type param
           if (i === 0 && paramType === typeParam) {
             isSelfMethod = true;
           }
@@ -838,13 +927,10 @@ export const typeclassAttribute = defineAttributeMacro({
           isSelfMethod,
         });
       } else if (ts.isPropertySignature(member) && member.name) {
-        // Handle property signatures (readonly map: <A,B>(...) => ...)
         const methodName = ts.isIdentifier(member.name)
           ? member.name.text
           : member.name.getText();
 
-        // For property signatures with function types, we extract params from the type
-        // For now, just record the method name - full type info is in fullSignatureText
         methods.push({
           name: methodName,
           params: [],
@@ -858,6 +944,9 @@ export const typeclassAttribute = defineAttributeMacro({
     const fullSignatureText =
       memberTexts.length > 0 ? `{ ${memberTexts.join("; ")} }` : undefined;
 
+    // Resolve final syntax map (decorator args take precedence)
+    const finalSyntax = syntax || undefined;
+
     // Register the typeclass
     const tcInfo: TypeclassInfo = {
       name: tcName,
@@ -866,8 +955,14 @@ export const typeclassAttribute = defineAttributeMacro({
       canDeriveProduct: true,
       canDeriveSum: true,
       fullSignatureText,
+      syntax: finalSyntax,
     };
     typeclassRegistry.set(tcName, tcInfo);
+
+    // Register operator syntax in the global registry
+    if (finalSyntax && finalSyntax.size > 0) {
+      registerTypeclassSyntax(tcName, finalSyntax);
+    }
 
     // Generate the companion namespace with utility functions
     const companionCode = generateCompanionNamespace(ctx, tcInfo);
@@ -880,7 +975,10 @@ export const typeclassAttribute = defineAttributeMacro({
       ...ctx.parseStatements(extensionCode),
     ];
 
-    return [target, ...statements];
+    // Strip the `syntax` member from the output interface if present
+    const outputTarget = stripSyntaxMember(ctx, target);
+
+    return [outputTarget, ...statements];
   },
 });
 
@@ -2550,6 +2648,7 @@ export {
   InstanceInfo,
   ExtensionMethodInfo,
   BuiltinTypeclassDerivation,
+  SyntaxEntry,
   findInstance,
   getTypeclass,
   findExtensionMethod,
@@ -2558,4 +2657,8 @@ export {
   registerExtensionMethods,
   instanceVarName,
   createTypeclassDeriveMacro,
+  syntaxRegistry,
+  getSyntaxForOperator,
+  registerTypeclassSyntax,
+  clearSyntaxRegistry,
 };

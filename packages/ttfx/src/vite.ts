@@ -3,5 +3,5 @@
  */
 export {
   default,
-  type TypeMacroPluginOptions,
+  type TtfxPluginOptions,
 } from "unplugin-ttfx/vite";

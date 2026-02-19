@@ -15,7 +15,8 @@ import type { FlatMap, Monad } from "../typeclasses/monad.js";
 import type { Applicative } from "../typeclasses/applicative.js";
 import type { $ } from "../hkt.js";
 import type { Law, LawSet } from "./types.js";
-import { applyLaws, applicativeLaws, type EqFA } from "./applicative.js";
+import { applyLaws, applicativeLaws } from "./applicative.js";
+import type { EqFA } from "./types.js";
 
 // ============================================================================
 // FlatMap Laws
@@ -64,7 +65,7 @@ export function flatMapLaws<F, A>(FM: FlatMap<F>, EqFA: EqFA<F, A>): LawSet {
         return EqFA.eqv(viaFlatMap, viaFlatMap2);
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 // ============================================================================
@@ -129,7 +130,7 @@ export function monadLaws<F, A>(M: Monad<F>, EqFA: EqFA<F, A>): LawSet {
           M.flatMap(fa, (a: A) => M.pure(f(a))),
         ),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 /**
@@ -164,5 +165,5 @@ export function monadStackSafetyLaws<F, A>(
         }
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

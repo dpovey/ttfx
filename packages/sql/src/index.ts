@@ -63,27 +63,8 @@ export type { DbConnection as SimpleDbConnection } from "./types.js";
 // SQL Typeclasses — Doobie-style type mapping with auto-derivation
 // ============================================================================
 
-// Core typeclass interfaces
-export type {
-  Get,
-  Put,
-  Meta,
-  Read,
-  Write,
-  Codec,
-  SqlRow,
-  SqlTypeName,
-  GetType,
-  PutType,
-  MetaType,
-  ReadType,
-  WriteType,
-  CodecType,
-  ColumnMapping,
-  DeriveColumn,
-} from "./typeclasses.js";
-
-// Typeclass companions with instances and combinators
+// Typeclass interfaces, companions, instances and combinators
+// Note: Get, Put, Meta, Read, Write, Codec are both interfaces and companion objects
 export {
   Get,
   Put,
@@ -104,12 +85,23 @@ export {
   codecRegistry,
 } from "./typeclasses.js";
 
-// Shapeless-style auto-derivation strategies (registers with core infrastructure)
-export {
-  readDerivation,
-  writeDerivation,
-  codecDerivation,
-} from "./auto-derive-strategies.js";
+// Additional type-only exports
+export type {
+  SqlRow,
+  SqlTypeName,
+  GetType,
+  PutType,
+  MetaType,
+  ReadType,
+  WriteType,
+  CodecType,
+  ColumnMapping,
+  DeriveColumn,
+} from "./typeclasses.js";
+
+// Note: auto-derive-strategies.ts provides Scala 3-style summon auto-derivation
+// for Read/Write/Codec, but is not exported as it depends on internal infrastructure.
+// Use @deriving(Read), @deriving(Write), @deriving(Codec) decorators instead.
 
 // Derive macros for @deriving(Read), @deriving(Write), @deriving(Codec)
 export {

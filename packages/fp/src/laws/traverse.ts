@@ -15,8 +15,8 @@ import type { Traverse } from "../typeclasses/traverse.js";
 import type { Applicative } from "../typeclasses/applicative.js";
 import type { $ } from "../hkt.js";
 import type { Law, LawSet } from "./types.js";
-import type { EqFA } from "./functor.js";
 import { functorLaws } from "./functor.js";
+import type { EqFA } from "./types.js";
 import { foldableLaws } from "./foldable.js";
 import type { Monoid } from "../typeclasses/semigroup.js";
 import type { Eq } from "../typeclasses/eq.js";
@@ -29,11 +29,8 @@ import type { Eq } from "../typeclasses/eq.js";
  * The Identity applicative - used for testing traverse laws.
  * Identity<A> = A, with pure(a) = a and ap(f, a) = f(a)
  */
-interface IdF {
-  _: this["_"];
-}
-
-const idApplicative: Applicative<IdF> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const idApplicative: Applicative<any> = {
   map: <A, B>(fa: A, f: (a: A) => B): B => f(fa),
   ap: <A, B>(fab: (a: A) => B, fa: A): B => fab(fa),
   pure: <A>(a: A): A => a,
@@ -80,7 +77,7 @@ export function traverseLaws<F, A>(T: Traverse<F>, EqFA: EqFA<F, A>): LawSet {
         return EqFA.eqv(result as $<F, A>, fa);
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 /**
@@ -107,7 +104,7 @@ export function traverseLawsWithApplicative<F, G, A>(
         return EqGFA.eqv(left, right);
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 /**
@@ -134,5 +131,5 @@ export function sequenceLaws<F, G, A>(
         return EqGFA.eqv(viaSequence, viaTraverse);
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

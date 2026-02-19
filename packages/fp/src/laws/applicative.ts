@@ -15,7 +15,8 @@
 import type { Apply, Applicative } from "../typeclasses/applicative.js";
 import type { $ } from "../hkt.js";
 import type { Law, LawSet } from "./types.js";
-import { functorLaws, type EqFA } from "./functor.js";
+import { functorLaws } from "./functor.js";
+import type { EqFA } from "./types.js";
 
 // ============================================================================
 // Apply Laws
@@ -51,7 +52,7 @@ export function applyLaws<F, A>(Ap: Apply<F>, EqFA: EqFA<F, A>): LawSet {
         return EqFA.eqv(left, right);
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 // ============================================================================
@@ -117,5 +118,5 @@ export function applicativeLaws<F, A>(
       check: (fa: $<F, A>, f: (a: A) => A): boolean =>
         EqFA.eqv(Ap.map(fa, f), Ap.ap(Ap.pure(f), fa)),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

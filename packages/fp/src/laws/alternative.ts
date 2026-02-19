@@ -24,7 +24,7 @@ import type {
 } from "../typeclasses/alternative.js";
 import type { $ } from "../hkt.js";
 import type { Law, LawSet } from "./types.js";
-import type { EqFA } from "./functor.js";
+import type { EqFA } from "./types.js";
 import { applicativeLaws } from "./applicative.js";
 
 // ============================================================================
@@ -55,7 +55,7 @@ export function semigroupKLaws<F, A>(
           SK.combineK(x, SK.combineK(y, z)),
         ),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 // ============================================================================
@@ -90,7 +90,7 @@ export function monoidKLaws<F, A>(MK: MonoidK<F>, EqFA: EqFA<F, A>): LawSet {
       check: (x: $<F, A>): boolean =>
         EqFA.eqv(MK.combineK(x, MK.emptyK<A>()), x),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 // ============================================================================
@@ -140,7 +140,7 @@ export function alternativeLaws<F, A>(
         return EqFA.eqv(Alt.ap(emptyF, a), Alt.emptyK<A>());
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 /**
@@ -172,5 +172,5 @@ export function alternativeLawsNonDistributive<F, A>(
         return EqFA.eqv(Alt.ap(emptyF, a), Alt.emptyK<A>());
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

@@ -27,3 +27,4 @@ coverage/
 
 # VSCode extension packaging
 *.vsix
+.typemacro-cache/

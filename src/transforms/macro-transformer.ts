@@ -2302,6 +2302,7 @@ class MacroTransformer {
         type: propType,
         optional,
         readonly,
+        symbol: prop,
       });
     }
 
@@ -2383,6 +2384,7 @@ class MacroTransformer {
               type: propType,
               optional,
               readonly,
+              symbol: prop,
             });
           }
         } catch {

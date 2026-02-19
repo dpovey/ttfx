@@ -748,10 +748,10 @@ export const forAllMacro = defineExpressionMacro({
     const property = args.length === 3 ? args[2] : args[1];
 
     // Generate hygienic variable names
-    const iName = ctx.hygiene.mangleName("fa_i");
-    const valueName = ctx.hygiene.mangleName("fa_value");
-    const eName = ctx.hygiene.mangleName("fa_e");
-    const errName = ctx.hygiene.mangleName("fa_err");
+    const iName = ctx.generateUniqueName("fa_i").text;
+    const valueName = ctx.generateUniqueName("fa_value").text;
+    const eName = ctx.generateUniqueName("fa_e").text;
+    const errName = ctx.generateUniqueName("fa_err").text;
 
     // Generate:
     // (() => {

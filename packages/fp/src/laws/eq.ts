@@ -61,7 +61,7 @@ export function eqLaws<A>(E: Eq<A>): LawSet {
         return true;
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 // ============================================================================
@@ -122,5 +122,5 @@ export function ordLaws<A>(O: Ord<A>): LawSet {
       description: "Eq and Ord agree: eqv(x, y) === (compare(x, y) === 0)",
       check: (x: A, y: A): boolean => O.eqv(x, y) === (O.compare(x, y) === 0),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

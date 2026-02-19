@@ -35,7 +35,7 @@ export function showLaws<A>(S: Show<A>): LawSet {
       description: "show is deterministic: show(x) === show(x) for the same x",
       check: (x: A): boolean => S.show(x) === S.show(x),
     },
-  ] as const;
+  ] as unknown as LawSet;
 }
 
 /**
@@ -62,5 +62,5 @@ export function showLawsWithEq<A>(S: Show<A>, E: Eq<A>): LawSet {
         return true;
       },
     },
-  ] as const;
+  ] as unknown as LawSet;
 }

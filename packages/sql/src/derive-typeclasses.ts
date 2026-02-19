@@ -58,13 +58,12 @@ import * as ts from "typescript";
 import {
   defineDeriveMacro,
   globalRegistry,
-} from "../../../src/core/registry.js";
+} from "@ttfx/core";
 import type {
   MacroContext,
   DeriveTypeInfo,
   DeriveFieldInfo,
-} from "../../../src/core/types.js";
-import { registerInstanceMethods } from "../../../src/macros/specialize.js";
+} from "@ttfx/core";
 
 // ============================================================================
 // Type-to-Instance Mapping
@@ -253,7 +252,10 @@ export const deriveReadMacro = defineDeriveMacro({
   name: "Read",
   expand(
     ctx: MacroContext,
-    target: ts.Declaration,
+    target:
+      | ts.InterfaceDeclaration
+      | ts.ClassDeclaration
+      | ts.TypeAliasDeclaration,
     typeInfo: DeriveTypeInfo,
   ): ts.Statement[] {
     const factory = ctx.factory;
@@ -380,35 +382,15 @@ export const deriveReadMacro = defineDeriveMacro({
       ),
     );
 
-    // Generate inline read function for specialization
-    const inlineReadBody = mappings
-      .map(
-        (m) =>
-          `${m.field}: ${m.nullable ? `${m.getExpr}.get(row.${m.column})` : `${m.getExpr}.unsafeGet(row.${m.column})`}`,
-      )
-      .join(",\n    ");
-
-    // Register for specialize
-    registerInstanceMethods(`Read${typeName}`, "Read", {
-      read: {
-        source: `(row) => ({\n    ${inlineReadBody}\n  })`,
-        params: ["row"],
-      },
-      unsafeRead: {
-        source: `(row) => ({\n    ${inlineReadBody}\n  })`,
-        params: ["row"],
-      },
-    });
-
-    // Generate registration statement for implicit resolution
-    // Read.registerInstance<User>("User", ReadUser);
+    // Generate registration statement for implicit resolution using the registry
+    // readRegistry.set("User", ReadUser);
     const registerStatement = factory.createExpressionStatement(
       factory.createCallExpression(
         factory.createPropertyAccessExpression(
-          factory.createIdentifier("Read"),
-          "registerInstance",
+          factory.createIdentifier("readRegistry"),
+          "set",
         ),
-        [factory.createTypeReferenceNode(typeName)],
+        undefined,
         [
           factory.createStringLiteral(typeName),
           factory.createIdentifier(`Read${typeName}`),
@@ -433,7 +415,10 @@ export const deriveWriteMacro = defineDeriveMacro({
   name: "Write",
   expand(
     ctx: MacroContext,
-    target: ts.Declaration,
+    target:
+      | ts.InterfaceDeclaration
+      | ts.ClassDeclaration
+      | ts.TypeAliasDeclaration,
     typeInfo: DeriveTypeInfo,
   ): ts.Statement[] {
     const factory = ctx.factory;
@@ -545,27 +530,15 @@ export const deriveWriteMacro = defineDeriveMacro({
       ),
     );
 
-    // Generate inline write function for specialization
-    const inlineWriteBody = mappings
-      .map((m) => `${m.putExpr}.put(value.${m.field})`)
-      .join(",\n    ");
-
-    registerInstanceMethods(`Write${typeName}`, "Write", {
-      write: {
-        source: `(value) => [\n    ${inlineWriteBody}\n  ]`,
-        params: ["value"],
-      },
-    });
-
-    // Generate registration statement for implicit resolution
-    // Write.registerInstance<User>("User", WriteUser);
+    // Generate registration statement for implicit resolution using the registry
+    // writeRegistry.set("User", WriteUser);
     const registerStatement = factory.createExpressionStatement(
       factory.createCallExpression(
         factory.createPropertyAccessExpression(
-          factory.createIdentifier("Write"),
-          "registerInstance",
+          factory.createIdentifier("writeRegistry"),
+          "set",
         ),
-        [factory.createTypeReferenceNode(typeName)],
+        undefined,
         [
           factory.createStringLiteral(typeName),
           factory.createIdentifier(`Write${typeName}`),
@@ -591,7 +564,10 @@ export const deriveCodecMacro = defineDeriveMacro({
   name: "Codec",
   expand(
     ctx: MacroContext,
-    target: ts.Declaration,
+    target:
+      | ts.InterfaceDeclaration
+      | ts.ClassDeclaration
+      | ts.TypeAliasDeclaration,
     typeInfo: DeriveTypeInfo,
   ): ts.Statement[] {
     const factory = ctx.factory;
@@ -658,6 +634,6 @@ export const deriveCodecMacro = defineDeriveMacro({
 // ============================================================================
 
 // Register the derive macros
-globalRegistry.registerDeriveMacro(deriveReadMacro);
-globalRegistry.registerDeriveMacro(deriveWriteMacro);
-globalRegistry.registerDeriveMacro(deriveCodecMacro);
+globalRegistry.register(deriveReadMacro);
+globalRegistry.register(deriveWriteMacro);
+globalRegistry.register(deriveCodecMacro);

@@ -106,8 +106,8 @@ export const stateMacro = defineExpressionMacro({
     }
 
     // Generate hygienic identifiers for value and setter
-    const valueIdent = ctx.hygiene.mangleName(`${varName}_val`);
-    const setterIdent = ctx.hygiene.mangleName(`${varName}_set`);
+    const valueIdent = ctx.generateUniqueName(`${varName}_val`).text;
+    const setterIdent = ctx.generateUniqueName(`${varName}_set`).text;
 
     // Store metadata for use by other macros
     const metadata: StateMetadata = {

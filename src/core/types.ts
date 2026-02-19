@@ -331,6 +331,12 @@ export interface DeriveFieldInfo {
 
   /** Is the field readonly? */
   readonly: boolean;
+
+  /**
+   * The TypeScript symbol for this field.
+   * Used to access JSDoc tags and other declaration-level metadata.
+   */
+  symbol?: ts.Symbol;
 }
 
 /** Tagged template macro - transforms tagged template literals */

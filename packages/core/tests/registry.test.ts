@@ -41,14 +41,31 @@ describe("MacroRegistry", () => {
       expect(retrieved).toBeUndefined();
     });
 
-    it("should throw when registering duplicate macros", () => {
+    it("should allow idempotent registration of same macro", () => {
       const macro = defineExpressionMacro({
         name: "duplicate",
         expand: (_ctx, callExpr) => callExpr,
       });
 
       registry.register(macro);
-      expect(() => registry.register(macro)).toThrow(/already registered/);
+      // Same object reference should be idempotent (no throw)
+      expect(() => registry.register(macro)).not.toThrow();
+    });
+
+    it("should throw when registering different macros with same name and different modules", () => {
+      const macro1 = defineExpressionMacro({
+        name: "conflicting",
+        module: "module-a",
+        expand: (_ctx, callExpr) => callExpr,
+      });
+      const macro2 = defineExpressionMacro({
+        name: "conflicting",
+        module: "module-b",
+        expand: (_ctx, callExpr) => callExpr,
+      });
+
+      registry.register(macro1);
+      expect(() => registry.register(macro2)).toThrow(/already registered/);
     });
   });
 
