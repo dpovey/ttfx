@@ -14,8 +14,8 @@
  * ## Usage
  *
  * ```typescript
- * import { effectMonad, effectApplicativeError } from "@ttfx/fp/effect";
- * import { specialize } from "@ttfx/macros";
+ * import { effectMonad, effectApplicativeError } from "@typesugar/fp/effect";
+ * import { specialize } from "@typesugar/macros";
  *
  * // Generic function using Monad
  * function double<F>(F: Monad<F>, fa: $<F, number>): $<F, number> {

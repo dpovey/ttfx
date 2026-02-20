@@ -55,7 +55,7 @@ const CACHE_VERSION = "2";
  * Separator used to join multiple node code strings in a single cache entry.
  * Chosen to be unlikely to appear in generated TypeScript code.
  */
-const MULTI_NODE_SEPARATOR = "\n/* __TTFX_CACHE_SEP__ */\n";
+const MULTI_NODE_SEPARATOR = "\n/* __TYPESUGAR_CACHE_SEP__ */\n";
 
 /**
  * On-disk cache for macro expansion results.

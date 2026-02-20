@@ -6,7 +6,7 @@
  * type errors, not runtime errors.
  */
 
-import { createStateMachine, Phantom } from "@ttfx/type-system";
+import { createStateMachine, Phantom } from "@typesugar/type-system";
 
 // --- Door State Machine ---
 

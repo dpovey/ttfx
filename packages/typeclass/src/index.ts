@@ -31,7 +31,7 @@ import {
   globalExtensionRegistry,
   MacroContext,
   AttributeTarget,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Registry for typeclasses and instances (compile-time)
@@ -98,7 +98,7 @@ export function getInstances(): Map<string, InstanceInfo> {
 
 export const typeclassAttribute = defineAttributeMacro({
   name: "typeclass",
-  module: "@ttfx/typeclass",
+  module: "@typesugar/typeclass",
   description: "Define a typeclass interface",
   validTargets: ["interface"] as AttributeTarget[],
 
@@ -181,7 +181,7 @@ export const typeclassAttribute = defineAttributeMacro({
 
 export const instanceAttribute = defineAttributeMacro({
   name: "instance",
-  module: "@ttfx/typeclass",
+  module: "@typesugar/typeclass",
   description: "Define a typeclass instance",
   // Note: This macro handles variable declarations which aren't standard
   // decorator targets. Validation is done in expand().
@@ -260,7 +260,7 @@ export const instanceAttribute = defineAttributeMacro({
 
 export const derivingAttribute = defineAttributeMacro({
   name: "deriving",
-  module: "@ttfx/typeclass",
+  module: "@typesugar/typeclass",
   description: "Auto-derive typeclass instances for a type",
   validTargets: ["interface", "class", "type"] as AttributeTarget[],
 
@@ -390,7 +390,7 @@ const ${instanceName}: ${typeclass.name}<${typeName}> = {
 
 export const summonMacro = defineExpressionMacro({
   name: "summon",
-  module: "@ttfx/typeclass",
+  module: "@typesugar/typeclass",
   description: "Summon a typeclass instance at compile time",
 
   expand(
@@ -462,7 +462,7 @@ export const summonMacro = defineExpressionMacro({
 
 export const extendMacro = defineExpressionMacro({
   name: "extend",
-  module: "@ttfx/typeclass",
+  module: "@typesugar/typeclass",
   description:
     "Extend a value with typeclass methods (compile-time resolution)",
 

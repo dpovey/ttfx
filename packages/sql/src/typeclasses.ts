@@ -2,7 +2,7 @@
  * Doobie-Style SQL Typeclasses
  *
  * This module provides a complete typeclass hierarchy for SQL type mapping,
- * inspired by Scala's Doobie library but integrated with ttfx's typeclass system.
+ * inspired by Scala's Doobie library but integrated with typesugar's typeclass system.
  *
  * ## Typeclass Hierarchy
  *

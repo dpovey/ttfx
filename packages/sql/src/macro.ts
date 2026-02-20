@@ -40,7 +40,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // SQL Macro Definition
@@ -141,7 +141,7 @@ function createFragmentConstructor(
 /**
  * Generate: __sql_build(["seg0", "seg1", ...], [expr0, expr1, ...])
  *
- * INTENTIONALLY UNHYGIENIC: __sql_build is a runtime helper exported from @ttfx/sql.
+ * INTENTIONALLY UNHYGIENIC: __sql_build is a runtime helper exported from @typesugar/sql.
  * Users must import it for the generated code to work.
  *
  * The runtime helper inspects each interpolation at runtime:

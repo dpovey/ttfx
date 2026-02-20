@@ -1,0 +1,116 @@
+---
+description: Patterns for implementing collection typeclasses and instances
+globs: ["packages/collections/**/*.ts", "packages/std/**/*.ts"]
+alwaysApply: false
+---
+
+# Collection Typeclass Patterns
+
+## Typeclass Hierarchy
+
+```
+IterableOnce<F>          — single-pass iteration + foldLeft (base of everything)
+  ├── Iterable<F>        — multi-pass, collection-producing (map, filter, flatMap, from, empty, concat)
+  │   ├── Seq<F>         — indexed, ordered (apply, reverse, sorted, updated)
+  │   │   └── SortedSeq<F>
+  │   └── SetLike<F>     — unique elements (contains, add, remove, union, intersect)
+  │       └── SortedSet<F>
+  └── MapLike<F, K>      — key-value (get, has, keys, values, updated, removed)
+
+Growable<F>              — mutable builder pattern (separate from the read hierarchy)
+```
+
+## Writing Typeclass Interfaces
+
+1. Core methods go in the interface; derived ops are standalone functions
+2. Every derived operation takes the dictionary as first argument: `function op<F>(F: TC<F>): ...`
+3. Derived ops return a curried function: `(F: TC<F>) => (fa, ...args) => result`
+
+```typescript
+export interface IterableOnce<F> {
+  readonly iterator: <A>(fa: $<F, A>) => IterableIterator<A>;
+  readonly foldLeft: <A, B>(fa: $<F, A>, z: B, f: (b: B, a: A) => B) => B;
+}
+
+// Derived — dictionary-passing for specialize()
+export function size<F>(F: IterableOnce<F>): <A>(fa: $<F, A>) => number {
+  return <A>(fa: $<F, A>): number => F.foldLeft(fa, 0, (n, _) => n + 1);
+}
+```
+
+## Writing Instance Implementations
+
+1. Delegate to native methods — no wrappers, no indirection
+2. The `as TC<TypeF>` cast at the end is acceptable (TypeScript can't infer HKT instances)
+3. Test every core method AND at least smoke-test derived operations
+
+```typescript
+export const arraySeq: Seq<ArrayF> = {
+  iterator: <A>(fa: A[]) => fa[Symbol.iterator](),
+  foldLeft: <A, B>(fa: A[], z: B, f: (b: B, a: A) => B) => fa.reduce(f, z),
+  map: <A, B>(fa: A[], f: (a: A) => B) => fa.map(f),
+  // ... all core Seq methods
+} as Seq<ArrayF>;
+```
+
+## `undefined` Handling in MapLike
+
+**This is the #1 source of bugs in collection code.**
+
+- NEVER use `!== undefined` to check key existence — values can legitimately be `undefined`
+- ALWAYS use `F.has(fa, key)` for existence, then `F.get(fa, key)` for retrieval
+
+```typescript
+// WRONG — breaks for Map.set("key", undefined)
+export function getOrElse<F, K>(F: MapLike<F, K>) {
+  return <V>(fa: $<F, V>, key: K, fallback: () => V): V => {
+    const v = F.get(fa, key);
+    return v !== undefined ? v : fallback(); // BUG: skips undefined values
+  };
+}
+
+// CORRECT
+export function getOrElse<F, K>(F: MapLike<F, K>) {
+  return <V>(fa: $<F, V>, key: K, fallback: () => V): V =>
+    F.has(fa, key) ? F.get(fa, key)! : fallback();
+}
+```
+
+Same pattern applies to: `mapValues`, `filterKeys`, `filterValues`, `foldEntries`, `merge`.
+
+## Performance Rules
+
+1. **`partition` must be single-pass** — never call `filter` twice with complementary predicates
+2. **LazyView chains must not allocate** — each operation returns a new LazyView wrapping a generator
+3. **Test laziness** — verify operation counts to ensure generators aren't fully consumed early
+
+## Naming Disambiguation
+
+When different typeclasses have methods with the same name, the standalone ops module must disambiguate:
+
+| Typeclass method                  | Standalone function name |
+| --------------------------------- | ------------------------ |
+| `Seq.updated(fa, index, value)`   | `C.updated`              |
+| `MapLike.updated(fa, key, value)` | `C.mapUpdated`           |
+| `SetLike.remove(fa, elem)`        | `C.remove`               |
+| `MapLike.removed(fa, key)`        | `C.mapRemoved`           |
+
+## Exports Checklist
+
+Every package must re-export from `index.ts`:
+
+- All type-level functions (HKT interfaces)
+- All typeclass interfaces
+- All derived operations
+- All pre-built instances
+- All bridge functions (to @typesugar/fp, @typesugar/std)
+- The `$` and `Kind` type utilities
+
+## Bridge Modules
+
+When bridging to `@typesugar/fp` or `@typesugar/std`, cover ALL relevant typeclasses:
+
+- `@typesugar/fp`: Foldable, Functor, Monad, SemigroupK, MonoidK, Monoid, Eq, Ord
+- `@typesugar/std`: Sized, Searchable, Reducible
+
+Don't leave gaps — if `Reducible` exists in std, provide `reducibleFromIterableOnce`.

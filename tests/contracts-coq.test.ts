@@ -1,5 +1,5 @@
 /**
- * Tests for Coq-inspired improvements to @ttfx/contracts
+ * Tests for Coq-inspired improvements to @typesugar/contracts
  *
  * - Linear arithmetic solver (Fourier-Motzkin)
  * - Decidability annotations and warnings
@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { TypeFact, DecidabilityInfo } from "@ttfx/contracts";
+import type { TypeFact, DecidabilityInfo } from "@typesugar/contracts";
 
 // ============================================================================
 // Linear Arithmetic Solver Tests
@@ -17,7 +17,7 @@ import type { TypeFact, DecidabilityInfo } from "@ttfx/contracts";
 
 describe("linear arithmetic solver", () => {
   it("should prove simple linear inequalities", async () => {
-    const { tryLinearArithmetic } = await import("@ttfx/contracts");
+    const { tryLinearArithmetic } = await import("@typesugar/contracts");
 
     const facts: TypeFact[] = [
       { variable: "x", predicate: "x > 0" },
@@ -31,7 +31,7 @@ describe("linear arithmetic solver", () => {
   });
 
   it("should prove transitivity", async () => {
-    const { tryLinearArithmetic } = await import("@ttfx/contracts");
+    const { tryLinearArithmetic } = await import("@typesugar/contracts");
 
     const facts: TypeFact[] = [
       { variable: "x", predicate: "x > y" },
@@ -44,7 +44,7 @@ describe("linear arithmetic solver", () => {
   });
 
   it("should prove positive implies non-negative", async () => {
-    const { trySimpleLinearProof } = await import("@ttfx/contracts");
+    const { trySimpleLinearProof } = await import("@typesugar/contracts");
 
     const facts: TypeFact[] = [{ variable: "x", predicate: "x > 0" }];
 
@@ -53,7 +53,7 @@ describe("linear arithmetic solver", () => {
   });
 
   it("should prove constant bounds", async () => {
-    const { tryLinearArithmetic } = await import("@ttfx/contracts");
+    const { tryLinearArithmetic } = await import("@typesugar/contracts");
 
     const facts: TypeFact[] = [
       { variable: "x", predicate: "x >= 5" },
@@ -65,7 +65,7 @@ describe("linear arithmetic solver", () => {
   });
 
   it("should not prove false goals", async () => {
-    const { tryLinearArithmetic } = await import("@ttfx/contracts");
+    const { tryLinearArithmetic } = await import("@typesugar/contracts");
 
     const facts: TypeFact[] = [{ variable: "x", predicate: "x > 0" }];
 
@@ -75,7 +75,7 @@ describe("linear arithmetic solver", () => {
   });
 
   it("should handle equality constraints", async () => {
-    const { tryLinearArithmetic } = await import("@ttfx/contracts");
+    const { tryLinearArithmetic } = await import("@typesugar/contracts");
 
     const facts: TypeFact[] = [{ variable: "x", predicate: "x === 5" }];
 
@@ -84,7 +84,7 @@ describe("linear arithmetic solver", () => {
   });
 
   it("should prove difference constraints", async () => {
-    const { tryLinearArithmetic } = await import("@ttfx/contracts");
+    const { tryLinearArithmetic } = await import("@typesugar/contracts");
 
     // Test transitivity: x > y and y > 0 implies x > 0
     const facts: TypeFact[] = [
@@ -114,7 +114,7 @@ describe("decidability annotations", () => {
 
   it("should register decidability info", async () => {
     const { registerDecidability, getDecidability } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     const info: DecidabilityInfo = {
       brand: "TestBrand",
@@ -131,7 +131,7 @@ describe("decidability annotations", () => {
   });
 
   it("should get preferred strategy with default", async () => {
-    const { getPreferredStrategy } = await import("@ttfx/contracts");
+    const { getPreferredStrategy } = await import("@typesugar/contracts");
 
     // Unknown brand should default to "algebra"
     const strategy = getPreferredStrategy("UnknownBrand123");
@@ -140,7 +140,7 @@ describe("decidability annotations", () => {
 
   it("should check if compile-time decidable", async () => {
     const { registerDecidability, isCompileTimeDecidable } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     registerDecidability({
       brand: "CompileTimeTest",
@@ -160,7 +160,7 @@ describe("decidability annotations", () => {
 
   it("should check if requires runtime check", async () => {
     const { registerDecidability, requiresRuntimeCheck } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     registerDecidability({
       brand: "RuntimeRequiredTest",
@@ -187,7 +187,7 @@ describe("decidability annotations", () => {
 
   it("should emit decidability warnings", async () => {
     const { emitDecidabilityWarning, setContractConfig, getContractConfig } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // Configure to warn on fallback
     setContractConfig({
@@ -211,7 +211,7 @@ describe("decidability annotations", () => {
 
   it("should respect ignored brands in warnings", async () => {
     const { emitDecidabilityWarning, setContractConfig, getContractConfig } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     setContractConfig({
       ...getContractConfig(),
@@ -233,7 +233,7 @@ describe("decidability annotations", () => {
 
   it("should get all decidability info", async () => {
     const { registerDecidability, getAllDecidabilityInfo } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     registerDecidability({
       brand: "InfoTest1",
@@ -255,7 +255,7 @@ describe("decidability annotations", () => {
 
 describe("Vec<T, N> length-indexed arrays", () => {
   it("should create empty Vec", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const empty = Vec.empty<string>();
     expect(empty.length).toBe(0);
@@ -263,7 +263,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should create singleton Vec", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const single = Vec.singleton("hello");
     expect(single.length).toBe(1);
@@ -271,7 +271,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should create Vec from array", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     expect(v.length).toBe(3);
@@ -279,7 +279,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should create Vec from tuple", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.tuple("a", "b", "c");
     expect(v.length).toBe(3);
@@ -287,7 +287,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should create filled Vec", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.fill(0, 5);
     expect(v.length).toBe(5);
@@ -295,7 +295,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should create generated Vec", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.generate(4, (i) => i * 2);
     expect(v.length).toBe(4);
@@ -303,7 +303,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should cons (prepend) element", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v3 = Vec.from<number, 3>([1, 2, 3]);
     const v4 = Vec.cons(0, v3);
@@ -312,7 +312,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should snoc (append) element", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v3 = Vec.from<number, 3>([1, 2, 3]);
     const v4 = Vec.snoc(v3, 4);
@@ -321,7 +321,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should append two Vecs", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const a = Vec.from<number, 2>([1, 2]);
     const b = Vec.from<number, 3>([3, 4, 5]);
@@ -331,14 +331,14 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should get head", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     expect(Vec.head(v)).toBe(1);
   });
 
   it("should get tail", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     const t = Vec.tail(v);
@@ -347,14 +347,14 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should get last", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     expect(Vec.last(v)).toBe(3);
   });
 
   it("should get init", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     const i = Vec.init(v);
@@ -363,7 +363,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should take elements", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 5>([1, 2, 3, 4, 5]);
     const taken = Vec.take(v, 3);
@@ -372,7 +372,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should drop elements", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 5>([1, 2, 3, 4, 5]);
     const dropped = Vec.drop(v, 2);
@@ -381,7 +381,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should get element at index", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([10, 20, 30]);
     expect(Vec.get(v, 0)).toBe(10);
@@ -390,7 +390,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should throw on out-of-bounds access", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     expect(() => Vec.get(v, 5)).toThrow("index out of bounds");
@@ -398,7 +398,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should map over Vec", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     const doubled = Vec.map(v, (x) => x * 2);
@@ -407,7 +407,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should zip two Vecs", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const a = Vec.from<number, 3>([1, 2, 3]);
     const b = Vec.from<string, 3>(["a", "b", "c"]);
@@ -421,7 +421,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should reverse Vec", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     const r = Vec.reverse(v);
@@ -430,7 +430,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should check isVec", async () => {
-    const { Vec, isVec } = await import("@ttfx/type-system");
+    const { Vec, isVec } = await import("@typesugar/type-system");
 
     const v = Vec.from<number, 3>([1, 2, 3]);
     const arr = [1, 2, 3];
@@ -442,7 +442,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
   });
 
   it("should throw on length mismatch in from()", async () => {
-    const { Vec } = await import("@ttfx/type-system");
+    const { Vec } = await import("@typesugar/type-system");
 
     // This would be a type error in strict mode, but at runtime:
     // Vec.from validates length matches
@@ -461,7 +461,7 @@ describe("Vec<T, N> length-indexed arrays", () => {
 
 describe("dynamic predicate generators", () => {
   it("should generate Vec predicates dynamically", async () => {
-    const { getRefinementPredicate } = await import("@ttfx/contracts");
+    const { getRefinementPredicate } = await import("@typesugar/contracts");
 
     // Vec predicates are generated on-the-fly based on the brand pattern
     const pred5 = getRefinementPredicate("Vec<5>");
@@ -476,7 +476,7 @@ describe("dynamic predicate generators", () => {
 
   it("should allow registering custom dynamic generators", async () => {
     const { registerDynamicPredicateGenerator, getRefinementPredicate } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // Register a custom pattern for Matrix<R,C>
     registerDynamicPredicateGenerator(
@@ -489,7 +489,7 @@ describe("dynamic predicate generators", () => {
   });
 
   it("should fall back to undefined for unknown brands", async () => {
-    const { getRefinementPredicate } = await import("@ttfx/contracts");
+    const { getRefinementPredicate } = await import("@typesugar/contracts");
 
     const unknown = getRefinementPredicate("CompletelyUnknownType123456");
     expect(unknown).toBeUndefined();
@@ -503,7 +503,7 @@ describe("dynamic predicate generators", () => {
 describe("subtyping coercions", () => {
   it("should register subtyping rules", async () => {
     const { registerSubtypingRule, getSubtypingRule, canWiden } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     registerSubtypingRule({
       from: "StrictPositive",
@@ -520,7 +520,7 @@ describe("subtyping coercions", () => {
   });
 
   it("should allow identity widening", async () => {
-    const { canWiden } = await import("@ttfx/contracts");
+    const { canWiden } = await import("@typesugar/contracts");
 
     // Same type should always be wideneable to itself
     expect(canWiden("Positive", "Positive")).toBe(true);
@@ -529,7 +529,7 @@ describe("subtyping coercions", () => {
 
   it("should get all widen targets", async () => {
     const { registerSubtypingRule, getWidenTargets } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     registerSubtypingRule({
       from: "WidenSource",
@@ -552,7 +552,7 @@ describe("subtyping coercions", () => {
   });
 
   it("should get all subtyping rules", async () => {
-    const { getAllSubtypingRules } = await import("@ttfx/contracts");
+    const { getAllSubtypingRules } = await import("@typesugar/contracts");
 
     const rules = getAllSubtypingRules();
     expect(Array.isArray(rules)).toBe(true);
@@ -567,7 +567,7 @@ describe("subtyping coercions", () => {
 describe("proof certificates", () => {
   it("should create a proof certificate", async () => {
     const { createCertificate, succeedCertificate, createStep } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // createCertificate takes (goal, assumptions)
     let cert = createCertificate("x > 0", []);
@@ -585,7 +585,7 @@ describe("proof certificates", () => {
 
   it("should create a failed certificate", async () => {
     const { createCertificate, failCertificate } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     let cert = createCertificate("impossible > 0", []);
     cert = failCertificate(cert, "No proof found");
@@ -600,7 +600,7 @@ describe("proof certificates", () => {
       succeedCertificate,
       formatCertificate,
       createStep,
-    } = await import("@ttfx/contracts");
+    } = await import("@typesugar/contracts");
 
     let cert = createCertificate("x > 0", []);
     const step = createStep("constant", "Evaluated at compile time");
@@ -618,7 +618,7 @@ describe("proof certificates", () => {
       succeedCertificate,
       certificateToResult,
       createStep,
-    } = await import("@ttfx/contracts");
+    } = await import("@typesugar/contracts");
 
     let cert = createCertificate("test", []);
     const step = createStep("algebra", "Sum of positives");
@@ -631,7 +631,7 @@ describe("proof certificates", () => {
 
   it("should build a certificate with steps manually", async () => {
     const { createCertificate, succeedCertificate, createStep, addStep } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // Start with facts and a goal
     const facts: TypeFact[] = [{ variable: "x", predicate: "x > 0" }];
@@ -666,14 +666,14 @@ describe("proof certificates", () => {
 
 describe("@decidable macro", () => {
   it("should export decidable function", async () => {
-    const { decidable } = await import("@ttfx/contracts");
+    const { decidable } = await import("@typesugar/contracts");
 
     expect(typeof decidable).toBe("function");
 
     // Should register decidability
     decidable("CustomDecidableType", "compile-time", "constant");
 
-    const { getDecidability } = await import("@ttfx/contracts");
+    const { getDecidability } = await import("@typesugar/contracts");
     const info = getDecidability("CustomDecidableType");
     expect(info).toBeDefined();
     expect(info?.decidability).toBe("compile-time");
@@ -681,7 +681,7 @@ describe("@decidable macro", () => {
   });
 
   it("should export decidableAttribute", async () => {
-    const { decidableAttribute } = await import("@ttfx/contracts");
+    const { decidableAttribute } = await import("@typesugar/contracts");
 
     expect(decidableAttribute).toBeDefined();
     expect(decidableAttribute.name).toBe("decidable");
@@ -696,7 +696,7 @@ describe("@decidable macro", () => {
 describe("check elision with decidability", () => {
   it("should prove goals matching type facts without emitting warnings", async () => {
     const { tryAlgebraicProof, isCompileTimeDecidable, registerDecidability } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // Register a decidable type
     registerDecidability({
@@ -717,7 +717,7 @@ describe("check elision with decidability", () => {
 
   it("should provide subtyping-based proof hints", async () => {
     const { canWiden, getSubtypingRule, registerSubtypingRule } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // Clear any prior state and register fresh rules
     registerSubtypingRule({
@@ -737,7 +737,7 @@ describe("check elision with decidability", () => {
 
   it("should use linear solver for numerical bounds", async () => {
     const { tryLinearArithmetic, trySimpleLinearProof } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // Test simple linear proof: x > 0 implies x >= 0
     const result = trySimpleLinearProof("x >= 0", [
@@ -754,7 +754,7 @@ describe("check elision with decidability", () => {
       canProveAtCompileTime,
       mustCheckAtRuntime,
       registerDecidability,
-    } = await import("@ttfx/contracts");
+    } = await import("@typesugar/contracts");
 
     // Register types with different decidability
     registerDecidability({
@@ -790,7 +790,7 @@ describe("check elision with decidability", () => {
 
   it("should elide checks when proof succeeds for compound expressions", async () => {
     const { tryAlgebraicProof, trySimpleLinearProof } =
-      await import("@ttfx/contracts");
+      await import("@typesugar/contracts");
 
     // Compound facts from multiple type facts
     const facts: TypeFact[] = [

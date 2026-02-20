@@ -1,15 +1,15 @@
 /**
- * @ttfx/fp Law Definitions
+ * @typesugar/fp Law Definitions
  *
  * This module exports structured law definitions for all typeclasses.
  * Laws are data, not just comments — they can be verified at compile time
- * via @ttfx/contracts or at runtime via property-based testing.
+ * via @typesugar/contracts or at runtime via property-based testing.
  *
  * ## Usage
  *
  * ```typescript
- * import { semigroupLaws, monoidLaws } from "@ttfx/fp/laws";
- * import { forAll } from "@ttfx/testing";
+ * import { semigroupLaws, monoidLaws } from "@typesugar/fp/laws";
+ * import { forAll } from "@typesugar/testing";
  *
  * // Property-based testing
  * const laws = semigroupLaws(mySemigroup, myEq);
@@ -30,7 +30,7 @@
 // ============================================================================
 
 export type {
-  // Re-exports from @ttfx/contracts
+  // Re-exports from @typesugar/contracts
   Law,
   LawSet,
   LawGenerator,
@@ -40,7 +40,7 @@ export type {
   UndecidableAction,
   LawVerificationResult,
   VerificationSummary,
-  // @ttfx/fp-specific types
+  // @typesugar/fp-specific types
   EqF,
   EqFA,
   VerifyLawsOptions,
@@ -48,7 +48,7 @@ export type {
   HKTLawGenerator,
 } from "./types.js";
 
-// Re-export builder utilities from @ttfx/contracts
+// Re-export builder utilities from @typesugar/contracts
 export { defineLaw, combineLaws, filterLaws, filterByHint } from "./types.js";
 
 // ============================================================================

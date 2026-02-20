@@ -1,6 +1,6 @@
 # Writing Macros
 
-This guide explains how to create your own macros for ttfx.
+This guide explains how to create your own macros for typesugar.
 
 ## Overview
 
@@ -17,8 +17,8 @@ Expression macros transform function calls.
 ### Basic Structure
 
 ```typescript
-import { defineExpressionMacro, globalRegistry } from "@ttfx/core";
-import type { MacroContext } from "@ttfx/core";
+import { defineExpressionMacro, globalRegistry } from "@typesugar/core";
+import type { MacroContext } from "@typesugar/core";
 import * as ts from "typescript";
 
 export const myMacro = defineExpressionMacro({
@@ -41,14 +41,14 @@ globalRegistry.register(myMacro);
 
 // Export placeholder for users to import
 export function myMacro(): string {
-  throw new Error("myMacro must be compiled with ttfx transformer");
+  throw new Error("myMacro must be compiled with typesugar transformer");
 }
 ```
 
 ### Example: Assert Macro
 
 ```typescript
-import { defineExpressionMacro, globalRegistry } from "@ttfx/core";
+import { defineExpressionMacro, globalRegistry } from "@typesugar/core";
 import * as ts from "typescript";
 
 export const assertMacro = defineExpressionMacro({
@@ -89,7 +89,7 @@ Attribute macros transform decorated declarations.
 ### Basic Structure
 
 ```typescript
-import { defineAttributeMacro, globalRegistry } from "@ttfx/core";
+import { defineAttributeMacro, globalRegistry } from "@typesugar/core";
 import * as ts from "typescript";
 
 export const myDecorator = defineAttributeMacro({
@@ -135,7 +135,7 @@ Tagged template macros process template literals.
 ### Basic Structure
 
 ```typescript
-import { defineTaggedTemplateMacro, globalRegistry } from "@ttfx/core";
+import { defineTaggedTemplateMacro, globalRegistry } from "@typesugar/core";
 import * as ts from "typescript";
 
 export const myTagMacro = defineTaggedTemplateMacro({
@@ -210,7 +210,7 @@ Labeled block macros use JavaScript's labeled statements.
 ### Basic Structure
 
 ```typescript
-import { defineLabeledBlockMacro, globalRegistry } from "@ttfx/core";
+import { defineLabeledBlockMacro, globalRegistry } from "@typesugar/core";
 import * as ts from "typescript";
 
 export const myBlockMacro = defineLabeledBlockMacro({
@@ -332,7 +332,7 @@ export const myMacro = defineExpressionMacro({
 ## Testing Macros
 
 ```typescript
-import { transformFile } from "@ttfx/transformer";
+import { transformFile } from "@typesugar/transformer";
 
 describe("myMacro", () => {
   it("transforms correctly", () => {

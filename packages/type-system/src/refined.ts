@@ -58,7 +58,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Type-Level API
@@ -260,7 +260,7 @@ export function getAllSubtypingDeclarations(): readonly SubtypingDeclaration[] {
  * Widen a refined value to a supertype without runtime validation.
  * This is safe when a subtyping relationship has been declared.
  *
- * At compile time (with the ttfx transformer), this verifies the
+ * At compile time (with the typesugar transformer), this verifies the
  * subtyping relationship exists and produces a zero-cost cast.
  * At runtime (without transformer), it's a simple identity function.
  *
@@ -305,7 +305,7 @@ export function widenTo<
 // ============================================================================
 
 // Register built-in subtyping relationships
-// These are proven by the algebraic rules in @ttfx/contracts
+// These are proven by the algebraic rules in @typesugar/contracts
 
 declareSubtyping({
   from: "Positive",
@@ -577,7 +577,7 @@ export const unsafeRefineMacro = defineExpressionMacro({
 globalRegistry.register(refineMacro);
 
 // ============================================================================
-// Predicate Exports for @ttfx/contracts-refined
+// Predicate Exports for @typesugar/contracts-refined
 // ============================================================================
 
 /**
@@ -623,7 +623,7 @@ export interface RefinementPredicate {
 
 /**
  * All built-in refinement predicates.
- * Used by @ttfx/contracts-refined to register type facts with the prover.
+ * Used by @typesugar/contracts-refined to register type facts with the prover.
  *
  * NOTE: These predicates are simplified for the prover's algebraic rules.
  * The actual runtime validation may include additional checks (e.g., isInteger).

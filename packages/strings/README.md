@@ -1,17 +1,17 @@
-# @ttfx/strings
+# @typesugar/strings
 
 > Compile-time validated string macros.
 
 ## Overview
 
-`@ttfx/strings` provides tagged template macros for string processing with compile-time validation: regex validation, HTML XSS escaping, printf-style formatting, JSON parsing, and raw strings.
+`@typesugar/strings` provides tagged template macros for string processing with compile-time validation: regex validation, HTML XSS escaping, printf-style formatting, JSON parsing, and raw strings.
 
 ## Installation
 
 ```bash
-npm install @ttfx/strings
+npm install @typesugar/strings
 # or
-pnpm add @ttfx/strings
+pnpm add @typesugar/strings
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @ttfx/strings
 ### regex — Compile-Time Validated Regular Expressions
 
 ```typescript
-import { regex } from "@ttfx/strings";
+import { regex } from "@typesugar/strings";
 
 // Validated at compile time
 const email = regex`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
@@ -33,7 +33,7 @@ const bad = regex`[invalid`;
 ### html — XSS-Safe HTML Templates
 
 ```typescript
-import { html } from "@ttfx/strings";
+import { html } from "@typesugar/strings";
 
 const userInput = "<script>alert('xss')</script>";
 
@@ -45,7 +45,7 @@ const safe = html`<div>${userInput}</div>`;
 ### fmt — Printf-Style Formatting
 
 ```typescript
-import { fmt } from "@ttfx/strings";
+import { fmt } from "@typesugar/strings";
 
 const name = "Alice";
 const age = 30;
@@ -57,7 +57,7 @@ const message = fmt`Hello, ${name}! You are ${age} years old.`;
 ### json — Compile-Time JSON Parsing
 
 ```typescript
-import { json } from "@ttfx/strings";
+import { json } from "@typesugar/strings";
 
 // Parsed and validated at compile time
 const config = json`{
@@ -75,7 +75,7 @@ const bad = json`{ invalid json }`;
 ### raw — Raw Strings (No Escape Processing)
 
 ```typescript
-import { raw } from "@ttfx/strings";
+import { raw } from "@typesugar/strings";
 
 // Escape sequences preserved
 const path = raw`C:\Users\name\Documents`;

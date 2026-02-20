@@ -5,7 +5,7 @@
  * during compilation and embed the results in your code.
  */
 
-import { comptime } from "@ttfx/comptime";
+import { comptime } from "@typesugar/comptime";
 
 console.log("=== Comptime Example ===\n");
 

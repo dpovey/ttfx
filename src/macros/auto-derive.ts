@@ -21,7 +21,7 @@
  * // Show.derived uses this mirror + Show[Int] instances to synthesize Show[Point]
  * ```
  *
- * ## ttfx Equivalent
+ * ## typesugar Equivalent
  *
  * ```typescript
  * // Just define the type — no annotations needed:
@@ -81,7 +81,7 @@ import { getGenericMeta, type GenericMeta } from "./generic.js";
  * which uses `Mirror.ProductOf[T]` / `Mirror.SumOf[T]` to synthesize
  * an instance from element-level instances.
  *
- * In ttfx, `GenericMeta` is our Mirror and this interface is our `derived`.
+ * In typesugar, `GenericMeta` is our Mirror and this interface is our `derived`.
  */
 export interface GenericDerivation {
   /**

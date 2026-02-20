@@ -2,13 +2,13 @@
  * Law Verification Engine
  *
  * Provides utilities for verifying laws at compile time or runtime.
- * This is the generic verification layer used by @ttfx/fp and
+ * This is the generic verification layer used by @typesugar/fp and
  * other packages that define algebraic laws.
  *
  * @module
  */
 
-import type { MacroContext } from "@ttfx/core";
+import type { MacroContext } from "@typesugar/core";
 import type { TypeFact } from "../prover/type-facts.js";
 import { tryAlgebraicProof } from "../prover/algebra.js";
 import { tryLinearArithmetic } from "../prover/linear.js";
@@ -30,7 +30,7 @@ import type {
 
 /**
  * Configuration for generic law verification.
- * Can be extended by domain-specific packages like @ttfx/fp.
+ * Can be extended by domain-specific packages like @typesugar/fp.
  */
 export interface LawsConfig {
   /** Default verification mode */

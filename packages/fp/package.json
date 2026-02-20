@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/fp",
+  "name": "@typesugar/fp",
   "version": "0.1.0",
-  "description": "Functional programming library with typeclasses and data types for ttfx",
+  "description": "Functional programming library with typeclasses and data types for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -61,9 +61,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/contracts": "workspace:*",
-    "@ttfx/core": "workspace:*",
-    "@ttfx/type-system": "workspace:*"
+    "@typesugar/contracts": "workspace:*",
+    "@typesugar/core": "workspace:*",
+    "@typesugar/type-system": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

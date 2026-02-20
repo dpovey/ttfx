@@ -5,7 +5,7 @@
  * then interpret them later. Enables referential transparency for side effects.
  */
 
-import { IO, runIO, runIOSync, pipe } from "@ttfx/fp";
+import { IO, runIO, runIOSync, pipe } from "@typesugar/fp";
 
 // --- Basic IO Operations ---
 

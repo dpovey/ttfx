@@ -1,17 +1,17 @@
-# @ttfx/operators
+# @typesugar/operators
 
 > Operator overloading macros for TypeScript.
 
 ## Overview
 
-`@ttfx/operators` enables operator overloading in TypeScript through compile-time macro expansion. Define custom behavior for `+`, `-`, `*`, `/`, and other operators on your classes, with transformations happening at compile time — no runtime overhead.
+`@typesugar/operators` enables operator overloading in TypeScript through compile-time macro expansion. Define custom behavior for `+`, `-`, `*`, `/`, and other operators on your classes, with transformations happening at compile time — no runtime overhead.
 
 ## Installation
 
 ```bash
-npm install @ttfx/operators
+npm install @typesugar/operators
 # or
-pnpm add @ttfx/operators
+pnpm add @typesugar/operators
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @ttfx/operators
 ### Operator Overloading with @operators
 
 ```typescript
-import { operators, ops } from "@ttfx/operators";
+import { operators, ops } from "@typesugar/operators";
 
 @operators({ "+": "add", "-": "sub", "*": "scale", "-unary": "negate" })
 class Vec2 {
@@ -90,7 +90,7 @@ const result = ops((a + b) * 3 - a);
 ### Function Composition with pipe()
 
 ```typescript
-import { pipe } from "@ttfx/operators";
+import { pipe } from "@typesugar/operators";
 
 const double = (x: number) => x * 2;
 const addOne = (x: number) => x + 1;
@@ -105,7 +105,7 @@ const result = pipe(5, double, addOne, square);
 ### Function Composition with compose()
 
 ```typescript
-import { compose } from "@ttfx/operators";
+import { compose } from "@typesugar/operators";
 
 const double = (x: number) => x * 2;
 const addOne = (x: number) => x + 1;

@@ -1,5 +1,5 @@
 {
-  "name": "@ttfx/testing",
+  "name": "@typesugar/testing",
   "version": "0.1.0",
   "description": "Compile-time testing macros — power assertions, property-based testing, type assertions",
   "type": "module",
@@ -35,8 +35,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*",
-    "@ttfx/type-system": "workspace:*"
+    "@typesugar/core": "workspace:*",
+    "@typesugar/type-system": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

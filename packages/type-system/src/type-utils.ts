@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * import { Equal, Extends, Not, And, Or, IsNever, IsAny, IsUnknown } from "@ttfx/type-system";
+ * import { Equal, Extends, Not, And, Or, IsNever, IsAny, IsUnknown } from "@typesugar/type-system";
  *
  * // Type-level equality check
  * type Test1 = Equal<string, string>;  // true
@@ -105,6 +105,6 @@ export type IsUnknown<T> =
  * Assert that two types are equal (deprecated alias).
  *
  * @deprecated Use `Equal<A, B>` instead. This alias exists for backward
- * compatibility with code that used `Equals` from @ttfx/zero-cost.
+ * compatibility with code that used `Equals` from @typesugar/zero-cost.
  */
 export type Equals<A, B> = Equal<A, B>;

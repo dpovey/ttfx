@@ -1,5 +1,5 @@
 /**
- * @ttfx/contracts — Comprehensive Examples
+ * @typesugar/contracts — Comprehensive Examples
  *
  * This file demonstrates the full capabilities of the Design by Contract
  * system, including what the prover can prove at compile time, what requires
@@ -16,7 +16,7 @@
  */
 
 /**
- * NOTE: This file demonstrates the INTENDED usage with the ttfx transformer.
+ * NOTE: This file demonstrates the INTENDED usage with the typesugar transformer.
  *
  * DECORATORS (@contract, @invariant):
  *   These are attribute macros recognized by the transformer during compilation.
@@ -29,15 +29,15 @@
  *   With the transformer: converted to optimized checks or stripped entirely.
  *
  * TO RUN THIS EXAMPLE:
- *   Compile with ttfx transformer enabled (via ts-patch or tsup with plugin).
+ *   Compile with typesugar transformer enabled (via ts-patch or tsup with plugin).
  */
 
 // =============================================================================
 // IMPORTANT: Enable Refined Types Integration
 // =============================================================================
 //
-// Import @ttfx/contracts-refined to connect the contracts prover with
-// the refinement types from @ttfx/type-system. This import:
+// Import @typesugar/contracts-refined to connect the contracts prover with
+// the refinement types from @typesugar/type-system. This import:
 //
 // 1. Registers ALL built-in refinement predicates (Positive, Byte, Port, etc.)
 // 2. Enables the prover to extract type facts from Refined<T, Brand> types
@@ -45,20 +45,20 @@
 //
 // Without this import, the prover has NO knowledge of refined types!
 // =============================================================================
-import "@ttfx/contracts-refined";
+import "@typesugar/contracts-refined";
 
 import {
   requires,
   ensures,
   old,
   registerAlgebraicRule,
-} from "@ttfx/contracts";
-import { Positive, NonNegative, Port, Byte, NonEmpty } from "@ttfx/type-system";
+} from "@typesugar/contracts";
+import { Positive, NonNegative, Port, Byte, NonEmpty } from "@typesugar/type-system";
 
 // =============================================================================
 // Decorator Stubs (for TypeScript type-checking without transformer)
 // =============================================================================
-// These are recognized by the ttfx transformer by name.
+// These are recognized by the typesugar transformer by name.
 // The stubs allow this file to type-check in a regular IDE.
 
 /**
@@ -603,7 +603,7 @@ console.log("\n=== Section 4: Configuration and Stripping ===\n");
  * - "none": All checks stripped (for production)
  *
  * Set via:
- * - Environment variable: TTFX_CONTRACTS_MODE=none
+ * - Environment variable: TYPESUGAR_CONTRACTS_MODE=none
  * - Transformer config: { contracts: { mode: "none" } }
  */
 function productionExample(x: number): number {
@@ -781,7 +781,7 @@ import {
   formatCertificate,
   type TypeFact,
   type ProofCertificate,
-} from "@ttfx/contracts";
+} from "@typesugar/contracts";
 
 // -----------------------------------------------------------------------------
 // 6.1 Decidability Annotations
@@ -1002,7 +1002,7 @@ console.log("\nElision demo result:", elisionDemoWithRefinedTypes(
 console.log("\n=== Summary ===");
 console.log(`
 INTEGRATION:
-  import "@ttfx/contracts-refined";  // Enable refined types integration
+  import "@typesugar/contracts-refined";  // Enable refined types integration
   
   This import is REQUIRED to connect contracts with type-system.
   Without it, the prover has no knowledge of Positive, Byte, Port, etc.
@@ -1038,8 +1038,8 @@ Edge cases to remember:
   - Z3 extends proof power but has async init delay
 
 Package architecture:
-  @ttfx/type-system       — Defines Refined<T, Brand> types + predicates
-  @ttfx/contracts         — Contract macros + prover (no built-in predicates)
-  @ttfx/contracts-refined — Bridges the two (import to activate)
-  @ttfx/contracts-z3      — Optional Z3 SMT solver plugin
+  @typesugar/type-system       — Defines Refined<T, Brand> types + predicates
+  @typesugar/contracts         — Contract macros + prover (no built-in predicates)
+  @typesugar/contracts-refined — Bridges the two (import to activate)
+  @typesugar/contracts-z3      — Optional Z3 SMT solver plugin
 `);

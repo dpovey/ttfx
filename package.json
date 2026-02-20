@@ -1,16 +1,16 @@
 {
-  "name": "ttfx-monorepo",
+  "name": "typesugar-monorepo",
   "private": true,
   "description": "Compile-time macros for TypeScript -- inspired by Rust, Scala 3, and Zig",
   "type": "module",
   "scripts": {
-    "build": "pnpm -r --filter '!ttfx-example-*' build",
-    "build:watch": "pnpm -r --parallel --filter '!ttfx-example-*' build:watch",
+    "build": "pnpm -r --filter '!typesugar-example-*' build",
+    "build:watch": "pnpm -r --parallel --filter '!typesugar-example-*' build:watch",
     "build:all": "pnpm -r build",
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "pnpm -r clean && rm -rf node_modules",
-    "typecheck": "pnpm -r --filter '!ttfx-example-*' typecheck",
+    "typecheck": "pnpm -r --filter '!typesugar-example-*' typecheck",
     "lint": "pnpm -r lint"
   },
   "keywords": [
@@ -27,11 +27,11 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@ttfx/contracts": "workspace:*",
-    "@ttfx/contracts-refined": "workspace:*",
-    "unplugin-ttfx": "workspace:*",
-    "@ttfx/testing": "workspace:*",
-    "@ttfx/type-system": "workspace:*",
+    "@typesugar/contracts": "workspace:*",
+    "@typesugar/contracts-refined": "workspace:*",
+    "unplugin-typesugar": "workspace:*",
+    "@typesugar/testing": "workspace:*",
+    "@typesugar/type-system": "workspace:*",
     "@types/node": "^22.15.30",
     "@types/react": "^19.2.14",
     "react": "^19.2.4",

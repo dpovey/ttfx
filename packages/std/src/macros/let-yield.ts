@@ -36,7 +36,7 @@
  * ## Registering custom types
  *
  * ```typescript
- * import { registerFlatMap } from "@ttfx/std/typeclasses/flatmap";
+ * import { registerFlatMap } from "@typesugar/std/typeclasses/flatmap";
  *
  * registerFlatMap("MyType", {
  *   map: (fa, f) => fa.map(f),
@@ -51,7 +51,7 @@ import {
   type MacroContext,
   defineLabeledBlockMacro,
   globalRegistry,
-} from "@ttfx/core";
+} from "@typesugar/core";
 import { getFlatMap } from "../typeclasses/flatmap.js";
 
 // ============================================================================
@@ -428,7 +428,7 @@ function generateMethodCall(
     );
   }
 
-  // For custom types, generate: require("@ttfx/std/typeclasses/flatmap").getFlatMap("Type")!.method(expr, param => body)
+  // For custom types, generate: require("@typesugar/std/typeclasses/flatmap").getFlatMap("Type")!.method(expr, param => body)
   // Uses inline require() to avoid needing to inject import statements in macro output.
   return factory.createCallExpression(
     factory.createPropertyAccessExpression(
@@ -438,7 +438,7 @@ function generateMethodCall(
             factory.createCallExpression(
               factory.createIdentifier("require"),
               undefined,
-              [factory.createStringLiteral("@ttfx/std/typeclasses/flatmap")],
+              [factory.createStringLiteral("@typesugar/std/typeclasses/flatmap")],
             ),
             factory.createIdentifier("getFlatMap"),
           ),

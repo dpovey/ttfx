@@ -1,17 +1,17 @@
-# @ttfx/specialize
+# @typesugar/specialize
 
 > Zero-cost typeclass specialization macros.
 
 ## Overview
 
-`@ttfx/specialize` provides compile-time specialization for generic functions, eliminating runtime typeclass dictionary passing. Similar to GHC's SPECIALIZE pragma or Rust's monomorphization — achieve true zero-cost abstractions.
+`@typesugar/specialize` provides compile-time specialization for generic functions, eliminating runtime typeclass dictionary passing. Similar to GHC's SPECIALIZE pragma or Rust's monomorphization — achieve true zero-cost abstractions.
 
 ## Installation
 
 ```bash
-npm install @ttfx/specialize
+npm install @typesugar/specialize
 # or
-pnpm add @ttfx/specialize
+pnpm add @typesugar/specialize
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @ttfx/specialize
 ### specialize() — Create Specialized Functions
 
 ```typescript
-import { specialize } from "@ttfx/specialize";
+import { specialize } from "@typesugar/specialize";
 
 // Generic function with typeclass constraint
 function sortWith<T>(items: T[], ord: Ord<T>): T[] {
@@ -37,7 +37,7 @@ const sorted = sortNumbers([3, 1, 2]); // [1, 2, 3]
 ### specialize$() — Inline Single Calls
 
 ```typescript
-import { specialize$ } from "@ttfx/specialize";
+import { specialize$ } from "@typesugar/specialize";
 
 // Inline specialization for a single call
 const result = specialize$(sortWith([3, 1, 2], numberOrd));
@@ -47,7 +47,7 @@ const result = specialize$(sortWith([3, 1, 2], numberOrd));
 ### mono() — Monomorphize Generics
 
 ```typescript
-import { mono } from "@ttfx/specialize";
+import { mono } from "@typesugar/specialize";
 
 // Monomorphize for specific type arguments
 const identity = <T>(x: T): T => x;
@@ -62,7 +62,7 @@ const identityString = mono<string>(identity);
 ### inlineCall() — Inline Function Calls
 
 ```typescript
-import { inlineCall } from "@ttfx/specialize";
+import { inlineCall } from "@typesugar/specialize";
 
 const double = (x: number) => x * 2;
 

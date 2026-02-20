@@ -1,7 +1,7 @@
 /**
  * Data Types Index
  *
- * Re-exports all data types for the @ttfx/fp system.
+ * Re-exports all data types for the @typesugar/fp system.
  * Uses namespace imports to avoid naming conflicts between data types.
  */
 

@@ -3,7 +3,7 @@
  *
  * This module provides infrastructure for defining and verifying algebraic
  * laws for any interface or abstraction. It serves as the foundation for
- * domain-specific law checking like @ttfx/fp typeclass laws.
+ * domain-specific law checking like @typesugar/fp typeclass laws.
  *
  * ## Quick Start
  *
@@ -14,7 +14,7 @@
  *   defineLaw,
  *   verifyLaws,
  *   laws,
- * } from "@ttfx/contracts/laws";
+ * } from "@typesugar/contracts/laws";
  *
  * // 1. Define an interface
  * interface Stack<T> {

@@ -1,23 +1,23 @@
-# @ttfx/comptime
+# @typesugar/comptime
 
 > Compile-time expression evaluation macro.
 
 ## Overview
 
-`@ttfx/comptime` provides the `comptime()` macro, inspired by Zig's comptime keyword. It evaluates expressions during compilation and replaces them with their computed values — zero runtime overhead, full TypeScript type safety.
+`@typesugar/comptime` provides the `comptime()` macro, inspired by Zig's comptime keyword. It evaluates expressions during compilation and replaces them with their computed values — zero runtime overhead, full TypeScript type safety.
 
 ## Installation
 
 ```bash
-npm install @ttfx/comptime
+npm install @typesugar/comptime
 # or
-pnpm add @ttfx/comptime
+pnpm add @typesugar/comptime
 ```
 
 ## Usage
 
 ```typescript
-import { comptime } from "@ttfx/comptime";
+import { comptime } from "@typesugar/comptime";
 
 // Simple expression
 const x = comptime(() => 5 * 5);

@@ -18,7 +18,7 @@ import {
   NonEmpty,
   Email,
   Url,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 // --- Using Built-in Refinements ---
 

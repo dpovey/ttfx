@@ -1,8 +1,8 @@
 /**
- * Basic @ttfx/testing Examples
+ * Basic @typesugar/testing Examples
  *
- * This file demonstrates the core testing macros available in @ttfx/testing.
- * These patterns were developed from dogfooding the macros in the ttfx test suite.
+ * This file demonstrates the core testing macros available in @typesugar/testing.
+ * These patterns were developed from dogfooding the macros in the typesugar test suite.
  *
  * Run with: npx vitest run examples/basic.ts
  */
@@ -14,7 +14,7 @@ import {
   typeAssert,
   type Equal,
   type Extends,
-} from "@ttfx/testing";
+} from "@typesugar/testing";
 
 // ============================================================================
 // assert() — Power Assertions with Sub-Expression Capture

@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/comptime",
+  "name": "@typesugar/comptime",
   "version": "0.1.0",
-  "description": "Compile-time expression evaluation macro for ttfx",
+  "description": "Compile-time expression evaluation macro for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -28,7 +28,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*"
+    "@typesugar/core": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

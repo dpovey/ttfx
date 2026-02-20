@@ -1,17 +1,17 @@
 /**
  * Unified Configuration System
  *
- * Provides a centralized configuration API for ttfx macros.
+ * Provides a centralized configuration API for typesugar macros.
  * Configuration is loaded from (in priority order):
  *
- * 1. Environment variables: TTFX_* (highest priority, for CI overrides)
- * 2. Config files: ttfx.config.ts, .ttfxrc, etc. (when cosmiconfig is available)
+ * 1. Environment variables: TYPESUGAR_* (highest priority, for CI overrides)
+ * 2. Config files: typesugar.config.ts, .typesugarrc, etc. (when cosmiconfig is available)
  * 3. Programmatic: config.set() calls
  * 4. Defaults (lowest priority)
  *
  * @example
  * ```typescript
- * import { config } from "@ttfx/core";
+ * import { config } from "@typesugar/core";
  *
  * // Read config values
  * config.get("debug")                    // → boolean
@@ -43,7 +43,7 @@ export interface ContractsConfig {
 }
 
 /**
- * Full ttfx configuration schema.
+ * Full typesugar configuration schema.
  */
 export interface TtfxConfig {
   /** Enable debug mode */
@@ -69,20 +69,20 @@ let configLoaded = false;
 
 /**
  * Load configuration from environment variables.
- * Variables prefixed with TTFX_ are parsed into the config object.
+ * Variables prefixed with TYPESUGAR_ are parsed into the config object.
  *
  * Examples:
- *   TTFX_DEBUG=1                        → { debug: true }
- *   TTFX_CONTRACTS_MODE=none            → { contracts: { mode: "none" } }
+ *   TYPESUGAR_DEBUG=1                        → { debug: true }
+ *   TYPESUGAR_CONTRACTS_MODE=none            → { contracts: { mode: "none" } }
  */
 function loadConfigFromEnv(): TtfxConfig {
   const envConfig: TtfxConfig = {};
-  const PREFIX = "TTFX_";
+  const PREFIX = "TYPESUGAR_";
 
   for (const [key, value] of Object.entries(process.env)) {
     if (!key.startsWith(PREFIX) || value === undefined) continue;
 
-    // Convert TTFX_CONTRACTS_MODE to contracts.mode
+    // Convert TYPESUGAR_CONTRACTS_MODE to contracts.mode
     // Double underscore __ becomes nested object separator
     const configPath = key
       .slice(PREFIX.length)

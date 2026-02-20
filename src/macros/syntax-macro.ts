@@ -8,7 +8,7 @@
  *
  * @example
  * ```typescript
- * import { defineSyntaxMacro } from "ttfx";
+ * import { defineSyntaxMacro } from "typesugar";
  *
  * // Simple pattern → replacement
  * defineSyntaxMacro("unless", {

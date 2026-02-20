@@ -1,5 +1,5 @@
 import { defineConfig } from "vitest/config";
-import typemacro from "unplugin-ttfx/vite";
+import typemacro from "unplugin-typesugar/vite";
 
 export default defineConfig({
   plugins: [typemacro()],

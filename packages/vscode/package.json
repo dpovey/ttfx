@@ -1,9 +1,9 @@
 {
-  "name": "@ttfx/vscode",
-  "displayName": "ttfx",
-  "description": "IDE support for ttfx — syntax highlighting, expansion preview, and diagnostics for compile-time macros",
+  "name": "@typesugar/vscode",
+  "displayName": "typesugar",
+  "description": "IDE support for typesugar — syntax highlighting, expansion preview, and diagnostics for compile-time macros",
   "version": "0.1.0",
-  "publisher": "ttfx",
+  "publisher": "typesugar",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
@@ -14,23 +14,23 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:**/ttfx.manifest.json",
-    "workspaceContains:**/node_modules/ttfx"
+    "workspaceContains:**/typesugar.manifest.json",
+    "workspaceContains:**/node_modules/typesugar"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "grammars": [
       {
-        "scopeName": "source.ts.ttfx",
-        "path": "./syntaxes/ttfx.tmLanguage.json",
+        "scopeName": "source.ts.typesugar",
+        "path": "./syntaxes/typesugar.tmLanguage.json",
         "injectTo": [
           "source.ts",
           "source.tsx"
         ]
       },
       {
-        "scopeName": "source.ts.ttfx.units",
-        "path": "./syntaxes/ttfx-units.tmLanguage.json",
+        "scopeName": "source.ts.typesugar.units",
+        "path": "./syntaxes/typesugar-units.tmLanguage.json",
         "injectTo": [
           "source.ts",
           "source.tsx"
@@ -88,13 +88,13 @@
       {
         "language": "typescript",
         "scopes": {
-          "macro": ["entity.name.function.macro.ttfx"],
-          "macroDecorator": ["entity.name.function.decorator.macro.ttfx"],
-          "macroTemplate": ["entity.name.tag.macro.ttfx"],
-          "extensionMethod": ["entity.name.function.extension.ttfx"],
-          "deriveArg": ["entity.name.type.derive.ttfx"],
-          "bindVariable": ["variable.other.bind.ttfx"],
-          "comptimeBlock": ["entity.name.function.comptime.ttfx"]
+          "macro": ["entity.name.function.macro.typesugar"],
+          "macroDecorator": ["entity.name.function.decorator.macro.typesugar"],
+          "macroTemplate": ["entity.name.tag.macro.typesugar"],
+          "extensionMethod": ["entity.name.function.extension.typesugar"],
+          "deriveArg": ["entity.name.type.derive.typesugar"],
+          "bindVariable": ["variable.other.bind.typesugar"],
+          "comptimeBlock": ["entity.name.function.comptime.typesugar"]
         }
       }
     ],
@@ -132,39 +132,39 @@
     },
     "commands": [
       {
-        "command": "ttfx.expandMacro",
-        "title": "ttfx: Expand Macro at Cursor"
+        "command": "typesugar.expandMacro",
+        "title": "typesugar: Expand Macro at Cursor"
       },
       {
-        "command": "ttfx.refreshManifest",
-        "title": "ttfx: Refresh Macro Manifest"
+        "command": "typesugar.refreshManifest",
+        "title": "typesugar: Refresh Macro Manifest"
       },
       {
-        "command": "ttfx.generateManifest",
-        "title": "ttfx: Generate Macro Manifest"
+        "command": "typesugar.generateManifest",
+        "title": "typesugar: Generate Macro Manifest"
       }
     ],
     "configuration": {
-      "title": "ttfx",
+      "title": "typesugar",
       "properties": {
-        "ttfx.enableCodeLens": {
+        "typesugar.enableCodeLens": {
           "type": "boolean",
           "default": true,
           "description": "Show CodeLens with macro expansion previews"
         },
-        "ttfx.enableInlayHints": {
+        "typesugar.enableInlayHints": {
           "type": "boolean",
           "default": true,
           "description": "Show inlay hints for bind types and comptime results"
         },
-        "ttfx.enableDiagnostics": {
+        "typesugar.enableDiagnostics": {
           "type": "boolean",
           "default": true,
           "description": "Run background macro expansion for diagnostics"
         },
-        "ttfx.manifestPath": {
+        "typesugar.manifestPath": {
           "type": "string",
-          "default": "ttfx.manifest.json",
+          "default": "typesugar.manifest.json",
           "description": "Path to the macro manifest file (relative to workspace root)"
         }
       }
@@ -184,6 +184,6 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@ttfx/core": "workspace:*"
+    "@typesugar/core": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Tests for @ttfx/contracts — Design by Contract macros
+ * Tests for @typesugar/contracts — Design by Contract macros
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -14,10 +14,10 @@ import {
   setContractConfig,
   shouldEmitCheck,
   type ContractConfig,
-} from "@ttfx/contracts";
-import { parseContractBlocks } from "@ttfx/contracts";
-import { normalizeExpression } from "@ttfx/contracts";
-import { tryAlgebraicProof, type TypeFact } from "@ttfx/contracts";
+} from "@typesugar/contracts";
+import { parseContractBlocks } from "@typesugar/contracts";
+import { normalizeExpression } from "@typesugar/contracts";
+import { tryAlgebraicProof, type TypeFact } from "@typesugar/contracts";
 
 // ============================================================================
 // Test Helpers
@@ -483,19 +483,19 @@ describe("algebraic prover", () => {
 
 describe("runtime errors", () => {
   it("requires() should throw on false condition", () => {
-    const { requires } = require("@ttfx/contracts");
+    const { requires } = require("@typesugar/contracts");
     expect(() => requires(false, "test")).toThrow("test");
     expect(() => requires(true, "test")).not.toThrow();
   });
 
   it("ensures() should throw on false condition", () => {
-    const { ensures } = require("@ttfx/contracts");
+    const { ensures } = require("@typesugar/contracts");
     expect(() => ensures(false, "test")).toThrow("test");
     expect(() => ensures(true, "test")).not.toThrow();
   });
 
   it("old() should be identity at runtime", () => {
-    const { old } = require("@ttfx/contracts");
+    const { old } = require("@typesugar/contracts");
     expect(old(42)).toBe(42);
     expect(old("hello")).toBe("hello");
   });
@@ -505,10 +505,10 @@ describe("runtime errors", () => {
 // contracts-refined Integration Tests
 // ============================================================================
 
-describe("@ttfx/contracts-refined integration", () => {
+describe("@typesugar/contracts-refined integration", () => {
   it("should register all built-in predicates when imported", async () => {
     // Import contracts-refined to register predicates
-    const contractsRefined = await import("@ttfx/contracts-refined");
+    const contractsRefined = await import("@typesugar/contracts-refined");
 
     // Use hasRefinementPredicate from the integration module
     // (getRefinementPredicate queries the same registry but through contracts-refined)
@@ -524,7 +524,7 @@ describe("@ttfx/contracts-refined integration", () => {
   });
 
   it("should export helper functions", async () => {
-    const contractsRefined = await import("@ttfx/contracts-refined");
+    const contractsRefined = await import("@typesugar/contracts-refined");
 
     expect(typeof contractsRefined.registerRefinementPredicate).toBe(
       "function",
@@ -534,7 +534,7 @@ describe("@ttfx/contracts-refined integration", () => {
   });
 
   it("should allow registering custom predicates", async () => {
-    const contractsRefined = await import("@ttfx/contracts-refined");
+    const contractsRefined = await import("@typesugar/contracts-refined");
 
     // Register a custom predicate
     contractsRefined.registerRefinementPredicate(
@@ -549,7 +549,7 @@ describe("@ttfx/contracts-refined integration", () => {
   });
 
   it("should track registered predicates via getRegisteredPredicates()", async () => {
-    const { getRegisteredPredicates } = await import("@ttfx/contracts-refined");
+    const { getRegisteredPredicates } = await import("@typesugar/contracts-refined");
 
     const predicates = getRegisteredPredicates();
     expect(Array.isArray(predicates)).toBe(true);

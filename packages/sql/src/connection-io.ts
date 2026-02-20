@@ -11,7 +11,7 @@
  *
  * ## Zero-Cost Implementation
  *
- * Unlike Doobie's runtime free monad, ttfx's ConnectionIO is specialized
+ * Unlike Doobie's runtime free monad, typesugar's ConnectionIO is specialized
  * at compile time using the `specialize` macro:
  *
  * ```typescript

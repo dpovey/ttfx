@@ -1,5 +1,5 @@
 /**
- * @ttfx/sql — Doobie-like Type-Safe SQL DSL
+ * @typesugar/sql — Doobie-like Type-Safe SQL DSL
  *
  * A comprehensive SQL library for TypeScript with:
  *
@@ -25,7 +25,7 @@
  *
  * @example
  * ```typescript
- * import { sql$, ConnectionIO, Transactor } from "@ttfx/sql";
+ * import { sql$, ConnectionIO, Transactor } from "@typesugar/sql";
  *
  * // Type-safe query with inferred types
  * const findUser = sql$<User>`

@@ -8,7 +8,7 @@
  * - fmt — printf-style formatting
  */
 
-import { regex, html, json, fmt, raw } from "@ttfx/strings";
+import { regex, html, json, fmt, raw } from "@typesugar/strings";
 
 console.log("=== String Macros Example ===\n");
 

@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ["typescript", "@ttfx/core", "@ttfx/type-system"],
+  external: ["typescript", "@typesugar/core", "@typesugar/type-system"],
 });

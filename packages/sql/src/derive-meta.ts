@@ -67,7 +67,7 @@
  */
 
 import * as ts from "typescript";
-import { defineAttributeMacro, type MacroContext } from "@ttfx/core";
+import { defineAttributeMacro, type MacroContext } from "@typesugar/core";
 import type { Meta, Read, Write, SqlRow } from "./meta.js";
 
 // ============================================================================

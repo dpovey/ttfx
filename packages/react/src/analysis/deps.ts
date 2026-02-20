@@ -11,7 +11,7 @@
  */
 
 import * as ts from "typescript";
-import type { MacroContext } from "@ttfx/core";
+import type { MacroContext } from "@typesugar/core";
 import type { DependencyInfo, SideEffect } from "../types.js";
 
 /**

@@ -1,15 +1,15 @@
 /**
- * @ttfx/effect
+ * @typesugar/effect
  *
  * Effect-TS adapter providing macros for working with Effect.
  *
- * ## Do-Notation (via @ttfx/std)
+ * ## Do-Notation (via @typesugar/std)
  *
- * The `let:/yield:` syntax is provided by @ttfx/std's generic do-notation macro.
+ * The `let:/yield:` syntax is provided by @typesugar/std's generic do-notation macro.
  * This package registers a `FlatMap` instance for Effect that enables this syntax:
  *
  * ```ts
- * import "@ttfx/effect"; // Registers FlatMap instance for Effect
+ * import "@typesugar/effect"; // Registers FlatMap instance for Effect
  *
  * // Labeled block syntax (compiles to Effect.flatMap chain)
  * let: {
@@ -42,18 +42,18 @@ import {
   type MacroContext,
   defineExpressionMacro,
   globalRegistry,
-} from "@ttfx/core";
-import { registerFlatMap } from "@ttfx/std/typeclasses/flatmap";
+} from "@typesugar/core";
+import { registerFlatMap } from "@typesugar/std/typeclasses/flatmap";
 
 // ============================================================================
-// Effect FlatMap Instance (for @ttfx/std do-notation)
+// Effect FlatMap Instance (for @typesugar/std do-notation)
 // ============================================================================
 
 /**
  * FlatMap instance for Effect-TS.
  *
  * Delegates to Effect.map and Effect.flatMap from the Effect module.
- * This enables the generic `let:/yield:` syntax from @ttfx/std.
+ * This enables the generic `let:/yield:` syntax from @typesugar/std.
  *
  * Note: Effect is loaded lazily from the 'effect' peer dependency.
  * Ensure 'effect' is installed in your project.
@@ -69,8 +69,8 @@ function getEffectModule(): any {
       _Effect = require("effect").Effect;
     } catch {
       throw new Error(
-        "@ttfx/effect requires 'effect' as a peer dependency. " +
-        "Install it with: npm install effect",
+        "@typesugar/effect requires 'effect' as a peer dependency. " +
+          "Install it with: npm install effect",
       );
     }
   }
@@ -297,7 +297,7 @@ export const pipeMacro: ExpressionMacro = defineExpressionMacro({
  * Register all Effect adapter macros with the global registry.
  */
 export function register(): void {
-  // Register FlatMap instance for Effect (enables let:/yield: from @ttfx/std)
+  // Register FlatMap instance for Effect (enables let:/yield: from @typesugar/std)
   registerFlatMap("Effect", flatMapEffect);
 
   // Register expression macros
@@ -316,7 +316,7 @@ register();
 export function gen$<T>(_fn: () => Generator<unknown, T, unknown>): never {
   throw new Error(
     "gen$ was not transformed at compile time. " +
-      "Make sure @ttfx/effect is registered with the transformer.",
+      "Make sure @typesugar/effect is registered with the transformer.",
   );
 }
 
@@ -326,7 +326,7 @@ export function gen$<T>(_fn: () => Generator<unknown, T, unknown>): never {
 export function map$<A, B>(_effect: unknown, _fn: (a: A) => B): never {
   throw new Error(
     "map$ was not transformed at compile time. " +
-      "Make sure @ttfx/effect is registered with the transformer.",
+      "Make sure @typesugar/effect is registered with the transformer.",
   );
 }
 
@@ -339,7 +339,7 @@ export function flatMap$<A, B>(
 ): never {
   throw new Error(
     "flatMap$ was not transformed at compile time. " +
-      "Make sure @ttfx/effect is registered with the transformer.",
+      "Make sure @typesugar/effect is registered with the transformer.",
   );
 }
 
@@ -352,6 +352,6 @@ export function pipe$<A>(
 ): never {
   throw new Error(
     "pipe$ was not transformed at compile time. " +
-      "Make sure @ttfx/effect is registered with the transformer.",
+      "Make sure @typesugar/effect is registered with the transformer.",
   );
 }

@@ -5,7 +5,7 @@
  * 1. Typeclass-derived extensions (e.g., Show[A] adds .show() to any A with an instance)
  * 2. Standalone extensions on concrete types (e.g., `extension (n: Int) def isEven = ...`)
  *
- * ttfx's typeclass system handles (1). This module handles (2): enriching concrete
+ * typesugar's typeclass system handles (1). This module handles (2): enriching concrete
  * types with methods that don't go through typeclass instance resolution.
  *
  * The rewrite is simpler than typeclass extensions — there's no summon/instance

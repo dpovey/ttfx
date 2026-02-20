@@ -1,5 +1,5 @@
 /**
- * Doobie-Style SQL in ttfx
+ * Doobie-Style SQL in typesugar
  *
  * This example demonstrates the full Doobie-like capabilities:
  *

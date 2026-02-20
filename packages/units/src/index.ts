@@ -1,5 +1,5 @@
 /**
- * @ttfx/units - Type-Safe Physical Units Library
+ * @typesugar/units - Type-Safe Physical Units Library
  *
  * A compile-time unit system inspired by boost::units.
  * Provides type-safe arithmetic operations that verify unit compatibility
@@ -7,7 +7,7 @@
  *
  * @example
  * ```typescript
- * import { meters, seconds, kilograms, units } from "@ttfx/units";
+ * import { meters, seconds, kilograms, units } from "@typesugar/units";
  *
  * const distance = meters(100);
  * const time = seconds(10);

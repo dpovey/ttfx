@@ -3,8 +3,8 @@
 // These are used with registerExtensions() to enable Scala 3-style
 // extension methods on concrete types:
 //
-//   import { registerExtensions, extend } from "ttfx";
-//   import { NumberExt } from "@ttfx/std";
+//   import { registerExtensions, extend } from "typesugar";
+//   import { NumberExt } from "@typesugar/std";
 //
 //   registerExtensions("number", NumberExt);
 //   extend(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)

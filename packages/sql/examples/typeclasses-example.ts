@@ -442,7 +442,7 @@ console.log("\n=== Scala 3-Style Auto-Derivation ===");
 /**
  * ## Scala 3-Style Typeclass Derivation
  *
- * ttfx follows the Scala 3 `derives` model for automatic typeclass derivation.
+ * typesugar follows the Scala 3 `derives` model for automatic typeclass derivation.
  *
  * ### Scala 3 recap
  *
@@ -459,7 +459,7 @@ console.log("\n=== Scala 3-Style Auto-Derivation ===");
  * // summon[Show[User]] resolves via `derived` + Mirror
  * ```
  *
- * ### ttfx equivalent
+ * ### typesugar equivalent
  *
  * ```typescript
  * // Just define the type — no annotations needed:
@@ -490,7 +490,7 @@ console.log("\n=== Scala 3-Style Auto-Derivation ===");
  * ### How to add `derived` for a new typeclass:
  *
  * ```typescript
- * import { registerGenericDerivation, makePrimitiveChecker } from "ttfx/macros";
+ * import { registerGenericDerivation, makePrimitiveChecker } from "typesugar/macros";
  *
  * // ≈ object MyTC { given derived[T](using Mirror.ProductOf[T], ...): MyTC[T] }
  * registerGenericDerivation("MyTC", {

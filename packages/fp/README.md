@@ -1,17 +1,17 @@
-# @ttfx/fp
+# @typesugar/fp
 
 > Functional programming library for TypeScript, inspired by Scala's Cats library.
 
 ## Overview
 
-`@ttfx/fp` provides a complete functional programming toolkit: typeclasses (Functor, Monad, Applicative), data types (Option, Either, List, Validated), monad transformers (State, Reader, Writer), and an IO monad with stack-safe interpreter.
+`@typesugar/fp` provides a complete functional programming toolkit: typeclasses (Functor, Monad, Applicative), data types (Option, Either, List, Validated), monad transformers (State, Reader, Writer), and an IO monad with stack-safe interpreter.
 
 ## Installation
 
 ```bash
-npm install @ttfx/fp
+npm install @typesugar/fp
 # or
-pnpm add @ttfx/fp
+pnpm add @typesugar/fp
 ```
 
 ## Quick Start
@@ -28,7 +28,7 @@ import {
   runIO,
   pipe,
   flow,
-} from "@ttfx/fp";
+} from "@typesugar/fp";
 
 // Option — nullable values
 const user = Option.flatMap(Some(2), (x) => Some(x * 3));
@@ -62,7 +62,7 @@ const transformed = pipe(
 Represents optional values — `Some<A>` or `None`.
 
 ```typescript
-import { Option, Some, None, isSome, isNone } from "@ttfx/fp";
+import { Option, Some, None, isSome, isNone } from "@typesugar/fp";
 
 const value = Some(42);
 const empty = None<number>();
@@ -78,7 +78,7 @@ Option.filter(value, (x) => x > 50); // None
 Represents success (`Right`) or failure (`Left`).
 
 ```typescript
-import { Either, Left, Right, isLeft, isRight } from "@ttfx/fp";
+import { Either, Left, Right, isLeft, isRight } from "@typesugar/fp";
 
 const success = Right<string, number>(42);
 const failure = Left<string, number>("error");
@@ -97,7 +97,7 @@ Either.fold(
 Immutable linked list.
 
 ```typescript
-import { List, Cons, Nil } from "@ttfx/fp";
+import { List, Cons, Nil } from "@typesugar/fp";
 
 const list = List.of(1, 2, 3);
 
@@ -111,7 +111,7 @@ List.foldLeft(list, 0, (a, b) => a + b); // 6
 Accumulates errors instead of failing fast.
 
 ```typescript
-import { Validated, valid, invalid, validNel, invalidNel } from "@ttfx/fp";
+import { Validated, valid, invalid, validNel, invalidNel } from "@typesugar/fp";
 
 const v1 = valid<string[], number>(42);
 const v2 = invalid<string[], number>(["error 1"]);
@@ -127,7 +127,7 @@ Validated.mapN(v2, v3, (a, b) => a + b);
 Pure description of side effects with stack-safe interpreter.
 
 ```typescript
-import { IO, runIO, runIOSync } from "@ttfx/fp";
+import { IO, runIO, runIOSync } from "@typesugar/fp";
 
 const program = IO.flatMap(
   IO.delay(() => fetch("/api/user")),
@@ -145,7 +145,7 @@ const result = await runIO(program);
 Stateful computations.
 
 ```typescript
-import { State, IndexedState } from "@ttfx/fp";
+import { State, IndexedState } from "@typesugar/fp";
 
 const increment = State.modify<number>((n) => n + 1);
 const getDouble = State.gets<number, number>((n) => n * 2);
@@ -159,7 +159,7 @@ State.run(program, 5); // [12, 6] (new state, result)
 Dependency injection.
 
 ```typescript
-import { Reader, Kleisli } from "@ttfx/fp";
+import { Reader, Kleisli } from "@typesugar/fp";
 
 interface Config {
   apiUrl: string;
@@ -176,7 +176,7 @@ Reader.run(fetchData, { apiUrl: "http://api.example.com" });
 Logging and accumulation.
 
 ```typescript
-import { Writer, LogWriter } from "@ttfx/fp";
+import { Writer, LogWriter } from "@typesugar/fp";
 
 const program = Writer.flatMap(Writer.tell(["Started"]), () =>
   Writer.flatMap(Writer.pure(42), (x) =>
@@ -190,7 +190,7 @@ Writer.run(program); // [["Started", "Got 42"], 42]
 ## Typeclasses
 
 ```typescript
-import { TC } from "@ttfx/fp";
+import { TC } from "@typesugar/fp";
 
 // Functor
 TC.Functor.map(someOption, f);
@@ -222,7 +222,7 @@ import {
   match,
   matchLiteral,
   matchGuard,
-} from "@ttfx/fp";
+} from "@typesugar/fp";
 
 // Zero-cost Option — just T | null at runtime
 const opt: ZeroCostOption<number> = 42;
@@ -247,12 +247,12 @@ const area = match(shape, {
 });
 ```
 
-See also: `@ttfx/fp/zero-cost` for direct imports.
+See also: `@typesugar/fp/zero-cost` for direct imports.
 
 ## Syntax Utilities
 
 ```typescript
-import { pipe, flow } from "@ttfx/fp";
+import { pipe, flow } from "@typesugar/fp";
 
 // Left-to-right application
 const result = pipe(

@@ -14,7 +14,7 @@ import {
   deriving,
   summon,
   extend,
-} from "@ttfx/typeclass";
+} from "@typesugar/typeclass";
 
 console.log("=== Typeclass Example ===\n");
 

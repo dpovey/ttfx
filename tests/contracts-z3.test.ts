@@ -1,5 +1,5 @@
 /**
- * Tests for @ttfx/contracts-z3 — Z3 SMT Solver Plugin
+ * Tests for @typesugar/contracts-z3 — Z3 SMT Solver Plugin
  *
  * These tests verify that the Z3 integration properly proves
  * arithmetic and logical formulas that the algebraic rules cannot handle.
@@ -51,7 +51,7 @@ async function proveGoalWithPlugins(
 // Test Setup
 // ============================================================================
 
-describe("@ttfx/contracts-z3", () => {
+describe("@typesugar/contracts-z3", () => {
   let z3Plugin: Z3ProverPlugin;
 
   beforeAll(async () => {

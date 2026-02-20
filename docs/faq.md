@@ -1,29 +1,29 @@
 # FAQ
 
-Frequently asked questions about ttfx.
+Frequently asked questions about typesugar.
 
 ## General
 
-### What is ttfx?
+### What is typesugar?
 
-ttfx is a macro system for TypeScript. It lets you write code that transforms at compile time, producing efficient JavaScript without runtime overhead.
+typesugar is a macro system for TypeScript. It lets you write code that transforms at compile time, producing efficient JavaScript without runtime overhead.
 
 ### How is this different from Babel macros?
 
-| Feature     | ttfx                    | Babel macros           |
+| Feature     | typesugar                    | Babel macros           |
 | ----------- | ----------------------- | ---------------------- |
 | Language    | TypeScript-first        | JavaScript-first       |
 | Type safety | Full type information   | Limited                |
 | Syntax      | Multiple macro types    | Expression macros only |
 | Integration | TypeScript compiler API | Babel plugin           |
 
-### Does ttfx work with plain JavaScript?
+### Does typesugar work with plain JavaScript?
 
-No, ttfx is TypeScript-only. It uses TypeScript's compiler API and type information.
+No, typesugar is TypeScript-only. It uses TypeScript's compiler API and type information.
 
 ### Is there runtime overhead?
 
-No. Macros expand at compile time. The output is plain JavaScript with no ttfx runtime dependencies (unless you're using packages like `@ttfx/fp` that provide runtime types).
+No. Macros expand at compile time. The output is plain JavaScript with no typesugar runtime dependencies (unless you're using packages like `@typesugar/fp` that provide runtime types).
 
 ## Setup
 
@@ -46,22 +46,22 @@ npm install -D ts-patch
 npx ts-patch install
 ```
 
-### Can I use ttfx with Next.js?
+### Can I use typesugar with Next.js?
 
 Yes, configure the Webpack plugin in `next.config.js`:
 
 ```javascript
-const ttfx = require("unplugin-ttfx/webpack");
+const typesugar = require("unplugin-typesugar/webpack");
 
 module.exports = {
   webpack: (config) => {
-    config.plugins.push(ttfx.default());
+    config.plugins.push(typesugar.default());
     return config;
   },
 };
 ```
 
-### Can I use ttfx with SWC?
+### Can I use typesugar with SWC?
 
 Not directly. SWC doesn't support TypeScript transformers. Use ts-patch with tsc, or use a bundler plugin.
 
@@ -78,7 +78,7 @@ Common reasons:
    const x = comptime(1 + 1);
 
    // ✓ Will expand
-   import { comptime } from "@ttfx/comptime";
+   import { comptime } from "@typesugar/comptime";
    const x = comptime(1 + 1);
    ```
 
@@ -97,7 +97,7 @@ Some macros work in type positions (like `Refined<T>`), but most are expression-
 Enable verbose mode:
 
 ```typescript
-ttfx({ verbose: true });
+typesugar({ verbose: true });
 ```
 
 This logs every expansion to the console.
@@ -107,7 +107,7 @@ This logs every expansion to the console.
 Yes, `comptime()` can run arbitrary code at compile time:
 
 ```typescript
-import { comptime } from "@ttfx/comptime";
+import { comptime } from "@typesugar/comptime";
 import fs from "fs";
 
 const schema = comptime(fs.readFileSync("schema.json", "utf8"));
@@ -121,21 +121,21 @@ Yes. Macros have access to TypeScript's type checker and can use type informatio
 
 ## Packages
 
-### What's the difference between @ttfx/ttfx and individual packages?
+### What's the difference between @typesugar/typesugar and individual packages?
 
-`@ttfx/ttfx` is an umbrella package that re-exports commonly used macros. Individual packages (`@ttfx/comptime`, `@ttfx/derive`, etc.) can be installed separately if you only need specific functionality.
+`@typesugar/typesugar` is an umbrella package that re-exports commonly used macros. Individual packages (`@typesugar/comptime`, `@typesugar/derive`, etc.) can be installed separately if you only need specific functionality.
 
-### Do I need @ttfx/core?
+### Do I need @typesugar/core?
 
 Usually not directly. It's a dependency of other packages and provides the macro registration system. You only need it if you're writing custom macros.
 
-### Can I use @ttfx/effect with Effect-TS?
+### Can I use @typesugar/effect with Effect-TS?
 
 Yes, that's exactly what it's for. It provides cleaner syntax for Effect-TS operations.
 
 ## Performance
 
-### Does ttfx slow down compilation?
+### Does typesugar slow down compilation?
 
 There's some overhead for macro expansion, but it's typically small compared to type checking. The `verbose` option can help identify slow macros.
 
@@ -149,12 +149,12 @@ The transformer caches some internal state, but macro results themselves aren't 
 
 ## Troubleshooting
 
-### "Cannot find module '@ttfx/...'"
+### "Cannot find module '@typesugar/...'"
 
 Make sure you've installed the package:
 
 ```bash
-npm install @ttfx/comptime
+npm install @typesugar/comptime
 ```
 
 ### "comptime is not a function"
@@ -167,7 +167,7 @@ Some macros generate code that needs type assertions. Check the macro's document
 
 ### Source maps are wrong
 
-Make sure source maps are enabled in your bundler. ttfx preserves source locations, but some transformations can affect mapping accuracy.
+Make sure source maps are enabled in your bundler. typesugar preserves source locations, but some transformations can affect mapping accuracy.
 
 ## Contributing
 

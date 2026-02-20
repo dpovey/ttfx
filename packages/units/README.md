@@ -1,17 +1,17 @@
-# @ttfx/units
+# @typesugar/units
 
 > Type-safe physical units with compile-time dimensional analysis.
 
 ## Overview
 
-`@ttfx/units` provides a compile-time unit system inspired by boost::units. Perform arithmetic on physical quantities with automatic unit tracking — the compiler catches dimension mismatches before runtime.
+`@typesugar/units` provides a compile-time unit system inspired by boost::units. Perform arithmetic on physical quantities with automatic unit tracking — the compiler catches dimension mismatches before runtime.
 
 ## Installation
 
 ```bash
-npm install @ttfx/units
+npm install @typesugar/units
 # or
-pnpm add @ttfx/units
+pnpm add @typesugar/units
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @ttfx/units
 ### Basic Operations
 
 ```typescript
-import { meters, seconds, kilograms } from "@ttfx/units";
+import { meters, seconds, kilograms } from "@typesugar/units";
 
 const distance = meters(100);
 const time = seconds(10);
@@ -37,7 +37,7 @@ const force = mass.mul(velocity.div(time));
 ### Type-Safe Arithmetic
 
 ```typescript
-import { meters, seconds } from "@ttfx/units";
+import { meters, seconds } from "@typesugar/units";
 
 const d1 = meters(100);
 const d2 = meters(50);
@@ -53,7 +53,7 @@ const invalid = d1.add(t); // ✗ Compile error: can't add meters and seconds
 ### Unit Literals
 
 ```typescript
-import { units } from "@ttfx/units";
+import { units } from "@typesugar/units";
 
 // Parse unit literals at compile time
 const speed = units`100 km/h`; // Type: Unit<Velocity>
@@ -64,7 +64,7 @@ const energy = units`1000 J`; // Type: Unit<Energy>
 ### Conversion
 
 ```typescript
-import { meters, kilometers, feet } from "@ttfx/units";
+import { meters, kilometers, feet } from "@typesugar/units";
 
 const d = kilometers(1);
 const inMeters = d.to(meters); // 1000 meters

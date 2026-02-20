@@ -122,7 +122,7 @@ export {
   MinLength,
   refineMacro,
   unsafeRefineMacro,
-  // Predicate exports for @ttfx/contracts-refined
+  // Predicate exports for @typesugar/contracts-refined
   type RefinementPredicate,
   REFINEMENT_PREDICATES,
   // Decidability annotations (Coq-inspired)

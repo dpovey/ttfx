@@ -8,7 +8,7 @@
  * (Uses the macro transformer to expand @implicits calls)
  */
 
-import { typeclass, instance, implicits, summonAll } from "ttfx";
+import { typeclass, instance, implicits, summonAll } from "typesugar";
 
 // ----------------------------------------------------------------------------
 // 1. Define a typeclass

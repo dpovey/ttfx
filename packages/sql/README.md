@@ -1,17 +1,17 @@
-# @ttfx/sql
+# @typesugar/sql
 
 > Type-safe SQL tagged templates with compile-time validation.
 
 ## Overview
 
-`@ttfx/sql` provides a Doobie-like type-safe SQL DSL for TypeScript. Build composable SQL queries with the `sql` tagged template, get compile-time SQL validation, and execute with ConnectionIO for pure database operation descriptions.
+`@typesugar/sql` provides a Doobie-like type-safe SQL DSL for TypeScript. Build composable SQL queries with the `sql` tagged template, get compile-time SQL validation, and execute with ConnectionIO for pure database operation descriptions.
 
 ## Installation
 
 ```bash
-npm install @ttfx/sql
+npm install @typesugar/sql
 # or
-pnpm add @ttfx/sql
+pnpm add @typesugar/sql
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @ttfx/sql
 ### Basic SQL Queries
 
 ```typescript
-import { sql, Fragment, Query, Update } from "@ttfx/sql";
+import { sql, Fragment, Query, Update } from "@typesugar/sql";
 
 const name = "Alice";
 const age = 30;
@@ -33,7 +33,7 @@ console.log(query.params); // ["Alice", 30]
 ### Composable Fragments
 
 ```typescript
-import { sql } from "@ttfx/sql";
+import { sql } from "@typesugar/sql";
 
 const whereClause = sql`WHERE active = ${true}`;
 const orderBy = sql`ORDER BY created_at DESC`;
@@ -50,7 +50,7 @@ const query = sql`
 ### Typed Queries
 
 ```typescript
-import { sql, Query } from "@ttfx/sql";
+import { sql, Query } from "@typesugar/sql";
 
 interface User {
   id: number;
@@ -68,7 +68,7 @@ const updateUser = (id: number, name: string): Update =>
 ### ConnectionIO — Pure Database Operations
 
 ```typescript
-import { ConnectionIO, Transactor } from "@ttfx/sql";
+import { ConnectionIO, Transactor } from "@typesugar/sql";
 
 // Describe database operations purely
 const getUser = (id: number): ConnectionIO<User | null> =>
@@ -95,7 +95,7 @@ const result = await transactor.run(program);
 ### Fragment Building
 
 ```typescript
-import { sql, Fragment } from "@ttfx/sql";
+import { sql, Fragment } from "@typesugar/sql";
 
 // Conditional fragments
 const buildQuery = (filters: { name?: string; age?: number }) => {
@@ -205,7 +205,7 @@ function sql(strings: TemplateStringsArray, ...values: unknown[]): Fragment;
 
 ## Macro Features
 
-When used with the ttfx transformer, `sql` provides compile-time validation:
+When used with the typesugar transformer, `sql` provides compile-time validation:
 
 - SQL syntax checking
 - Unbalanced parentheses detection

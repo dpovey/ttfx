@@ -1,5 +1,5 @@
 /**
- * @ttfx/contracts — Design by Contract for TypeScript
+ * @typesugar/contracts — Design by Contract for TypeScript
  *
  * Provides compile-time and runtime contract checking:
  *
@@ -18,11 +18,11 @@
  * 1. Constant evaluation
  * 2. Type deduction from Refined<T, Brand> types
  * 3. Algebraic rules
- * 4. Prover plugins (e.g., Z3 via @ttfx/contracts-z3)
+ * 4. Prover plugins (e.g., Z3 via @typesugar/contracts-z3)
  *
  * @example
  * ```typescript
- * import { requires, ensures, old, contract, invariant } from "@ttfx/contracts";
+ * import { requires, ensures, old, contract, invariant } from "@typesugar/contracts";
  *
  * // Inline style
  * function withdraw(account: Account, amount: Positive): number {

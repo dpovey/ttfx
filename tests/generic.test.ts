@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { assert, typeAssert, type Equal } from "@ttfx/testing";
+import { assert, typeAssert, type Equal } from "@typesugar/testing";
 import {
   DeriveTypeInfo,
   DeriveFieldInfo,

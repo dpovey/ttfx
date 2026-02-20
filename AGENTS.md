@@ -1,10 +1,10 @@
-# Agent Guidelines for ttfx
+# Agent Guidelines for typesugar
 
 ## Core Principles
 
 ### 1. Zero-Cost Abstractions
 
-**This is the most important principle of ttfx.**
+**This is the most important principle of typesugar.**
 
 Every abstraction should compile away to what you'd write by hand:
 
@@ -77,30 +77,30 @@ src/
 └── index.ts            # Main exports and runtime placeholder functions
 
 packages/
-├── core/               # @ttfx/core — macro registration, types, context
-├── transformer/        # @ttfx/transformer — ts-patch transformer plugin
-├── typeclass/          # @ttfx/typeclass — Scala 3-style typeclasses
-├── specialize/         # @ttfx/specialize — zero-cost specialization
-├── operators/          # @ttfx/operators — operator overloading
-├── derive/             # @ttfx/derive — custom derive API
-├── reflect/            # @ttfx/reflect — compile-time reflection
-├── comptime/           # @ttfx/comptime — compile-time evaluation
-├── fp/                 # @ttfx/fp — functional programming (Option, Result, IO)
-├── std/                # @ttfx/std — standard library extensions
-├── react/              # @ttfx/react — reactive signals, JSX macros
-├── sql/                # @ttfx/sql — typed SQL fragments
-├── contracts/          # @ttfx/contracts — requires/ensures/invariant
-├── contracts-z3/       # @ttfx/contracts-z3 — Z3 SMT solver integration
-├── contracts-refined/  # @ttfx/contracts-refined — refinement types
-├── testing/            # @ttfx/testing — powerAssert, comptimeAssert, ArbitraryDerive
-├── type-system/        # @ttfx/type-system — refined types, newtype, vec
-├── units/              # @ttfx/units — units of measure
-├── strings/            # @ttfx/strings — string manipulation macros
-├── effect/             # @ttfx/effect — Effect TS integration
-├── kysely/             # @ttfx/kysely — Kysely integration
-├── unplugin-ttfx/      # unplugin-ttfx — build tool integrations
-├── eslint-plugin/      # @ttfx/eslint-plugin
-└── vscode/             # @ttfx/vscode
+├── core/               # @typesugar/core — macro registration, types, context
+├── transformer/        # @typesugar/transformer — ts-patch transformer plugin
+├── typeclass/          # @typesugar/typeclass — Scala 3-style typeclasses
+├── specialize/         # @typesugar/specialize — zero-cost specialization
+├── operators/          # @typesugar/operators — operator overloading
+├── derive/             # @typesugar/derive — custom derive API
+├── reflect/            # @typesugar/reflect — compile-time reflection
+├── comptime/           # @typesugar/comptime — compile-time evaluation
+├── fp/                 # @typesugar/fp — functional programming (Option, Result, IO)
+├── std/                # @typesugar/std — standard library extensions
+├── react/              # @typesugar/react — reactive signals, JSX macros
+├── sql/                # @typesugar/sql — typed SQL fragments
+├── contracts/          # @typesugar/contracts — requires/ensures/invariant
+├── contracts-z3/       # @typesugar/contracts-z3 — Z3 SMT solver integration
+├── contracts-refined/  # @typesugar/contracts-refined — refinement types
+├── testing/            # @typesugar/testing — powerAssert, comptimeAssert, ArbitraryDerive
+├── type-system/        # @typesugar/type-system — refined types, newtype, vec
+├── units/              # @typesugar/units — units of measure
+├── strings/            # @typesugar/strings — string manipulation macros
+├── effect/             # @typesugar/effect — Effect TS integration
+├── kysely/             # @typesugar/kysely — Kysely integration
+├── unplugin-typesugar/      # unplugin-typesugar — build tool integrations
+├── eslint-plugin/      # @typesugar/eslint-plugin
+└── vscode/             # @typesugar/vscode
 ```
 
 ---
@@ -336,8 +336,8 @@ extensions compile to direct function calls — inherently zero-cost.
 **Usage — extensions are import-scoped (like Scala 3):**
 
 ```typescript
-import { extend } from "ttfx";
-import { NumberExt, StringExt } from "@ttfx/std";
+import { extend } from "typesugar";
+import { NumberExt, StringExt } from "@typesugar/std";
 
 // No registration needed — the transformer scans imports when it encounters
 // an undefined method call. If NumberExt has a callable `clamp` whose first
@@ -351,7 +351,7 @@ extend("hello").capitalize(); // → StringExt.capitalize("hello")
 Bare function imports work too:
 
 ```typescript
-import { clamp } from "@ttfx/std";
+import { clamp } from "@typesugar/std";
 (42).clamp(0, 100); // → clamp(42, 0, 100)
 ```
 
@@ -388,7 +388,7 @@ strips itself and emits `value.method(args)` for the implicit rewriter to handle
 
 **IMPORTANT: TypeScript HKT uses `F<_>`, NOT Scala's `F[_]`.** Never use square bracket syntax in code or types.
 
-The HKT encoding in ttfx is based on indexed-access types (`packages/type-system/src/hkt.ts`):
+The HKT encoding in typesugar is based on indexed-access types (`packages/type-system/src/hkt.ts`):
 
 ```typescript
 type $<F, A> = (F & { readonly _: A })["_"];
@@ -419,7 +419,7 @@ interface StringF {
 
 **Writing HKT typeclasses:**
 
-The project convention is to write `$<F, A>` explicitly in typeclass definitions. The `F<_>` sugar exists (auto-detected by the transformer) but is NOT used in `@ttfx/fp` or `@ttfx/collections`:
+The project convention is to write `$<F, A>` explicitly in typeclass definitions. The `F<_>` sugar exists (auto-detected by the transformer) but is NOT used in `@typesugar/fp` or `@typesugar/collections`:
 
 ```typescript
 // Current convention: explicit $<F, A>
@@ -606,14 +606,14 @@ interface Point { x: number; y: number; }
 // Enables deriveShowViaGeneric, deriveEqViaGeneric, etc.
 ```
 
-### FlatMap & Do-Notation (`@ttfx/std`)
+### FlatMap & Do-Notation (`@typesugar/std`)
 
 The `FlatMap` typeclass and `let:/yield:` macros provide zero-cost do-notation for monadic types.
 
 **FlatMap typeclass:**
 
 ```typescript
-import { FlatMap, registerFlatMap } from "@ttfx/std";
+import { FlatMap, registerFlatMap } from "@typesugar/std";
 
 // FlatMap is pre-registered for common types: Promise, Array, Option, Result
 // Register custom FlatMap instances:
@@ -625,7 +625,7 @@ registerFlatMap<MyMonad<unknown>>("MyMonad", {
 **Do-notation with labeled blocks:**
 
 ```typescript
-import { Option, Some, None } from "@ttfx/fp";
+import { Option, Some, None } from "@typesugar/fp";
 
 // let: binds the result, yield: returns the final value
 let: {
@@ -696,8 +696,8 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 | Read config values              | `config.get(path)`, `config.evaluate(condition)`                    | `core/config.ts`          |
 | Include file at compile time    | `includeStr()`, `includeJson()`                                     | `macros/include.ts`       |
 | Assert at compile time          | `static_assert(cond, msg)`                                          | `macros/static-assert.ts` |
-| Register FlatMap instance       | `registerFlatMap<F>(name, impl)`                                    | `@ttfx/std`               |
-| Use do-notation for monads      | `let: { x << ... } yield: { ... }`                                  | `@ttfx/std`               |
+| Register FlatMap instance       | `registerFlatMap<F>(name, impl)`                                    | `@typesugar/std`               |
+| Use do-notation for monads      | `let: { x << ... } yield: { ... }`                                  | `@typesugar/std`               |
 
 ---
 
@@ -715,7 +715,7 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 
 1. **Always declare `devDependencies`** — don't rely on hoisting (`vitest`, `typescript`, etc.)
 2. **Create `vitest.config.ts`** with a project name matching the package name
-3. **Add JSDoc comments** on every exported type, interface, and function — follow `@ttfx/fp` as the standard
+3. **Add JSDoc comments** on every exported type, interface, and function — follow `@typesugar/fp` as the standard
 4. **All imports must be at the top of the file** — no mid-file imports
 5. **Re-export everything from `index.ts`** — including derived operations, not just core types
 6. **Don't export dead code** — if a type-level function or type has no instances, don't export it
@@ -750,7 +750,7 @@ Before considering any code complete, verify:
 
 ---
 
-## Preprocessor Guidelines (`@ttfx/preprocessor`)
+## Preprocessor Guidelines (`@typesugar/preprocessor`)
 
 The preprocessor handles custom syntax (`F<_>` HKT, `|>` pipeline, `::` cons) that TypeScript cannot parse. It runs **before** the AST exists, doing text-level rewriting so tools like esbuild/vitest can parse the output.
 
@@ -811,7 +811,7 @@ There must be exactly **one canonical implementation** at `packages/transformer/
 The legacy file `src/language-service/index.ts` must be a thin re-export:
 
 ```typescript
-export { default } from "@ttfx/transformer/language-service";
+export { default } from "@typesugar/transformer/language-service";
 ```
 
 Do not duplicate the 700+ lines of language service code.

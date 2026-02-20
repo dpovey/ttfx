@@ -54,7 +54,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Type-Level API

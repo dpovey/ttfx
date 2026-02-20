@@ -9,7 +9,7 @@
  *
  * @example
  * ```typescript
- * import { defineCustomDerive } from "ttfx";
+ * import { defineCustomDerive } from "typesugar";
  *
  * // Simple derive that generates a toString function
  * defineCustomDerive("ToString", (info) => {

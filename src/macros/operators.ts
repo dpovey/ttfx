@@ -21,6 +21,7 @@ import {
   globalRegistry,
 } from "../core/registry.js";
 import { MacroContext, AttributeTarget } from "../core/types.js";
+import { getSyntaxForOperator, findInstance } from "./typeclass.js";
 
 /**
  * Operator mappings storage.
@@ -36,10 +37,24 @@ import { MacroContext, AttributeTarget } from "../core/types.js";
 const operatorMappings = new Map<string, Map<string, string>>();
 
 /**
+ * Method-level operator mappings storage.
+ * Maps type name -> operator symbol -> method name
+ * Populated by @operator decorator on class methods.
+ */
+const methodOperatorMappings = new Map<string, Map<string, string>>();
+
+/**
+ * Custom operators handled by the preprocessor (not valid TypeScript syntax).
+ * These must NOT be used with @operator - they go through __binop__ directly.
+ */
+const PREPROCESSOR_OPERATORS = new Set(["|>", "::", "<|"]);
+
+/**
  * Clear all operator mappings (for testing)
  */
 export function clearOperatorMappings(): void {
   operatorMappings.clear();
+  methodOperatorMappings.clear();
 }
 
 /**
@@ -57,6 +72,20 @@ export function registerOperators(
 }
 
 /**
+ * Register a method-level operator mapping for a type.
+ * Used by @operator decorator on class methods.
+ */
+export function registerMethodOperator(
+  typeName: string,
+  operator: string,
+  methodName: string,
+): void {
+  const typeMap = methodOperatorMappings.get(typeName) ?? new Map();
+  typeMap.set(operator, methodName);
+  methodOperatorMappings.set(typeName, typeMap);
+}
+
+/**
  * Get the method name for an operator on a type.
  * Falls back to checking well-known method names by convention
  * if no explicit mapping is registered.
@@ -65,6 +94,11 @@ export function getOperatorMethod(
   typeName: string,
   operator: string,
 ): string | undefined {
+  // Check method-level operators first (@operator decorator)
+  const methodOp = methodOperatorMappings.get(typeName)?.get(operator);
+  if (methodOp) return methodOp;
+
+  // Check class-level operators (@operators decorator)
   const explicit = operatorMappings.get(typeName)?.get(operator);
   if (explicit) return explicit;
 
@@ -132,6 +166,187 @@ export const operatorsAttribute = defineAttributeMacro({
 
     // Return the class unchanged (the mappings are used by the ops() macro)
     return target;
+  },
+});
+
+// ============================================================================
+// @operator Method Decorator - Mark a method as an operator implementation
+// ============================================================================
+
+export const operatorMethodAttribute = defineAttributeMacro({
+  name: "operator",
+  module: "typemacro",
+  description: "Mark a method as implementing a custom operator",
+  validTargets: ["method"] as AttributeTarget[],
+
+  expand(
+    ctx: MacroContext,
+    decorator: ts.Decorator,
+    target: ts.Declaration,
+    args: readonly ts.Expression[],
+  ): ts.Node | ts.Node[] {
+    if (!ts.isMethodDeclaration(target) || !target.name) {
+      ctx.reportError(
+        decorator,
+        "@operator can only be applied to named methods",
+      );
+      return target;
+    }
+
+    // Get the operator symbol from the decorator argument
+    if (args.length !== 1 || !ts.isStringLiteral(args[0])) {
+      ctx.reportError(
+        decorator,
+        '@operator requires a string argument (e.g., @operator("==="))',
+      );
+      return target;
+    }
+
+    const operatorSymbol = args[0].text;
+
+    // Reject preprocessor-handled operators - these must use typeclass instances
+    if (PREPROCESSOR_OPERATORS.has(operatorSymbol)) {
+      ctx.reportError(
+        decorator,
+        `Operator "${operatorSymbol}" is handled by the preprocessor and cannot be registered with @operator. ` +
+          `Custom operators like |> and :: are transformed to __binop__ calls at the lexical level. ` +
+          `Use @instance to define typeclass behavior or implement a method that __binop__ can dispatch to.`,
+      );
+      return target;
+    }
+
+    const methodName = ts.isIdentifier(target.name)
+      ? target.name.text
+      : target.name.getText();
+
+    // Find the containing class
+    const parent = target.parent;
+    if (!ts.isClassDeclaration(parent) || !parent.name) {
+      ctx.reportError(decorator, "@operator must be used inside a named class");
+      return target;
+    }
+
+    const className = parent.name.text;
+
+    // Register the operator mapping
+    registerMethodOperator(className, operatorSymbol, methodName);
+
+    // Return the method unchanged (the mapping is used by __binop__ macro)
+    return target;
+  },
+});
+
+// ============================================================================
+// __binop__() Expression Macro - Binary operator dispatch
+// ============================================================================
+
+/**
+ * The __binop__ macro is emitted by the preprocessor for custom operators.
+ * It resolves to the appropriate method call based on the left operand's type.
+ *
+ * Resolution order:
+ * 1. Check methodOperatorMappings (@operator decorator)
+ * 2. Check syntaxRegistry (typeclass Op<> annotations)
+ * 3. Fall back to semantic defaults (|> = pipeline, :: = cons)
+ *
+ * __binop__(a, "|>", f) resolves to:
+ * - a.pipe(f) if the type of a has @operator('|>')
+ * - TypeclassInstance.method(a, f) if a typeclass has Op<"|>"> on a method
+ * - f(a) as fallback for |> (pipeline semantics)
+ * - [a, ...b] as fallback for :: (cons semantics)
+ */
+export const binopMacro = defineExpressionMacro({
+  name: "__binop__",
+  module: "typemacro",
+  description: "Binary operator dispatch (generated by preprocessor)",
+
+  expand(
+    ctx: MacroContext,
+    callExpr: ts.CallExpression,
+    args: readonly ts.Expression[],
+  ): ts.Expression {
+    if (args.length !== 3) {
+      ctx.reportError(
+        callExpr,
+        "__binop__ expects exactly 3 arguments: (left, operator, right)",
+      );
+      return callExpr;
+    }
+
+    const [left, opArg, right] = args;
+
+    // Get the operator symbol
+    if (!ts.isStringLiteral(opArg)) {
+      ctx.reportError(callExpr, "__binop__ operator must be a string literal");
+      return callExpr;
+    }
+
+    const operator = opArg.text;
+
+    // Get the type of the left operand
+    const leftType = ctx.getTypeOf(left);
+    const typeName = ctx.typeChecker.typeToString(leftType);
+    const baseTypeName = typeName.split("<")[0].trim();
+
+    // 1. Check for a registered method operator (@operator decorator)
+    const method = getOperatorMethod(baseTypeName, operator);
+
+    if (method) {
+      // Transform to method call: left.method(right)
+      return ctx.factory.createCallExpression(
+        ctx.factory.createPropertyAccessExpression(left, method),
+        undefined,
+        [right],
+      );
+    }
+
+    // 2. Check syntaxRegistry for typeclass-based operator (Op<> annotation)
+    const syntaxEntries = getSyntaxForOperator(operator);
+    if (syntaxEntries && syntaxEntries.length > 0) {
+      // Try to find a typeclass instance for the left operand's type
+      for (const entry of syntaxEntries) {
+        const instance = findInstance(entry.typeclass, baseTypeName);
+        if (instance) {
+          // Transform to: TypeclassInstance.method(left, right)
+          return ctx.factory.createCallExpression(
+            ctx.factory.createPropertyAccessExpression(
+              ctx.factory.createIdentifier(instance.instanceName),
+              entry.method,
+            ),
+            undefined,
+            [left, right],
+          );
+        }
+      }
+    }
+
+    // 3. Default fallbacks based on operator semantics
+    const factory = ctx.factory;
+
+    switch (operator) {
+      case "|>":
+        // Pipeline: f(a)
+        return factory.createCallExpression(right, undefined, [left]);
+
+      case "::":
+        // Cons: [head, ...tail]
+        return factory.createArrayLiteralExpression([
+          left,
+          factory.createSpreadElement(right),
+        ]);
+
+      case "<|":
+        // Reverse pipeline: f(a) but arguments flipped
+        return factory.createCallExpression(left, undefined, [right]);
+
+      default:
+        // Unknown operator - leave as is (will fail at runtime)
+        ctx.reportWarning(
+          callExpr,
+          `Unknown custom operator "${operator}" with no registered method`,
+        );
+        return callExpr;
+    }
   },
 });
 
@@ -275,9 +490,10 @@ function transformExpression(
 }
 
 /**
- * Convert a binary operator token to a string representation
+ * Convert a binary operator token to its string representation.
+ * Covers all operators in OPERATOR_SYMBOLS.
  */
-function getOperatorString(kind: ts.SyntaxKind): string | undefined {
+export function getOperatorString(kind: ts.SyntaxKind): string | undefined {
   switch (kind) {
     case ts.SyntaxKind.PlusToken:
       return "+";
@@ -417,6 +633,8 @@ export const composeMacro = defineExpressionMacro({
 
 // Register macros
 globalRegistry.register(operatorsAttribute);
+globalRegistry.register(operatorMethodAttribute);
+globalRegistry.register(binopMacro);
 globalRegistry.register(opsMacro);
 globalRegistry.register(pipeMacro);
 globalRegistry.register(composeMacro);

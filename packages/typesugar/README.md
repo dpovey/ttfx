@@ -94,19 +94,19 @@ Eliminate typeclass dictionary passing at compile time for true zero-cost abstra
 
 ## Package Structure
 
-| Package              | Description                         |
-| -------------------- | ----------------------------------- |
-| `ttfx`               | Umbrella package (this one)         |
-| `@ttfx/core`         | Foundation types, registry, context |
-| `@ttfx/transformer`  | TypeScript transformer              |
-| `@ttfx/comptime`     | Compile-time evaluation             |
-| `@ttfx/derive`       | Derive macros                       |
-| `@ttfx/reflect`      | Type reflection                     |
-| `@ttfx/operators`    | Operator overloading                |
-| `@ttfx/typeclass`    | Typeclass system                    |
-| `@ttfx/specialize`   | Zero-cost specialization            |
-| `unplugin-ttfx`      | Bundler plugins                     |
-| `@ttfx/vscode`       | IDE extension                       |
+| Package             | Description                         |
+| ------------------- | ----------------------------------- |
+| `ttfx`              | Umbrella package (this one)         |
+| `@ttfx/core`        | Foundation types, registry, context |
+| `@ttfx/transformer` | TypeScript transformer              |
+| `@ttfx/comptime`    | Compile-time evaluation             |
+| `@ttfx/derive`      | Derive macros                       |
+| `@ttfx/reflect`     | Type reflection                     |
+| `@ttfx/operators`   | Operator overloading                |
+| `@ttfx/typeclass`   | Typeclass system                    |
+| `@ttfx/specialize`  | Zero-cost specialization            |
+| `unplugin-ttfx`     | Bundler plugins                     |
+| `@ttfx/vscode`      | IDE extension                       |
 
 ## Bundler Integration
 

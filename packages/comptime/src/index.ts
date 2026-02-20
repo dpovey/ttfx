@@ -25,7 +25,7 @@ import {
   MacroContext,
   MacroContextImpl,
   ComptimeValue,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 /** Maximum execution time for comptime evaluation (ms) */
 const COMPTIME_TIMEOUT_MS = 5000;
@@ -35,7 +35,7 @@ const MAX_ITERATIONS = 100_000;
 
 export const comptimeMacro = defineExpressionMacro({
   name: "comptime",
-  module: "@ttfx/comptime",
+  module: "@typesugar/comptime",
   description: "Evaluate an expression at compile time",
 
   expand(
@@ -376,8 +376,8 @@ export function comptime<T>(expr: T): T;
 export function comptime<T>(expr: T | (() => T)): T {
   throw new Error(
     "comptime() was called at runtime. " +
-      "This indicates the ttfx transformer is not configured correctly. " +
-      "Please ensure your build tool is configured to use the ttfx transformer.",
+      "This indicates the typesugar transformer is not configured correctly. " +
+      "Please ensure your build tool is configured to use the typesugar transformer.",
   );
 }
 

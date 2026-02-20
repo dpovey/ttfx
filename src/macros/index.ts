@@ -28,10 +28,10 @@ import "./verify-laws.js"; // Typeclass law verification
 import "./extension.js"; // Standalone extension methods for concrete types
 
 // --- Contract macros ---
-import "@ttfx/contracts";
+import "@typesugar/contracts";
 
 // --- Testing macros ---
-import "@ttfx/testing/macros";
+import "@typesugar/testing/macros";
 
 // Re-export for programmatic use
 export { comptimeMacro } from "./comptime.js";
@@ -332,7 +332,7 @@ export {
   type ProverPlugin,
   tryProve,
   registerProverPlugin,
-} from "@ttfx/contracts";
+} from "@typesugar/contracts";
 
 // --- Testing macros ---
 export {
@@ -343,4 +343,4 @@ export {
   typeAssertMacro,
   forAllMacro,
   ArbitraryDerive,
-} from "@ttfx/testing/macros";
+} from "@typesugar/testing/macros";

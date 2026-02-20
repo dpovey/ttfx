@@ -11,7 +11,7 @@
  * - json`...` - Compile-time JSON parsing
  * - raw`...` - Raw strings without escape processing
  *
- * Note: For SQL queries, use @ttfx/sql instead.
+ * Note: For SQL queries, use @typesugar/sql instead.
  */
 
 import * as ts from "typescript";
@@ -19,7 +19,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Regex Tagged Template
@@ -104,7 +104,7 @@ export const htmlMacro = defineExpressionMacro({
 
       for (const span of template.templateSpans) {
         // INTENTIONALLY UNHYGIENIC: __typemacro_escapeHtml is a runtime helper
-        // exported from @ttfx/strings. Users must import it for generated code to work.
+        // exported from @typesugar/strings. Users must import it for generated code to work.
         const escapedValue = factory.createCallExpression(
           factory.createIdentifier("__typemacro_escapeHtml"),
           undefined,

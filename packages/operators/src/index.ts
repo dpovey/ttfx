@@ -21,7 +21,7 @@ import {
   globalRegistry,
   MacroContext,
   AttributeTarget,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 /**
  * Operator mappings storage.
@@ -81,7 +81,7 @@ export function getOperatorMethod(
 
 export const operatorsAttribute = defineAttributeMacro({
   name: "operators",
-  module: "@ttfx/operators",
+  module: "@typesugar/operators",
   description: "Define operator overloading mappings for a class",
   validTargets: ["class"] as AttributeTarget[],
 
@@ -142,7 +142,7 @@ export const operatorsAttribute = defineAttributeMacro({
 
 export const opsMacro = defineExpressionMacro({
   name: "ops",
-  module: "@ttfx/operators",
+  module: "@typesugar/operators",
   description: "Transform operators into method calls",
 
   expand(
@@ -363,7 +363,7 @@ function getPrefixOperatorString(
  */
 export const pipeMacro = defineExpressionMacro({
   name: "pipe",
-  module: "@ttfx/operators",
+  module: "@typesugar/operators",
   description:
     "Zero-cost pipe — inlines function composition into nested calls",
 
@@ -408,7 +408,7 @@ export const pipeMacro = defineExpressionMacro({
  */
 export const flowMacro = defineExpressionMacro({
   name: "flow",
-  module: "@ttfx/operators",
+  module: "@typesugar/operators",
   description:
     "Zero-cost flow — composes functions left-to-right into a single inlined arrow function",
 
@@ -462,7 +462,7 @@ export const flowMacro = defineExpressionMacro({
  */
 export const composeMacro = defineExpressionMacro({
   name: "compose",
-  module: "@ttfx/operators",
+  module: "@typesugar/operators",
   description: "Compose functions right-to-left into a single function",
 
   expand(

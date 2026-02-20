@@ -60,7 +60,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Type-Level API
@@ -140,7 +140,7 @@ export function validatedNewtype<T>(
 
 export const wrapMacro = defineExpressionMacro({
   name: "wrap",
-  module: "@ttfx/type-system",
+  module: "@typesugar/type-system",
   description: "Zero-cost newtype wrap — compiles away to the raw value",
 
   expand(
@@ -159,7 +159,7 @@ export const wrapMacro = defineExpressionMacro({
 
 export const unwrapMacro = defineExpressionMacro({
   name: "unwrap",
-  module: "@ttfx/type-system",
+  module: "@typesugar/type-system",
   description: "Zero-cost newtype unwrap — compiles away to the raw value",
 
   expand(
@@ -178,7 +178,7 @@ export const unwrapMacro = defineExpressionMacro({
 
 export const newtypeCtorMacro = defineExpressionMacro({
   name: "newtypeCtor",
-  module: "@ttfx/type-system",
+  module: "@typesugar/type-system",
   description:
     "Zero-cost newtype constructor factory — the returned function compiles to identity",
 

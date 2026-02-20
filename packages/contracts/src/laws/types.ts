@@ -3,11 +3,11 @@
  *
  * Provides a framework for defining and verifying algebraic laws
  * for any interface or abstraction. This is the foundation that
- * @ttfx/fp uses for typeclass laws, but can be used independently.
+ * @typesugar/fp uses for typeclass laws, but can be used independently.
  *
  * @example
  * ```typescript
- * import { type Law, type LawSet } from "@ttfx/contracts/laws";
+ * import { type Law, type LawSet } from "@typesugar/contracts/laws";
  *
  * // Define laws for a custom Cache interface
  * interface Cache<K, V> {

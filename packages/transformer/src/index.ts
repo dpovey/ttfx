@@ -1,5 +1,5 @@
 /**
- * @ttfx/transformer - Main TypeScript transformer for macro expansion
+ * @typesugar/transformer - Main TypeScript transformer for macro expansion
  *
  * This transformer integrates with ts-patch to process macros during compilation.
  */
@@ -22,7 +22,7 @@ import {
   LabeledBlockMacro,
   TaggedTemplateMacroDef,
   TypeMacro,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 /**
  * Configuration for the transformer
@@ -186,7 +186,7 @@ class MacroTransformer {
         return;
       }
 
-      // Namespace import: import * as M from "ttfx"
+      // Namespace import: import * as M from "typesugar"
       if (ts.isNamespaceImport(decl)) {
         const importClause = decl.parent; // ImportClause
         const importDecl = importClause.parent; // ImportDeclaration
@@ -201,7 +201,7 @@ class MacroTransformer {
         return;
       }
 
-      // Default import: import comptime from "ttfx"
+      // Default import: import comptime from "typesugar"
       if (ts.isImportClause(decl) && decl.name) {
         const importDecl = decl.parent; // ImportDeclaration
         if (ts.isImportDeclaration(importDecl)) {
@@ -230,10 +230,10 @@ class MacroTransformer {
    * "extensions are scoped to what's imported".
    *
    * Two patterns are recognized:
-   *   1. Namespace: `import { NumberExt } from "@ttfx/std"`
+   *   1. Namespace: `import { NumberExt } from "@typesugar/std"`
    *      → if NumberExt has a callable `clamp` whose first param matches
    *        the receiver type, rewrite to `NumberExt.clamp(receiver, args)`
-   *   2. Bare function: `import { clamp } from "@ttfx/std"`
+   *   2. Bare function: `import { clamp } from "@typesugar/std"`
    *      → if `clamp`'s first param matches the receiver type, rewrite to
    *        `clamp(receiver, args)`
    *
@@ -483,7 +483,7 @@ class MacroTransformer {
   }
 
   /**
-   * Map a file path back to a module specifier like "typemacro" or "@ttfx/units".
+   * Map a file path back to a module specifier like "typemacro" or "@typesugar/units".
    */
   private resolveModuleSpecifier(fileName: string): string | undefined {
     const normalized = fileName.replace(/\\/g, "/");
@@ -495,7 +495,7 @@ class MacroTransformer {
     if (nodeModulesMatch) {
       const pkgName = nodeModulesMatch[1];
       // Check for @typemacro scoped packages
-      if (pkgName.startsWith("@ttfx/")) {
+      if (pkgName.startsWith("@typesugar/")) {
         return pkgName;
       }
       if (pkgName === "typemacro") {
@@ -505,23 +505,23 @@ class MacroTransformer {
     }
 
     // Development mode: detect from source tree structure
-    if (normalized.includes("/packages/units/")) return "@ttfx/units";
-    if (normalized.includes("/packages/sql/")) return "@ttfx/sql";
-    if (normalized.includes("/packages/strings/")) return "@ttfx/strings";
-    if (normalized.includes("/packages/fp/")) return "@ttfx/fp";
-    if (normalized.includes("/packages/comptime/")) return "@ttfx/comptime";
-    if (normalized.includes("/packages/reflect/")) return "@ttfx/reflect";
-    if (normalized.includes("/packages/derive/")) return "@ttfx/derive";
-    if (normalized.includes("/packages/operators/")) return "@ttfx/operators";
-    if (normalized.includes("/packages/typeclass/")) return "@ttfx/typeclass";
-    if (normalized.includes("/packages/specialize/")) return "@ttfx/specialize";
-    if (normalized.includes("/packages/core/")) return "@ttfx/core";
+    if (normalized.includes("/packages/units/")) return "@typesugar/units";
+    if (normalized.includes("/packages/sql/")) return "@typesugar/sql";
+    if (normalized.includes("/packages/strings/")) return "@typesugar/strings";
+    if (normalized.includes("/packages/fp/")) return "@typesugar/fp";
+    if (normalized.includes("/packages/comptime/")) return "@typesugar/comptime";
+    if (normalized.includes("/packages/reflect/")) return "@typesugar/reflect";
+    if (normalized.includes("/packages/derive/")) return "@typesugar/derive";
+    if (normalized.includes("/packages/operators/")) return "@typesugar/operators";
+    if (normalized.includes("/packages/typeclass/")) return "@typesugar/typeclass";
+    if (normalized.includes("/packages/specialize/")) return "@typesugar/specialize";
+    if (normalized.includes("/packages/core/")) return "@typesugar/core";
     if (normalized.includes("/packages/typemacro/")) return "typemacro";
 
     // Legacy source tree paths (for backwards compatibility during migration)
-    if (normalized.includes("/src/use-cases/units/")) return "@ttfx/units";
-    if (normalized.includes("/src/use-cases/sql/")) return "@ttfx/sql";
-    if (normalized.includes("/src/use-cases/strings/")) return "@ttfx/strings";
+    if (normalized.includes("/src/use-cases/units/")) return "@typesugar/units";
+    if (normalized.includes("/src/use-cases/sql/")) return "@typesugar/sql";
+    if (normalized.includes("/src/use-cases/strings/")) return "@typesugar/strings";
     if (
       normalized.includes("/src/index.") ||
       normalized.includes("/src/macros/") ||

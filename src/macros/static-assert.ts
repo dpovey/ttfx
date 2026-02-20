@@ -10,7 +10,7 @@
  *
  * @example
  * ```typescript
- * import { staticAssert, compileError, compileWarning } from "ttfx";
+ * import { staticAssert, compileError, compileWarning } from "typesugar";
  *
  * staticAssert(comptime(() => MAX_SIZE <= 1024), "MAX_SIZE must be <= 1024");
  *

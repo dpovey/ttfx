@@ -1,18 +1,18 @@
 /**
  * Unified Configuration System
  *
- * Provides a centralized configuration API for ttfx macros and user code.
+ * Provides a centralized configuration API for typesugar macros and user code.
  * Configuration is loaded from (in priority order):
  *
- * 1. Environment variables: TTFX_* (highest priority, for CI overrides)
- * 2. Config files: ttfx.config.ts, .ttfxrc, .ttfxrc.json, etc.
- * 3. package.json: "ttfx" key
+ * 1. Environment variables: TYPESUGAR_* (highest priority, for CI overrides)
+ * 2. Config files: typesugar.config.ts, .typesugarrc, .typesugarrc.json, etc.
+ * 3. package.json: "typesugar" key
  * 4. Programmatic: config.set() calls
  * 5. Defaults (lowest priority)
  *
  * @example
  * ```typescript
- * import { config } from "ttfx";
+ * import { config } from "typesugar";
  *
  * // Read config values
  * config.get("debug")                    // → boolean
@@ -27,9 +27,9 @@
  * class ExperimentalFeature { }
  * ```
  *
- * @example Config file (ttfx.config.ts)
+ * @example Config file (typesugar.config.ts)
  * ```typescript
- * import { defineConfig } from "ttfx";
+ * import { defineConfig } from "typesugar";
  *
  * export default defineConfig({
  *   debug: true,
@@ -86,8 +86,8 @@ export interface CatsConfig {
   /**
    * Typeclass law verification mode:
    * - false (default): Laws not checked, @verifyLaws erases completely
-   * - "compile-time": Use @ttfx/contracts prover for static verification
-   * - "property-test": Generate forAll() property tests via @ttfx/testing
+   * - "compile-time": Use @typesugar/contracts prover for static verification
+   * - "property-test": Generate forAll() property tests via @typesugar/testing
    */
   verifyLaws?: false | "compile-time" | "property-test";
 
@@ -108,7 +108,7 @@ export interface CatsConfig {
 }
 
 /**
- * Full ttfx configuration schema.
+ * Full typesugar configuration schema.
  */
 export interface TtfxConfig {
   /** Enable debug mode */
@@ -135,7 +135,7 @@ let configFilePath: string | undefined;
 // Config File Loading (cosmiconfig)
 // ============================================================================
 
-const MODULE_NAME = "ttfx";
+const MODULE_NAME = "typesugar";
 
 /**
  * Load configuration synchronously from files.
@@ -169,7 +169,7 @@ function loadConfigFromFiles(): TtfxConfig {
   } catch (error) {
     // Config file errors shouldn't crash — just use defaults
     if (process.env.NODE_ENV === "development") {
-      console.warn(`[ttfx] Failed to load config file:`, error);
+      console.warn(`[typesugar] Failed to load config file:`, error);
     }
   }
 
@@ -182,21 +182,21 @@ function loadConfigFromFiles(): TtfxConfig {
 
 /**
  * Load configuration from environment variables.
- * Variables prefixed with TTFX_ are parsed into the config object.
+ * Variables prefixed with TYPESUGAR_ are parsed into the config object.
  *
  * Examples:
- *   TTFX_DEBUG=1                        → { debug: true }
- *   TTFX_CONTRACTS_MODE=none            → { contracts: { mode: "none" } }
- *   TTFX_CONTRACTS__STRIP__PRECONDITIONS=1 → { contracts: { strip: { preconditions: true } } }
+ *   TYPESUGAR_DEBUG=1                        → { debug: true }
+ *   TYPESUGAR_CONTRACTS_MODE=none            → { contracts: { mode: "none" } }
+ *   TYPESUGAR_CONTRACTS__STRIP__PRECONDITIONS=1 → { contracts: { strip: { preconditions: true } } }
  */
 function loadConfigFromEnv(): TtfxConfig {
   const envConfig: TtfxConfig = {};
-  const PREFIX = "TTFX_";
+  const PREFIX = "TYPESUGAR_";
 
   for (const [key, value] of Object.entries(process.env)) {
     if (!key.startsWith(PREFIX) || value === undefined) continue;
 
-    // Convert TTFX_CONTRACTS_MODE to contracts.mode
+    // Convert TYPESUGAR_CONTRACTS_MODE to contracts.mode
     // Double underscore __ becomes nested object separator
     const configPath = key
       .slice(PREFIX.length)
@@ -577,7 +577,7 @@ when.decorator = function whenDecorator(condition: string) {
  */
 export const configWhenMacro = defineExpressionMacro({
   name: "config.when",
-  module: "ttfx",
+  module: "typesugar",
   description: "Conditional compilation based on configuration",
 
   expand(
@@ -641,7 +641,7 @@ export const configWhenMacro = defineExpressionMacro({
  */
 export const configWhenAttrMacro = defineAttributeMacro({
   name: "config.when",
-  module: "ttfx",
+  module: "typesugar",
   description: "Conditionally include a declaration based on configuration",
   validTargets: [
     "class",
@@ -795,8 +795,8 @@ export const config = {
  * Helper for creating type-safe configuration files.
  *
  * @example
- * // ttfx.config.ts
- * import { defineConfig } from "ttfx";
+ * // typesugar.config.ts
+ * import { defineConfig } from "typesugar";
  *
  * export default defineConfig({
  *   debug: true,

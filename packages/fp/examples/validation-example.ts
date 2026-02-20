@@ -12,7 +12,7 @@ import {
   validNel,
   invalidNel,
   NonEmptyList,
-} from "@ttfx/fp";
+} from "@typesugar/fp";
 
 // --- Types ---
 

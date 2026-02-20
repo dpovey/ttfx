@@ -1,12 +1,12 @@
 /**
  * Effect-TS Adapter Example
  *
- * Demonstrates cleaner syntax for Effect-TS operations using ttfx macros.
+ * Demonstrates cleaner syntax for Effect-TS operations using typesugar macros.
  * The macros compile to standard Effect API calls.
  */
 
 import { Effect, pipe } from "effect";
-import { gen$, map$, flatMap$, pipe$ } from "@ttfx/effect";
+import { gen$, map$, flatMap$, pipe$ } from "@typesugar/effect";
 
 console.log("=== Effect-TS Adapter Example ===\n");
 

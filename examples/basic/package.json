@@ -1,16 +1,16 @@
 {
-  "name": "ttfx-example-basic",
+  "name": "typesugar-example-basic",
   "version": "0.0.0",
   "private": true,
-  "description": "Basic example of ttfx usage",
+  "description": "Basic example of typesugar usage",
   "type": "module",
   "scripts": {
-    "build": "ttfx build",
-    "check": "ttfx check",
+    "build": "typesugar build",
+    "check": "typesugar check",
     "build:tsc": "tspc"
   },
   "dependencies": {
-    "ttfx": "workspace:*",
+    "typesugar": "workspace:*",
     "ts-patch": "^3.3.0",
     "typescript": "^5.8.3"
   }

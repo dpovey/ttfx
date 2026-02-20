@@ -5,7 +5,7 @@
  * eliminating runtime typeclass dictionary passing overhead.
  */
 
-import { specialize, specialize$, mono, inlineCall } from "@ttfx/specialize";
+import { specialize, specialize$, mono, inlineCall } from "@typesugar/specialize";
 
 console.log("=== Zero-Cost Specialization Example ===\n");
 

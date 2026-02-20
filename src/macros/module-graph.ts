@@ -9,7 +9,7 @@
  *
  * @example
  * ```typescript
- * import { collectTypes, moduleIndex } from "ttfx";
+ * import { collectTypes, moduleIndex } from "typesugar";
  *
  * // Collect all types decorated with @entity across the project
  * const entities = collectTypes("@entity");

@@ -44,7 +44,7 @@
  */
 
 import * as ts from "typescript";
-import { defineTypeMacro, globalRegistry, MacroContext } from "@ttfx/core";
+import { defineTypeMacro, globalRegistry, MacroContext } from "@typesugar/core";
 
 // ============================================================================
 // Helper: Extract numeric literal from a TypeNode

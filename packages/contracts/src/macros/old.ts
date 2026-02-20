@@ -29,7 +29,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 /**
  * Runtime old function — identity at runtime (only meaningful with transformer).
@@ -128,7 +128,7 @@ export function generateOldCaptureStatements(
  */
 export const oldMacro = defineExpressionMacro({
   name: "old",
-  module: "@ttfx/contracts",
+  module: "@typesugar/contracts",
   description:
     "Capture the pre-call value of an expression for use in postconditions.",
 

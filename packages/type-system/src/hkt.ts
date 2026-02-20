@@ -34,7 +34,7 @@
  * ## Usage
  *
  * ```typescript
- * import { $, Kind } from "@ttfx/type-system";
+ * import { $, Kind } from "@typesugar/type-system";
  *
  * // Define a type-level function for your type
  * interface OptionF { _: Option<this["_"]> }

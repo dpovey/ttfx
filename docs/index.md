@@ -1,17 +1,17 @@
-# ttfx
+# typesugar
 
 > Type-safe macros for TypeScript — compile-time metaprogramming without the footguns.
 
-## What is ttfx?
+## What is typesugar?
 
-ttfx is a macro system for TypeScript that runs at compile time. Write expressive, high-level code that expands to efficient, type-safe JavaScript. No runtime overhead, no magic strings, no loss of type safety.
+typesugar is a macro system for TypeScript that runs at compile time. Write expressive, high-level code that expands to efficient, type-safe JavaScript. No runtime overhead, no magic strings, no loss of type safety.
 
 ## Quick Example
 
 ```typescript
-import { comptime } from "@ttfx/comptime";
-import { derive } from "@ttfx/derive";
-import { sql } from "@ttfx/sql";
+import { comptime } from "@typesugar/comptime";
+import { derive } from "@typesugar/derive";
+import { sql } from "@typesugar/sql";
 
 // Compile-time evaluation
 const buildTime = comptime(new Date().toISOString());
@@ -40,7 +40,7 @@ const query = sql`SELECT * FROM users WHERE id = ${userId}`;
 ## Getting Started
 
 ```bash
-npm install @ttfx/ttfx @ttfx/transformer
+npm install @typesugar/typesugar @typesugar/transformer
 ```
 
 See the [Getting Started Guide](./getting-started.md) for detailed setup instructions.
@@ -51,40 +51,40 @@ See the [Getting Started Guide](./getting-started.md) for detailed setup instruc
 
 | Package                                     | Description                  |
 | ------------------------------------------- | ---------------------------- |
-| [@ttfx/transformer](./packages/transformer) | Core TypeScript transformer  |
-| [@ttfx/core](./packages/core)               | Macro registration and types |
-| [@ttfx/ttfx](./packages/ttfx)               | Umbrella package             |
-| [unplugin-ttfx](./packages/unplugin-ttfx)   | Bundler plugins              |
+| [@typesugar/transformer](./packages/transformer) | Core TypeScript transformer  |
+| [@typesugar/core](./packages/core)               | Macro registration and types |
+| [@typesugar/typesugar](./packages/typesugar)               | Umbrella package             |
+| [unplugin-typesugar](./packages/unplugin-typesugar)   | Bundler plugins              |
 
 ### Macros
 
 | Package                                   | Description                 |
 | ----------------------------------------- | --------------------------- |
-| [@ttfx/comptime](./packages/comptime)     | Compile-time evaluation     |
-| [@ttfx/derive](./packages/derive)         | Auto-derive implementations |
-| [@ttfx/reflect](./packages/reflect)       | Type reflection             |
-| [@ttfx/operators](./packages/operators)   | Operator overloading        |
-| [@ttfx/typeclass](./packages/typeclass)   | Scala-style typeclasses     |
-| [@ttfx/specialize](./packages/specialize) | Zero-cost specialization    |
+| [@typesugar/comptime](./packages/comptime)     | Compile-time evaluation     |
+| [@typesugar/derive](./packages/derive)         | Auto-derive implementations |
+| [@typesugar/reflect](./packages/reflect)       | Type reflection             |
+| [@typesugar/operators](./packages/operators)   | Operator overloading        |
+| [@typesugar/typeclass](./packages/typeclass)   | Scala-style typeclasses     |
+| [@typesugar/specialize](./packages/specialize) | Zero-cost specialization    |
 
 ### Domain-Specific
 
 | Package                                     | Description                         |
 | ------------------------------------------- | ----------------------------------- |
-| [@ttfx/sql](./packages/sql)                 | Type-safe SQL                       |
-| [@ttfx/strings](./packages/strings)         | String validation macros            |
-| [@ttfx/units](./packages/units)             | Physical units                      |
-| [@ttfx/type-system](./packages/type-system) | Advanced types (HKT, Newtype, etc.) |
-| [@ttfx/fp](./packages/fp)                   | Functional programming              |
+| [@typesugar/sql](./packages/sql)                 | Type-safe SQL                       |
+| [@typesugar/strings](./packages/strings)         | String validation macros            |
+| [@typesugar/units](./packages/units)             | Physical units                      |
+| [@typesugar/type-system](./packages/type-system) | Advanced types (HKT, Newtype, etc.) |
+| [@typesugar/fp](./packages/fp)                   | Functional programming              |
 
 ### Adapters
 
 | Package                             | Description           |
 | ----------------------------------- | --------------------- |
-| [@ttfx/effect](./packages/effect)   | Effect-TS integration |
-| [@ttfx/kysely](./packages/kysely)   | Kysely integration    |
-| [@ttfx/react](./packages/react)     | React macros          |
-| [@ttfx/testing](./packages/testing) | Testing macros        |
+| [@typesugar/effect](./packages/effect)   | Effect-TS integration |
+| [@typesugar/kysely](./packages/kysely)   | Kysely integration    |
+| [@typesugar/react](./packages/react)     | React macros          |
+| [@typesugar/testing](./packages/testing) | Testing macros        |
 
 ## Documentation
 

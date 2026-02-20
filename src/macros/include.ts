@@ -13,7 +13,7 @@
  *
  * @example
  * ```typescript
- * import { includeStr, includeBytes, includeJson } from "ttfx";
+ * import { includeStr, includeBytes, includeJson } from "typesugar";
  *
  * const schema = includeStr("./schema.graphql");
  * const icon = includeBytes("./icon.png");

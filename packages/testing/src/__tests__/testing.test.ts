@@ -1,5 +1,5 @@
 /**
- * Tests for the @ttfx/testing module
+ * Tests for the @typesugar/testing module
  *
  * Tests macro definitions, registration, and expansion behavior for:
  * - assert()             — Power assertions with sub-expression capture
@@ -17,7 +17,7 @@ import {
   MacroContextImpl,
   createMacroContext,
   globalRegistry,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // Import to register the testing macros
 import "../macro.js";
@@ -121,7 +121,7 @@ describe("testing macro registration", () => {
     expect(macro).toBeDefined();
     expect(macro!.name).toBe("assert");
     expect(macro!.kind).toBe("expression");
-    expect(macro!.module).toBe("@ttfx/testing");
+    expect(macro!.module).toBe("@typesugar/testing");
   });
 
   it("should register powerAssert as an expression macro (backward compat)", () => {
@@ -135,7 +135,7 @@ describe("testing macro registration", () => {
     const macro = globalRegistry.getExpression("staticAssert");
     expect(macro).toBeDefined();
     expect(macro!.name).toBe("staticAssert");
-    expect(macro!.module).toBe("@ttfx/testing");
+    expect(macro!.module).toBe("@typesugar/testing");
   });
 
   it("should register comptimeAssert as an expression macro (backward compat)", () => {
@@ -148,21 +148,21 @@ describe("testing macro registration", () => {
     const macro = globalRegistry.getExpression("assertSnapshot");
     expect(macro).toBeDefined();
     expect(macro!.name).toBe("assertSnapshot");
-    expect(macro!.module).toBe("@ttfx/testing");
+    expect(macro!.module).toBe("@typesugar/testing");
   });
 
   it("should register typeAssert as an expression macro", () => {
     const macro = globalRegistry.getExpression("typeAssert");
     expect(macro).toBeDefined();
     expect(macro!.name).toBe("typeAssert");
-    expect(macro!.module).toBe("@ttfx/testing");
+    expect(macro!.module).toBe("@typesugar/testing");
   });
 
   it("should register forAll as an expression macro", () => {
     const macro = globalRegistry.getExpression("forAll");
     expect(macro).toBeDefined();
     expect(macro!.name).toBe("forAll");
-    expect(macro!.module).toBe("@ttfx/testing");
+    expect(macro!.module).toBe("@typesugar/testing");
   });
 
   it("should register Arbitrary as a derive macro", () => {
@@ -177,7 +177,7 @@ describe("testing macro registration", () => {
     expect(macro).toBeDefined();
     expect(macro!.name).toBe("testCases");
     expect(macro!.kind).toBe("attribute");
-    expect(macro!.module).toBe("@ttfx/testing");
+    expect(macro!.module).toBe("@typesugar/testing");
   });
 });
 
@@ -636,7 +636,7 @@ describe("@derive(Arbitrary) expansion", () => {
 describe("assertSnapshot macro expansion", () => {
   it("should have correct metadata", () => {
     expect(assertSnapshotMacro.name).toBe("assertSnapshot");
-    expect(assertSnapshotMacro.module).toBe("@ttfx/testing");
+    expect(assertSnapshotMacro.module).toBe("@typesugar/testing");
   });
 });
 
@@ -664,7 +664,7 @@ describe("testing module integration", () => {
     expect(globalRegistry.getAttribute("testCases")).toBeDefined();
   });
 
-  it("all testing macros should be import-scoped to @ttfx/testing", () => {
+  it("all testing macros should be import-scoped to @typesugar/testing", () => {
     const testingMacros = [
       globalRegistry.getExpression("assert"),
       globalRegistry.getExpression("staticAssert"),
@@ -676,7 +676,7 @@ describe("testing module integration", () => {
 
     for (const macro of testingMacros) {
       expect(macro).toBeDefined();
-      expect(macro!.module).toBe("@ttfx/testing");
+      expect(macro!.module).toBe("@typesugar/testing");
     }
   });
 });

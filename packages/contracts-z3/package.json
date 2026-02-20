@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/contracts-z3",
+  "name": "@typesugar/contracts-z3",
   "version": "0.1.0",
-  "description": "Z3 SMT solver integration for @ttfx/contracts — compile-time proof verification",
+  "description": "Z3 SMT solver integration for @typesugar/contracts — compile-time proof verification",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -31,7 +31,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/contracts": "workspace:*",
+    "@typesugar/contracts": "workspace:*",
     "z3-solver": "^4.13.4"
   },
   "peerDependencies": {

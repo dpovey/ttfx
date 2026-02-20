@@ -10,8 +10,8 @@ import {
   defineAttributeMacro,
   defineDeriveMacro,
   registerMacros,
-} from "@ttfx/core";
-import type { MacroRegistry, MacroContext } from "@ttfx/core";
+} from "@typesugar/core";
+import type { MacroRegistry, MacroContext } from "@typesugar/core";
 
 describe("MacroRegistry", () => {
   let registry: MacroRegistry;

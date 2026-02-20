@@ -1,14 +1,14 @@
-# @ttfx/contracts
+# @typesugar/contracts
 
 > Design by Contract for TypeScript with compile-time proof elimination.
 
 ## Overview
 
-`@ttfx/contracts` provides Eiffel/Dafny-style contracts with a multi-layer proof engine that eliminates runtime checks when conditions can be proven at compile time.
+`@typesugar/contracts` provides Eiffel/Dafny-style contracts with a multi-layer proof engine that eliminates runtime checks when conditions can be proven at compile time.
 
 ```typescript
-import { requires, ensures, old } from "@ttfx/contracts";
-import { Positive } from "@ttfx/type-system";
+import { requires, ensures, old } from "@typesugar/contracts";
+import { Positive } from "@typesugar/type-system";
 
 function withdraw(account: Account, amount: Positive): number {
   requires(account.balance >= amount, "Insufficient funds");
@@ -22,9 +22,9 @@ function withdraw(account: Account, amount: Positive): number {
 ## Installation
 
 ```bash
-npm install @ttfx/contracts
+npm install @typesugar/contracts
 # For refined type integration:
-npm install @ttfx/contracts-refined @ttfx/type-system
+npm install @typesugar/contracts-refined @typesugar/type-system
 ```
 
 ## Features
@@ -56,7 +56,7 @@ The prover runs layers in order, stopping at first success:
 Mark predicates with their decidability level to control proof strategy and warnings:
 
 ```typescript
-import { decidable, registerDecidability } from "@ttfx/contracts";
+import { decidable, registerDecidability } from "@typesugar/contracts";
 
 // Decorator form
 @decidable("compile-time", "constant")
@@ -83,7 +83,7 @@ registerDecidability({
 Configure warnings when proofs fall back to runtime:
 
 ```typescript
-// ttfx.config.ts
+// typesugar.config.ts
 export default {
   contracts: {
     decidabilityWarnings: {
@@ -100,7 +100,7 @@ export default {
 Register safe type coercions for automatic widening:
 
 ```typescript
-import { registerSubtypingRule, canWiden } from "@ttfx/contracts";
+import { registerSubtypingRule, canWiden } from "@typesugar/contracts";
 
 registerSubtypingRule({
   from: "Positive",
@@ -117,7 +117,7 @@ canWiden("Positive", "NonNegative"); // true
 Proves linear inequalities via Fourier-Motzkin elimination:
 
 ```typescript
-import { tryLinearArithmetic, trySimpleLinearProof } from "@ttfx/contracts";
+import { tryLinearArithmetic, trySimpleLinearProof } from "@typesugar/contracts";
 
 // Given: x > 0, y >= 0
 // Proves: x + y >= 0
@@ -144,7 +144,7 @@ import {
   createCertificate,
   succeedCertificate,
   formatCertificate,
-} from "@ttfx/contracts";
+} from "@typesugar/contracts";
 
 const facts = [{ variable: "x", predicate: "x > 0" }];
 let cert = createCertificate("x >= 0", facts);
@@ -167,7 +167,7 @@ console.log(formatCertificate(cert));
 ### Inline Style
 
 ```typescript
-import { requires, ensures, old } from "@ttfx/contracts";
+import { requires, ensures, old } from "@typesugar/contracts";
 
 function deposit(account: Account, amount: Positive): void {
   requires(amount > 0); // PROVEN: Positive type
@@ -211,7 +211,7 @@ class BankAccount {
 ### Custom Algebraic Rules
 
 ```typescript
-import { registerAlgebraicRule } from "@ttfx/contracts";
+import { registerAlgebraicRule } from "@typesugar/contracts";
 
 registerAlgebraicRule({
   name: "percentage_bounds",
@@ -226,15 +226,15 @@ registerAlgebraicRule({
 });
 ```
 
-## Integration with @ttfx/type-system
+## Integration with @typesugar/type-system
 
-Import `@ttfx/contracts-refined` to connect the prover with refined types:
+Import `@typesugar/contracts-refined` to connect the prover with refined types:
 
 ```typescript
 // REQUIRED: Registers all built-in predicates
-import "@ttfx/contracts-refined";
+import "@typesugar/contracts-refined";
 
-import { Positive, Byte, Port } from "@ttfx/type-system";
+import { Positive, Byte, Port } from "@typesugar/type-system";
 
 function processPort(port: Port): void {
   requires(port >= 1); // PROVEN: Port guarantees >= 1
@@ -244,7 +244,7 @@ function processPort(port: Port): void {
 
 ## Configuration
 
-### Via ttfx.config.ts
+### Via typesugar.config.ts
 
 ```typescript
 export default {
@@ -263,7 +263,7 @@ export default {
 ### Via Environment Variable
 
 ```bash
-TTFX_CONTRACTS_MODE=none npm run build  # Production: strip all checks
+TYPESUGAR_CONTRACTS_MODE=none npm run build  # Production: strip all checks
 ```
 
 ### Mode Reference
@@ -338,9 +338,9 @@ packages/contracts/src/
 
 ## See Also
 
-- `@ttfx/contracts-refined` — Bridges contracts with type-system
-- `@ttfx/contracts-z3` — Z3 SMT solver plugin
-- `@ttfx/type-system` — Refined types (Positive, Byte, etc.)
+- `@typesugar/contracts-refined` — Bridges contracts with type-system
+- `@typesugar/contracts-z3` — Z3 SMT solver plugin
+- `@typesugar/type-system` — Refined types (Positive, Byte, etc.)
 
 ## License
 

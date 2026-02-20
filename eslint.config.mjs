@@ -1,7 +1,7 @@
 /**
- * ESLint configuration for ttfx monorepo
+ * ESLint configuration for typesugar monorepo
  *
- * Uses @ttfx/eslint-plugin to handle macro syntax properly.
+ * Uses @typesugar/eslint-plugin to handle macro syntax properly.
  * The plugin runs macro transformation before linting, so ESLint
  * sees expanded TypeScript instead of macro syntax.
  */
@@ -10,7 +10,7 @@ import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 // Once built, import the plugin:
-// import ttfxPlugin from "@ttfx/eslint-plugin";
+// import typesugarPlugin from "@typesugar/eslint-plugin";
 
 // For now, use a simple config without the plugin
 // (the plugin needs to be built first)
@@ -41,8 +41,8 @@ export default tseslint.config(
       },
     },
     rules: {
-      // ttfx-specific overrides for macro syntax
-      // These will be unnecessary once @ttfx/eslint-plugin is used
+      // typesugar-specific overrides for macro syntax
+      // These will be unnecessary once @typesugar/eslint-plugin is used
 
       // Allow labeled blocks (requires:/ensures:)
       "no-labels": "off",

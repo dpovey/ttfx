@@ -1,5 +1,5 @@
 /**
- * Core module exports for @ttfx/core
+ * Core module exports for @typesugar/core
  *
  * This package provides:
  * - Macro system infrastructure (types, registry, context)

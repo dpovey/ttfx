@@ -58,7 +58,7 @@
  */
 
 import * as ts from "typescript";
-import { defineExpressionMacro, type MacroContext } from "@ttfx/core";
+import { defineExpressionMacro, type MacroContext } from "@typesugar/core";
 
 // ============================================================================
 // SQL Statement Types

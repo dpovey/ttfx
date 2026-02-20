@@ -12,7 +12,7 @@ import {
   Update,
   ConnectionIO,
   Transactor,
-} from "@ttfx/sql";
+} from "@typesugar/sql";
 
 console.log("=== Type-Safe SQL Example ===\n");
 

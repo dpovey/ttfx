@@ -1,5 +1,5 @@
 /**
- * @ttfx/std — Standard Library
+ * @typesugar/std — Standard Library
  *
  * A comprehensive set of typeclasses and extension methods for enriching
  * basic TypeScript types. Draws from the best of Haskell, Scala, Rust,
@@ -27,8 +27,8 @@
  *
  * @example
  * ```ts
- * import { extend } from '@ttfx/core';
- * import '@ttfx/std';
+ * import { extend } from '@typesugar/core';
+ * import '@typesugar/std';
  *
  * // Extension methods on numbers
  * extend(42).clamp(0, 100);
@@ -44,7 +44,7 @@
  * extend([3, 1, 4, 1, 5]).unique();
  *
  * // Ranges
- * import { range, rangeToArray } from '@ttfx/std';
+ * import { range, rangeToArray } from '@typesugar/std';
  * rangeToArray(range(1, 10)); // [1, 2, ..., 9]
  * ```
  */

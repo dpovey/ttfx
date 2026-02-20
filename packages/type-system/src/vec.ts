@@ -216,7 +216,7 @@ export type VecBrand<N extends number> = `Vec<${N}>`;
 /**
  * Internal symbol for Vec branding.
  */
-const VEC_BRAND = Symbol.for("@ttfx/type-system/Vec");
+const VEC_BRAND = Symbol.for("@typesugar/type-system/Vec");
 
 /**
  * Check if a value is a Vec.
@@ -597,7 +597,7 @@ export const Vec = {
 } as const;
 
 // ============================================================================
-// Predicate Registration (for @ttfx/contracts integration)
+// Predicate Registration (for @typesugar/contracts integration)
 // ============================================================================
 
 /**

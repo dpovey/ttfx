@@ -1,17 +1,17 @@
-# @ttfx/effect
+# @typesugar/effect
 
-> Effect-TS adapter for ttfx do-notation macros.
+> Effect-TS adapter for typesugar do-notation macros.
 
 ## Overview
 
-`@ttfx/effect` provides seamless integration between ttfx macros and Effect-TS. Use labeled block syntax or expression macros to write Effect code with cleaner syntax that compiles to standard Effect API calls.
+`@typesugar/effect` provides seamless integration between typesugar macros and Effect-TS. Use labeled block syntax or expression macros to write Effect code with cleaner syntax that compiles to standard Effect API calls.
 
 ## Installation
 
 ```bash
-npm install @ttfx/effect
+npm install @typesugar/effect
 # or
-pnpm add @ttfx/effect
+pnpm add @typesugar/effect
 ```
 
 Requires Effect-TS as a peer dependency:
@@ -52,7 +52,7 @@ Effect.flatMap(getUserById(id), (user) =>
 ### gen$ — Effect.gen Shorthand
 
 ```typescript
-import { gen$ } from "@ttfx/effect";
+import { gen$ } from "@typesugar/effect";
 
 const program = gen$(function* () {
   const user = yield* getUserById(id);
@@ -71,7 +71,7 @@ const program = Effect.gen(function* () {
 ### map$ — Effect.map Shorthand
 
 ```typescript
-import { map$ } from "@ttfx/effect";
+import { map$ } from "@typesugar/effect";
 
 const userName = map$(getUser(), (user) => user.name);
 
@@ -82,7 +82,7 @@ const userName = Effect.map(getUser(), (user) => user.name);
 ### flatMap$ — Effect.flatMap Shorthand
 
 ```typescript
-import { flatMap$ } from "@ttfx/effect";
+import { flatMap$ } from "@typesugar/effect";
 
 const posts = flatMap$(getUser(), (user) => getPostsForUser(user.id));
 
@@ -93,7 +93,7 @@ const posts = Effect.flatMap(getUser(), (user) => getPostsForUser(user.id));
 ### pipe$ — Effect.pipe Shorthand
 
 ```typescript
-import { pipe$ } from "@ttfx/effect";
+import { pipe$ } from "@typesugar/effect";
 
 const result = pipe$(
   getUser(),
@@ -111,7 +111,7 @@ const result = Effect.pipe(
 
 ## Labeled Block Syntax Details
 
-> **Note:** The `let:/yield:` syntax is provided by `@ttfx/std`. This package registers a `FlatMap` instance for Effect that enables it.
+> **Note:** The `let:/yield:` syntax is provided by `@typesugar/std`. This package registers a `FlatMap` instance for Effect that enables it.
 
 The `let:` block uses the `<<` operator for bindings:
 
@@ -135,7 +135,7 @@ Continuation labels:
 
 ### Labeled Block Macros
 
-- `let: { ... } yield: { ... }` — Do-notation (provided by `@ttfx/std`, enabled by this package's FlatMap registration)
+- `let: { ... } yield: { ... }` — Do-notation (provided by `@typesugar/std`, enabled by this package's FlatMap registration)
 
 ### Expression Macros
 

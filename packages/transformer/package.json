@@ -1,13 +1,13 @@
 {
-  "name": "@ttfx/transformer",
+  "name": "@typesugar/transformer",
   "version": "0.1.0",
-  "description": "TypeScript transformer for ttfx macro expansion",
+  "description": "TypeScript transformer for typesugar macro expansion",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "ttfx": "./dist/cli.js"
+    "typesugar": "./dist/cli.js"
   },
   "exports": {
     ".": {
@@ -41,7 +41,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*"
+    "@typesugar/core": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

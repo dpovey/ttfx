@@ -62,8 +62,8 @@ import {
   defineAttributeMacro,
   defineExpressionMacro,
   globalRegistry,
-} from "@ttfx/core";
-import { MacroContext, AttributeTarget } from "@ttfx/core";
+} from "@typesugar/core";
+import { MacroContext, AttributeTarget } from "@typesugar/core";
 
 // ============================================================================
 // Effect Types

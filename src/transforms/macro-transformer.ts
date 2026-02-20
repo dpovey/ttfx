@@ -28,7 +28,7 @@ import {
   createRestrictedContext,
 } from "../core/capabilities.js";
 import { setCfgConfig } from "../macros/cfg.js";
-import { setContractConfig } from "@ttfx/contracts";
+import { setContractConfig } from "@typesugar/contracts";
 import { clearDerivationCaches } from "../macros/auto-derive.js";
 import { MacroExpansionCache } from "../core/cache.js";
 
@@ -528,7 +528,7 @@ class MacroTransformer {
         return;
       }
 
-      // Namespace import: import * as M from "ttfx"
+      // Namespace import: import * as M from "typesugar"
       if (ts.isNamespaceImport(decl)) {
         const importClause = decl.parent; // ImportClause
         const importDecl = importClause.parent; // ImportDeclaration
@@ -543,7 +543,7 @@ class MacroTransformer {
         return;
       }
 
-      // Default import: import comptime from "ttfx"
+      // Default import: import comptime from "typesugar"
       if (ts.isImportClause(decl) && decl.name) {
         const importDecl = decl.parent; // ImportDeclaration
         if (ts.isImportDeclaration(importDecl)) {
@@ -569,11 +569,11 @@ class MacroTransformer {
    * For macros that declare a `module` field, this traces the identifier's
    * symbol back through imports/re-exports to see if it originates from
    * the macro's declared module. This handles:
-   *   - Direct imports:  import { comptime } from "ttfx"
-   *   - Renamed imports: import { comptime as ct } from "ttfx"
+   *   - Direct imports:  import { comptime } from "typesugar"
+   *   - Renamed imports: import { comptime as ct } from "typesugar"
    *   - Barrel re-exports: import { comptime } from "./utils"
-   *                        (where ./utils re-exports from "ttfx")
-   *   - Namespace imports: import * as M from "ttfx"; M.comptime()
+   *                        (where ./utils re-exports from "typesugar")
+   *   - Namespace imports: import * as M from "typesugar"; M.comptime()
    *
    * For macros without a `module` field, falls back to name-based lookup
    * (legacy behavior).
@@ -2874,10 +2874,10 @@ class MacroTransformer {
    * "extensions are scoped to what's imported".
    *
    * Two patterns are recognized:
-   *   1. Namespace: `import { NumberExt } from "@ttfx/std"`
+   *   1. Namespace: `import { NumberExt } from "@typesugar/std"`
    *      → if NumberExt has a callable `clamp` whose first param matches
    *        the receiver type, rewrite to `NumberExt.clamp(receiver, args)`
-   *   2. Bare function: `import { clamp } from "@ttfx/std"`
+   *   2. Bare function: `import { clamp } from "@typesugar/std"`
    *      → if `clamp`'s first param matches the receiver type, rewrite to
    *        `clamp(receiver, args)`
    *

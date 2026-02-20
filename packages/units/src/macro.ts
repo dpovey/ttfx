@@ -12,7 +12,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // Map of unit strings to constructor function names
 const UNIT_MAP: Record<string, { fn: string; factor: number }> = {

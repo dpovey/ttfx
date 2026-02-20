@@ -1,0 +1,68 @@
+---
+description: Code quality checklist and common pitfalls to avoid in typesugar
+globs: ["packages/*/src/**/*.ts", "src/**/*.ts"]
+alwaysApply: false
+---
+
+# Code Quality Checklist
+
+## Before Submitting Any Code
+
+### Type Safety
+
+- [ ] No `as unknown as` casts — if you need one, the types are wrong; fix the root cause
+- [ ] No phantom HKT types implementing Functor/map/flatMap (see hkt-conventions rule)
+- [ ] All generics are actually used — no unused type parameters
+
+### `undefined` / `null` Handling
+
+- [ ] Never use `!== undefined` to check key existence in maps — use `has()` then `get()`
+- [ ] Consider: can the value legitimately be `undefined`, `null`, `0`, `""`, or `false`?
+- [ ] Falsy checks (`if (!x)`) should not be used when `0`, `""`, or `false` are valid values
+
+### Performance
+
+- [ ] No double iteration — `partition` must be single-pass, not two `filter` calls
+- [ ] Lazy operations must stay lazy — verify with operation-count tests
+- [ ] Builders have correct types — no casts to fix generic mismatches
+
+### Module Structure
+
+- [ ] All imports at the top of the file — no mid-file imports
+- [ ] No dead exports — every exported type/function must be used or documented
+- [ ] `index.ts` re-exports everything the package exposes
+- [ ] `devDependencies` declares all tools used (vitest, typescript, etc.) — don't rely on hoisting
+
+### Documentation
+
+- [ ] JSDoc on every exported interface, type, and function
+- [ ] Follow `@typesugar/fp` as the documentation standard
+- [ ] Typeclass laws documented in JSDoc comments on the interface
+- [ ] Non-obvious `as` casts have a comment explaining why they're safe
+
+### Testing
+
+- [ ] Every core typeclass method has a test
+- [ ] Derived operations have at least smoke tests
+- [ ] Edge cases tested: empty collections, single elements, undefined values
+- [ ] Laziness verified with operation counts where applicable
+- [ ] `vitest.config.ts` exists with a named project
+
+### Naming
+
+- [ ] Disambiguate when different typeclasses share method names (e.g., `mapUpdated` vs `updated`)
+- [ ] Consistent naming: `fooFromBar` for bridge/derivation functions
+- [ ] Type-level functions end in `F` (e.g., `ArrayF`, `SetF`, `MapF<K>`)
+
+## Common Anti-Patterns
+
+| Anti-Pattern                                             | Fix                                       |
+| -------------------------------------------------------- | ----------------------------------------- |
+| `v !== undefined ? v : fallback()` for map lookups       | `has(key) ? get(key) : fallback()`        |
+| `as unknown as TargetType`                               | Fix the generic types instead             |
+| `interface FooF { _: Foo }` (no `this["_"]`)             | `interface FooF { _: Foo<this["_"]> }`    |
+| `import ... from "..."` in middle of file                | Move all imports to top                   |
+| Implementing `map`/`flatMap` for non-parameterized types | Only implement read-only typeclasses      |
+| `filter(p)` + `filter(!p)` for partition                 | Single-pass with accumulator              |
+| `F[_]` in comments or code                               | Use `F<_>` (TypeScript syntax, not Scala) |
+| Relying on `vitest` being hoisted from root              | Add to `devDependencies`                  |

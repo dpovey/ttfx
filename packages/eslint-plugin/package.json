@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/eslint-plugin",
+  "name": "@typesugar/eslint-plugin",
   "version": "0.1.0",
-  "description": "ESLint plugin for ttfx macro system - lints transformed output",
+  "description": "ESLint plugin for typesugar macro system - lints transformed output",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,7 +23,7 @@
   "keywords": [
     "eslint",
     "eslint-plugin",
-    "ttfx",
+    "typesugar",
     "typescript",
     "macros"
   ],
@@ -33,8 +33,9 @@
     "typescript": ">=5.0.0"
   },
   "dependencies": {
-    "@ttfx/core": "workspace:*",
-    "@ttfx/transformer": "workspace:*"
+    "@typesugar/core": "workspace:*",
+    "@typesugar/preprocessor": "workspace:*",
+    "@typesugar/transformer": "workspace:*"
   },
   "devDependencies": {
     "@types/eslint": "^8.56.0",

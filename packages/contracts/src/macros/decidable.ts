@@ -34,7 +34,7 @@ import {
   globalRegistry,
   MacroContext,
   type AttributeTarget,
-} from "@ttfx/core";
+} from "@typesugar/core";
 import {
   registerDecidability,
   type Decidability,
@@ -158,12 +158,12 @@ export const decidableAttribute = defineAttributeMacro({
     });
 
     // Generate runtime registration call (for when the module loads)
-    // INTENTIONALLY UNHYGIENIC: __ttfx_contracts is expected to be a runtime namespace
+    // INTENTIONALLY UNHYGIENIC: __typesugar_contracts is expected to be a runtime namespace
     // containing contract utilities. Users must import or set this up appropriately.
     const registrationCall = ctx.factory.createExpressionStatement(
       ctx.factory.createCallExpression(
         ctx.factory.createPropertyAccessExpression(
-          ctx.factory.createIdentifier("__ttfx_contracts"),
+          ctx.factory.createIdentifier("__typesugar_contracts"),
           ctx.factory.createIdentifier("registerDecidability"),
         ),
         undefined,
@@ -344,7 +344,7 @@ globalRegistry.register(decidableAttribute);
  *
  * @example
  * ```typescript
- * import { decidable } from "@ttfx/contracts";
+ * import { decidable } from "@typesugar/contracts";
  *
  * // Register decidability for a custom type
  * decidable("MyCustomType", "compile-time", "constant");

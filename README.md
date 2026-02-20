@@ -1,15 +1,15 @@
-# ttfx
+# typesugar
 
 **TypeScript that F\*cks! Compile-time macros. Zero runtime. Full type safety.**
 
 > _What if TypeScript had `comptime`? What if `@derive` just worked? What if your tagged templates ran at build time?_
 
-ttfx brings compile-time metaprogramming to TypeScript, drawing from the best ideas in Rust, Scala 3, and Zig — and making them feel native to the TypeScript ecosystem.
+typesugar brings compile-time metaprogramming to TypeScript, drawing from the best ideas in Rust, Scala 3, and Zig — and making them feel native to the TypeScript ecosystem.
 
 ```typescript
-import { comptime } from "@ttfx/comptime";
-import { derive } from "@ttfx/derive";
-import { sql } from "@ttfx/sql";
+import { comptime } from "@typesugar/comptime";
+import { derive } from "@typesugar/derive";
+import { sql } from "@typesugar/sql";
 
 // Evaluate at compile time — gone before your code ships
 const LOOKUP = comptime(() => {
@@ -31,9 +31,9 @@ class Point {
 const query = sql`SELECT * FROM users WHERE id = ${userId}`;
 ```
 
-## Why ttfx?
+## Why typesugar?
 
-| Feature                  | ttfx                              | ts-macros               | Babel macros |
+| Feature                  | typesugar                              | ts-macros               | Babel macros |
 | ------------------------ | --------------------------------- | ----------------------- | ------------ |
 | **Type-aware**           | Yes — reads the type checker      | No                      | No           |
 | **Compile-time eval**    | Full JS via `vm` sandbox          | `$comptime` (similar)   | No           |
@@ -50,61 +50,61 @@ const query = sql`SELECT * FROM users WHERE id = ${userId}`;
 
 | Package                                   | Description                  |
 | ----------------------------------------- | ---------------------------- |
-| [ttfx](packages/ttfx)                     | Umbrella package             |
-| [@ttfx/transformer](packages/transformer) | Core TypeScript transformer  |
-| [@ttfx/core](packages/core)               | Macro registration and types |
-| [@ttfx/comptime](packages/comptime)       | Compile-time evaluation      |
-| [@ttfx/derive](packages/derive)           | Auto-derive implementations  |
-| [@ttfx/reflect](packages/reflect)         | Type reflection              |
-| [@ttfx/operators](packages/operators)     | Operator overloading         |
+| [typesugar](packages/typesugar)                     | Umbrella package             |
+| [@typesugar/transformer](packages/transformer) | Core TypeScript transformer  |
+| [@typesugar/core](packages/core)               | Macro registration and types |
+| [@typesugar/comptime](packages/comptime)       | Compile-time evaluation      |
+| [@typesugar/derive](packages/derive)           | Auto-derive implementations  |
+| [@typesugar/reflect](packages/reflect)         | Type reflection              |
+| [@typesugar/operators](packages/operators)     | Operator overloading         |
 
 ### Typeclasses & FP
 
-| Package                                 | Description                          |
-| --------------------------------------- | ------------------------------------ |
-| [@ttfx/typeclass](packages/typeclass)   | Scala 3-style typeclasses            |
-| [@ttfx/specialize](packages/specialize) | Zero-cost specialization             |
-| [@ttfx/fp](packages/fp)                 | Functional programming library       |
-| [@ttfx/std](packages/std)               | Standard typeclasses and extensions  |
+| Package                                 | Description                         |
+| --------------------------------------- | ----------------------------------- |
+| [@typesugar/typeclass](packages/typeclass)   | Scala 3-style typeclasses           |
+| [@typesugar/specialize](packages/specialize) | Zero-cost specialization            |
+| [@typesugar/fp](packages/fp)                 | Functional programming library      |
+| [@typesugar/std](packages/std)               | Standard typeclasses and extensions |
 
 ### Contracts
 
-| Package                                             | Description             |
-| --------------------------------------------------- | ----------------------- |
-| [@ttfx/contracts](packages/contracts)               | Design by contract      |
-| [@ttfx/contracts-refined](packages/contracts-refined) | Refinement types        |
-| [@ttfx/contracts-z3](packages/contracts-z3)         | Z3 SMT solver integration |
+| Package                                               | Description               |
+| ----------------------------------------------------- | ------------------------- |
+| [@typesugar/contracts](packages/contracts)                 | Design by contract        |
+| [@typesugar/contracts-refined](packages/contracts-refined) | Refinement types          |
+| [@typesugar/contracts-z3](packages/contracts-z3)           | Z3 SMT solver integration |
 
 ### Domain-Specific
 
 | Package                                   | Description                         |
 | ----------------------------------------- | ----------------------------------- |
-| [@ttfx/sql](packages/sql)                 | Type-safe SQL                       |
-| [@ttfx/react](packages/react)             | React macros                        |
-| [@ttfx/strings](packages/strings)         | String validation macros            |
-| [@ttfx/units](packages/units)             | Physical units                      |
-| [@ttfx/type-system](packages/type-system) | Advanced types (HKT, Newtype, etc.) |
+| [@typesugar/sql](packages/sql)                 | Type-safe SQL                       |
+| [@typesugar/react](packages/react)             | React macros                        |
+| [@typesugar/strings](packages/strings)         | String validation macros            |
+| [@typesugar/units](packages/units)             | Physical units                      |
+| [@typesugar/type-system](packages/type-system) | Advanced types (HKT, Newtype, etc.) |
 
 ### Integrations
 
-| Package                           | Description           |
-| --------------------------------- | --------------------- |
-| [@ttfx/effect](packages/effect)   | Effect-TS integration |
-| [@ttfx/kysely](packages/kysely)   | Kysely integration    |
+| Package                         | Description           |
+| ------------------------------- | --------------------- |
+| [@typesugar/effect](packages/effect) | Effect-TS integration |
+| [@typesugar/kysely](packages/kysely) | Kysely integration    |
 
 ### Tooling
 
-| Package                                     | Description                                      |
-| ------------------------------------------- | ------------------------------------------------ |
-| [unplugin-ttfx](packages/unplugin-ttfx)     | Bundler plugins (Vite, Webpack, esbuild, Rollup) |
-| [@ttfx/eslint-plugin](packages/eslint-plugin) | ESLint plugin                                    |
-| [@ttfx/vscode](packages/vscode)             | VSCode/Cursor extension                          |
-| [@ttfx/testing](packages/testing)           | Testing macros                                   |
+| Package                                       | Description                                      |
+| --------------------------------------------- | ------------------------------------------------ |
+| [unplugin-typesugar](packages/unplugin-typesugar)       | Bundler plugins (Vite, Webpack, esbuild, Rollup) |
+| [@typesugar/eslint-plugin](packages/eslint-plugin) | ESLint plugin                                    |
+| [@typesugar/vscode](packages/vscode)               | VSCode/Cursor extension                          |
+| [@typesugar/testing](packages/testing)             | Testing macros                                   |
 
 ## Getting Started
 
 ```bash
-npm install @ttfx/ttfx @ttfx/transformer
+npm install @typesugar/typesugar @typesugar/transformer
 ```
 
 ### Vite
@@ -112,10 +112,10 @@ npm install @ttfx/ttfx @ttfx/transformer
 ```typescript
 // vite.config.ts
 import { defineConfig } from "vite";
-import ttfx from "unplugin-ttfx/vite";
+import typesugar from "unplugin-typesugar/vite";
 
 export default defineConfig({
-  plugins: [ttfx()],
+  plugins: [typesugar()],
 });
 ```
 
@@ -130,7 +130,7 @@ npx ts-patch install
 // tsconfig.json
 {
   "compilerOptions": {
-    "plugins": [{ "transform": "@ttfx/transformer" }]
+    "plugins": [{ "transform": "@typesugar/transformer" }]
   }
 }
 ```
@@ -140,7 +140,7 @@ npx ts-patch install
 ### Compile-Time Evaluation
 
 ```typescript
-import { comptime } from "@ttfx/comptime";
+import { comptime } from "@typesugar/comptime";
 
 const fib10 = comptime(() => {
   const fib = (n: number): number => (n <= 1 ? n : fib(n - 1) + fib(n - 2));
@@ -151,7 +151,7 @@ const fib10 = comptime(() => {
 ### Derive Macros
 
 ```typescript
-import { derive } from "@ttfx/derive";
+import { derive } from "@typesugar/derive";
 
 @derive(Eq, Ord, Clone, Debug, Json, Builder)
 class User {
@@ -165,7 +165,7 @@ class User {
 ### Type Reflection
 
 ```typescript
-import { typeInfo, fieldNames, validator } from "@ttfx/reflect";
+import { typeInfo, fieldNames, validator } from "@typesugar/reflect";
 
 const fields = fieldNames<User>(); // ["id", "name", "email"]
 const validate = validator<User>(); // Runtime validator from types
@@ -174,9 +174,9 @@ const validate = validator<User>(); // Runtime validator from types
 ### Tagged Templates
 
 ```typescript
-import { sql } from "@ttfx/sql";
-import { regex, html, json } from "@ttfx/strings";
-import { units } from "@ttfx/units";
+import { sql } from "@typesugar/sql";
+import { regex, html, json } from "@typesugar/strings";
+import { units } from "@typesugar/units";
 
 const query = sql`SELECT * FROM ${table} WHERE id = ${id}`;
 const pattern = regex`^[a-zA-Z]+$`; // Validated at compile time
@@ -187,7 +187,7 @@ const speed = units`100 km/h`; // Dimensional analysis
 ### Typeclasses
 
 ```typescript
-import { typeclass, deriving, summon } from "@ttfx/typeclass";
+import { typeclass, deriving, summon } from "@typesugar/typeclass";
 
 @typeclass
 interface Show<A> {
@@ -206,7 +206,7 @@ s.show(new Point(1, 2)); // "Point(x = 1, y = 2)"
 ### Operator Overloading
 
 ```typescript
-import { operators, ops } from "@ttfx/operators";
+import { operators, ops } from "@typesugar/operators";
 
 @operators({ "+": "add", "*": "scale" })
 class Vec2 {

@@ -1,6 +1,6 @@
 # Macro Types
 
-ttfx supports several kinds of macros, each suited to different use cases.
+typesugar supports several kinds of macros, each suited to different use cases.
 
 ## Expression Macros
 
@@ -16,9 +16,9 @@ macroName<TypeArg>(arg1, arg2, ...)
 ### Examples
 
 ```typescript
-import { comptime } from "@ttfx/comptime";
-import { typeInfo, fieldNames } from "@ttfx/reflect";
-import { summon } from "@ttfx/typeclass";
+import { comptime } from "@typesugar/comptime";
+import { typeInfo, fieldNames } from "@typesugar/reflect";
+import { summon } from "@typesugar/typeclass";
 
 // comptime — evaluate at compile time
 const buildTime = comptime(new Date().toISOString());
@@ -56,10 +56,10 @@ Attribute macros use decorators to transform declarations.
 ### Examples
 
 ```typescript
-import { derive } from "@ttfx/derive";
-import { reflect } from "@ttfx/reflect";
-import { operators } from "@ttfx/operators";
-import { typeclass, instance, deriving } from "@ttfx/typeclass";
+import { derive } from "@typesugar/derive";
+import { reflect } from "@typesugar/reflect";
+import { operators } from "@typesugar/operators";
+import { typeclass, instance, deriving } from "@typesugar/typeclass";
 
 // @derive — auto-generate implementations
 @derive(Eq, Clone, Debug, Json)
@@ -118,9 +118,9 @@ macroName`template ${expr} literal`;
 ### Examples
 
 ```typescript
-import { sql } from "@ttfx/sql";
-import { regex, html, json } from "@ttfx/strings";
-import { units } from "@ttfx/units";
+import { sql } from "@typesugar/sql";
+import { regex, html, json } from "@typesugar/strings";
+import { units } from "@typesugar/units";
 
 // sql — type-safe SQL with compile-time validation
 const query = sql`SELECT * FROM users WHERE id = ${userId}`;
@@ -165,7 +165,7 @@ continuation: {
 ### Examples
 
 ```typescript
-import "@ttfx/effect";
+import "@typesugar/effect";
 
 // let: yield: — monadic do-notation
 let: {
@@ -260,7 +260,7 @@ Type macros transform type annotations.
 ### Examples
 
 ```typescript
-import { Refined, Opaque, Phantom } from "@ttfx/type-system";
+import { Refined, Opaque, Phantom } from "@typesugar/type-system";
 
 // Refined types — types with predicates
 type Port = Refined<number, typeof Port>;

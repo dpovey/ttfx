@@ -1,17 +1,17 @@
-# @ttfx/type-system
+# @typesugar/type-system
 
 > Advanced type system extensions for TypeScript.
 
 ## Overview
 
-`@ttfx/type-system` extends TypeScript with powerful type-level features from the "too hard basket" — things the TypeScript team deemed too complex to add to the language. All implemented through compile-time macros.
+`@typesugar/type-system` extends TypeScript with powerful type-level features from the "too hard basket" — things the TypeScript team deemed too complex to add to the language. All implemented through compile-time macros.
 
 ## Installation
 
 ```bash
-npm install @ttfx/type-system
+npm install @typesugar/type-system
 # or
-pnpm add @ttfx/type-system
+pnpm add @typesugar/type-system
 ```
 
 ## Features
@@ -30,7 +30,7 @@ import {
   type IsNever,
   type IsAny,
   type IsUnknown,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 // Type-level equality check
 type Test1 = Equal<string, string>; // true
@@ -61,7 +61,7 @@ import {
   unwrap,
   newtypeCtor,
   validatedNewtype,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 // Define branded types
 type UserId = Newtype<number, "UserId">;
@@ -104,7 +104,7 @@ import {
   type Kind,
   type ArrayF,
   type PromiseF,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 // F is a type constructor (Array, Promise, etc.)
 interface Functor<F extends Kind> {
@@ -127,7 +127,7 @@ import {
   useExists,
   type Showable,
   showable,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 // Pack a value with its witness
 const items: Showable[] = [
@@ -153,7 +153,7 @@ import {
   NonEmpty,
   Email,
   Port,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 // Refined types carry their constraints
 type PositiveInt = Refined<number, typeof Positive>;
@@ -170,7 +170,7 @@ const badPort = refine<Port>(-1); // ✗ Compile error
 Compile-time numeric computation.
 
 ```typescript
-import { Add, Sub, Mul, Div, Mod, Pow } from "@ttfx/type-system";
+import { Add, Sub, Mul, Div, Mod, Pow } from "@typesugar/type-system";
 
 type Sum = Add<1, 2>; // 3
 type Diff = Sub<10, 3>; // 7
@@ -185,7 +185,7 @@ type Power = Pow<2, 8>; // 256
 Arrays with compile-time known length — type-safe head/tail, concatenation, zip.
 
 ```typescript
-import { Vec, type Add, type Sub } from "@ttfx/type-system";
+import { Vec, type Add, type Sub } from "@typesugar/type-system";
 
 // Create length-indexed vectors
 const v3: Vec<number, 3> = Vec.from([1, 2, 3]);
@@ -223,7 +223,7 @@ Key properties for contract proofs:
 ML-style abstract types with controlled access.
 
 ```typescript
-import { opaqueModule, type OpaqueModule } from "@ttfx/type-system";
+import { opaqueModule, type OpaqueModule } from "@typesugar/type-system";
 
 // Define an opaque type with smart constructor
 const UserId = opaqueModule<number, "UserId">({
@@ -241,7 +241,7 @@ const raw = UserId.unwrap(id); // number
 Encode state machines in the type system.
 
 ```typescript
-import { createStateMachine, type Phantom } from "@ttfx/type-system";
+import { createStateMachine, type Phantom } from "@typesugar/type-system";
 
 type DoorState = "open" | "closed" | "locked";
 
@@ -262,7 +262,7 @@ const locked = Door.transition(open, "lock"); // ✗ Can't lock an open door
 Compile-time side-effect tracking.
 
 ```typescript
-import { pure, io, async, assertPure } from "@ttfx/type-system";
+import { pure, io, async, assertPure } from "@typesugar/type-system";
 
 @pure
 function add(a: number, b: number): number {

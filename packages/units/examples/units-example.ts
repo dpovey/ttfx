@@ -18,7 +18,7 @@ import {
   metersPerSecond,
   kilometersPerHour,
   units,
-} from "@ttfx/units";
+} from "@typesugar/units";
 
 console.log("=== Physical Units Example ===\n");
 

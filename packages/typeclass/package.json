@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/typeclass",
+  "name": "@typesugar/typeclass",
   "version": "0.1.0",
-  "description": "Scala 3-style typeclass macros with auto-derivation for ttfx",
+  "description": "Scala 3-style typeclass macros with auto-derivation for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -29,7 +29,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*"
+    "@typesugar/core": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

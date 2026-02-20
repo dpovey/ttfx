@@ -365,7 +365,7 @@ describe("environment variable loading", () => {
   afterEach(() => {
     // Restore original environment
     for (const key of Object.keys(process.env)) {
-      if (key.startsWith("TTFX_")) {
+      if (key.startsWith("TYPESUGAR_")) {
         delete process.env[key];
       }
     }
@@ -373,44 +373,44 @@ describe("environment variable loading", () => {
     config.reset();
   });
 
-  it("should load TTFX_DEBUG=1 as true", () => {
-    process.env.TTFX_DEBUG = "1";
+  it("should load TYPESUGAR_DEBUG=1 as true", () => {
+    process.env.TYPESUGAR_DEBUG = "1";
     config.reset();
     expect(config.get("debug")).toBe(true);
   });
 
-  it("should load TTFX_DEBUG=true as true", () => {
-    process.env.TTFX_DEBUG = "true";
+  it("should load TYPESUGAR_DEBUG=true as true", () => {
+    process.env.TYPESUGAR_DEBUG = "true";
     config.reset();
     expect(config.get("debug")).toBe(true);
   });
 
-  it("should load TTFX_DEBUG=0 as false", () => {
-    process.env.TTFX_DEBUG = "0";
+  it("should load TYPESUGAR_DEBUG=0 as false", () => {
+    process.env.TYPESUGAR_DEBUG = "0";
     config.reset();
     expect(config.get("debug")).toBe(false);
   });
 
-  it("should load TTFX_CONTRACTS_MODE as nested value", () => {
-    process.env.TTFX_CONTRACTS_MODE = "none";
+  it("should load TYPESUGAR_CONTRACTS_MODE as nested value", () => {
+    process.env.TYPESUGAR_CONTRACTS_MODE = "none";
     config.reset();
     expect(config.get("contracts.mode")).toBe("none");
   });
 
   it("should load double underscore as deeper nesting", () => {
-    process.env.TTFX_CONTRACTS__STRIP__PRECONDITIONS = "1";
+    process.env.TYPESUGAR_CONTRACTS__STRIP__PRECONDITIONS = "1";
     config.reset();
     expect(config.get("contracts.strip.preconditions")).toBe(true);
   });
 
   it("should parse numeric values", () => {
-    process.env.TTFX_CUSTOM_NUMBER = "42";
+    process.env.TYPESUGAR_CUSTOM_NUMBER = "42";
     config.reset();
     expect(config.get("custom.number")).toBe(42);
   });
 
   it("should keep string values as strings", () => {
-    process.env.TTFX_CUSTOM_VALUE = "hello";
+    process.env.TYPESUGAR_CUSTOM_VALUE = "hello";
     config.reset();
     expect(config.get("custom.value")).toBe("hello");
   });

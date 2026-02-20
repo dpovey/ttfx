@@ -243,7 +243,7 @@ export function registerFlatMap<F>(
 ): void {
   if (flatMapInstances.has(name)) {
     console.warn(
-      `[ttfx] FlatMap instance for '${name}' is already registered. Overriding.`,
+      `[typesugar] FlatMap instance for '${name}' is already registered. Overriding.`,
     );
   }
   flatMapInstances.set(name, instance as FlatMap<unknown>);

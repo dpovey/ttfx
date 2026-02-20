@@ -1,7 +1,7 @@
 /**
  * Transformer Configuration Example
  *
- * Shows how to configure the ttfx transformer for different build systems.
+ * Shows how to configure the typesugar transformer for different build systems.
  * The transformer is the core engine that expands macros at compile time.
  */
 
@@ -12,7 +12,7 @@
   "compilerOptions": {
     "plugins": [
       {
-        "transform": "@ttfx/transformer",
+        "transform": "@typesugar/transformer",
         "verbose": true,
         "timeout": 5000
       }
@@ -25,11 +25,11 @@
 
 /*
 import { defineConfig } from "vite";
-import { ttfxPlugin } from "unplugin-ttfx/vite";
+import { typesugarPlugin } from "unplugin-typesugar/vite";
 
 export default defineConfig({
   plugins: [
-    ttfxPlugin({
+    typesugarPlugin({
       verbose: false,
       timeout: 5000,
     }),
@@ -41,14 +41,14 @@ export default defineConfig({
 
 /*
 import { build } from "esbuild";
-import { ttfxPlugin } from "unplugin-ttfx/esbuild";
+import { typesugarPlugin } from "unplugin-typesugar/esbuild";
 
 build({
   entryPoints: ["src/index.ts"],
   bundle: true,
   outfile: "dist/bundle.js",
   plugins: [
-    ttfxPlugin({
+    typesugarPlugin({
       verbose: false,
     }),
   ],
@@ -58,7 +58,7 @@ build({
 // --- Webpack Configuration (webpack.config.js) ---
 
 /*
-const { ttfxPlugin } = require("unplugin-ttfx/webpack");
+const { typesugarPlugin } = require("unplugin-typesugar/webpack");
 
 module.exports = {
   module: {
@@ -70,7 +70,7 @@ module.exports = {
             loader: "ts-loader",
             options: {
               getCustomTransformers: () => ({
-                before: [ttfxPlugin({})],
+                before: [typesugarPlugin({})],
               }),
             },
           },
@@ -83,7 +83,7 @@ module.exports = {
 
 // --- Using the Transformer Directly ---
 
-import { MacroTransformer, MacroTransformerConfig } from "@ttfx/transformer";
+import { MacroTransformer, MacroTransformerConfig } from "@typesugar/transformer";
 import * as ts from "typescript";
 
 console.log("=== Transformer Configuration ===\n");
@@ -148,14 +148,14 @@ macroTypes.forEach((m) => {
 
 console.log("\n--- Import-Scoped Resolution ---");
 console.log("Macros are resolved based on imports:");
-console.log("  import { sql } from '@ttfx/sql';");
+console.log("  import { sql } from '@typesugar/sql';");
 console.log("  sql`SELECT * FROM users`  // Expands with sqlMacro");
 console.log("");
-console.log("  import { comptime } from '@ttfx/comptime';");
+console.log("  import { comptime } from '@typesugar/comptime';");
 console.log("  comptime(Date.now())  // Evaluates at compile time");
 
 // --- CLI Usage ---
 
 console.log("\n--- CLI Usage ---");
-console.log("npx ttfx build src/index.ts --outDir dist");
-console.log("npx ttfx watch src/ --outDir dist");
+console.log("npx typesugar build src/index.ts --outDir dist");
+console.log("npx typesugar watch src/ --outDir dist");

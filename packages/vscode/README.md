@@ -1,10 +1,10 @@
-# @ttfx/vscode
+# @typesugar/vscode
 
-> VSCode/Cursor IDE extension for ttfx macro development.
+> VSCode/Cursor IDE extension for typesugar macro development.
 
 ## Overview
 
-`@ttfx/vscode` provides IDE support for ttfx macros: syntax highlighting, expansion previews, inline hints, code actions, and diagnostics — all powered by a manifest-driven architecture that automatically adapts to your project's macros.
+`@typesugar/vscode` provides IDE support for typesugar macros: syntax highlighting, expansion previews, inline hints, code actions, and diagnostics — all powered by a manifest-driven architecture that automatically adapts to your project's macros.
 
 ## Features
 
@@ -53,23 +53,23 @@ Shows macro count with one-click manifest refresh.
 
 ### From Marketplace
 
-Search for "ttfx" in the VSCode/Cursor extensions panel.
+Search for "typesugar" in the VSCode/Cursor extensions panel.
 
 ### From VSIX
 
 ```bash
-# In the ttfx repo
+# In the typesugar repo
 cd packages/vscode
 pnpm run package
-code --install-extension ttfx-*.vsix
+code --install-extension typesugar-*.vsix
 ```
 
 ## Configuration
 
-The extension reads from `ttfx.manifest.json` in your workspace root. Generate it with:
+The extension reads from `typesugar.manifest.json` in your workspace root. Generate it with:
 
 ```bash
-npx ttfx build --manifest
+npx typesugar build --manifest
 ```
 
 The manifest contains all macro names, types, and metadata. The extension watches this file and hot-reloads when it changes.
@@ -78,18 +78,18 @@ The manifest contains all macro names, types, and metadata. The extension watche
 
 | Setting                  | Description                | Default |
 | ------------------------ | -------------------------- | ------- |
-| `ttfx.enableCodeLens`    | Show expansion previews    | `true`  |
-| `ttfx.enableInlayHints`  | Show inline type hints     | `true`  |
-| `ttfx.enableDiagnostics` | Run background transformer | `true`  |
+| `typesugar.enableCodeLens`    | Show expansion previews    | `true`  |
+| `typesugar.enableInlayHints`  | Show inline type hints     | `true`  |
+| `typesugar.enableDiagnostics` | Run background transformer | `true`  |
 
 ## Commands
 
 | Command                 | Description                    |
 | ----------------------- | ------------------------------ |
-| `ttfx.expandMacro`      | Expand macro at cursor         |
-| `ttfx.refreshManifest`  | Reload the manifest file       |
-| `ttfx.generateManifest` | Run `ttfx build --manifest`    |
-| `ttfx.addDerive`        | Add @derive to interface/class |
+| `typesugar.expandMacro`      | Expand macro at cursor         |
+| `typesugar.refreshManifest`  | Reload the manifest file       |
+| `typesugar.generateManifest` | Run `typesugar build --manifest`    |
+| `typesugar.addDerive`        | Add @derive to interface/class |
 
 ## Manifest Format
 
@@ -99,13 +99,13 @@ The manifest contains all macro names, types, and metadata. The extension watche
   "macros": {
     "expression": {
       "comptime": {
-        "module": "@ttfx/comptime",
+        "module": "@typesugar/comptime",
         "description": "Compile-time evaluation"
       }
     },
     "decorator": {
       "derive": {
-        "module": "@ttfx/derive",
+        "module": "@typesugar/derive",
         "args": [
           "Eq",
           "Ord",
@@ -118,12 +118,12 @@ The manifest contains all macro names, types, and metadata. The extension watche
         ]
       },
       "operators": {
-        "module": "@ttfx/operators"
+        "module": "@typesugar/operators"
       }
     },
     "taggedTemplate": {
       "sql": {
-        "module": "@ttfx/sql",
+        "module": "@typesugar/sql",
         "contentType": "sql"
       }
     },
@@ -153,7 +153,7 @@ The manifest contains all macro names, types, and metadata. The extension watche
 │   Tokens    │  Provider   │   Provider   │    Provider     │
 ├─────────────┴─────────────┴──────────────┴─────────────────┤
 │                    Manifest Loader                          │
-│              (watches ttfx.manifest.json)                   │
+│              (watches typesugar.manifest.json)                   │
 ├─────────────────────────────────────────────────────────────┤
 │                   Expansion Service                         │
 │           (runs transformer for previews)                   │

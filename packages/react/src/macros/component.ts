@@ -34,7 +34,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   type MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 import type { ReactMacroMode } from "../types.js";
 import {
   analyzeClosureCaptures,

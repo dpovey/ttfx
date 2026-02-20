@@ -1,8 +1,8 @@
 /**
- * Higher-Kinded Types for @ttfx/fp
+ * Higher-Kinded Types for @typesugar/fp
  *
- * This module defines type-level functions for @ttfx/fp data types using the
- * indexed-access HKT encoding from `@ttfx/type-system`.
+ * This module defines type-level functions for @typesugar/fp data types using the
+ * indexed-access HKT encoding from `@typesugar/type-system`.
  *
  * ## Zero-Cost Philosophy
  *
@@ -34,8 +34,8 @@
  */
 
 // Re-export core HKT infrastructure from type-system
-export type { $, Kind } from "@ttfx/type-system";
-export { unsafeCoerce } from "@ttfx/type-system";
+export type { $, Kind } from "@typesugar/type-system";
+export { unsafeCoerce } from "@typesugar/type-system";
 
 // ============================================================================
 // Import actual data types from their modules
@@ -89,7 +89,7 @@ export interface PromiseF {
 }
 
 // ============================================================================
-// Type-Level Functions for @ttfx/fp Data Types
+// Type-Level Functions for @typesugar/fp Data Types
 // ============================================================================
 
 /**

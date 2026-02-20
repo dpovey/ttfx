@@ -8,7 +8,7 @@
  *
  * @example
  * ```typescript
- * import { comptime, derive, ops } from "ttfx";
+ * import { comptime, derive, ops } from "typesugar";
  *
  * // Compile-time evaluation
  * const factorial5 = comptime(() => {
@@ -401,7 +401,7 @@ export function summon<T>(): T {
  * // Typeclass extension
  * extend(point).show();    // Uses Show<Point>
  *
- * // Standalone extension (from @ttfx/std)
+ * // Standalone extension (from @typesugar/std)
  * extend(42).clamp(0, 100);        // → NumberExt.clamp(42, 0, 100)
  * extend("hello").capitalize();     // → StringExt.capitalize("hello")
  * ```

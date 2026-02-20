@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ["typescript", "@ttfx/core", "effect"],
+  external: ["typescript", "@typesugar/core", "effect"],
 });

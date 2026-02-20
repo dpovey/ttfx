@@ -1,22 +1,22 @@
 /**
- * @ttfx/eslint-plugin
+ * @typesugar/eslint-plugin
  *
- * ESLint plugin that runs the ttfx macro transformer before linting.
+ * ESLint plugin that runs the typesugar macro transformer before linting.
  * This allows ESLint to see the expanded code, eliminating false positives
  * from macro syntax like undefined identifiers in @derive(Eq, Clone).
  *
  * Usage in eslint.config.mjs:
  *
- *   import ttfxPlugin from "@ttfx/eslint-plugin";
+ *   import typesugarPlugin from "@typesugar/eslint-plugin";
  *
  *   export default [
- *     ttfxPlugin.configs.recommended,
+ *     typesugarPlugin.configs.recommended,
  *     // ... your other configs
  *   ];
  *
  * For full macro expansion (slower but more accurate):
  *
- *   import { fullConfig } from "@ttfx/eslint-plugin";
+ *   import { fullConfig } from "@typesugar/eslint-plugin";
  *
  *   export default [
  *     fullConfig,
@@ -33,15 +33,15 @@ const fullProcessor = createFullProcessor();
 
 const plugin: ESLint.Plugin = {
   meta: {
-    name: "@ttfx/eslint-plugin",
+    name: "@typesugar/eslint-plugin",
     version: "0.1.0",
   },
 
   processors: {
     // Lightweight processor (pattern-based, fast)
-    ttfx: lightweightProcessor,
+    typesugar: lightweightProcessor,
     // Full processor (actual transformer, slower but accurate)
-    "ttfx-full": fullProcessor,
+    "typesugar-full": fullProcessor,
   },
 
   configs: {},
@@ -51,12 +51,12 @@ const plugin: ESLint.Plugin = {
 
 // Flat config presets - Lightweight (fast, pattern-based)
 const recommendedConfig: Linter.Config = {
-  name: "@ttfx/recommended",
+  name: "@typesugar/recommended",
   plugins: {
-    "@ttfx": plugin,
+    "@typesugar": plugin,
   },
-  // Process all .ts/.tsx files through the lightweight ttfx processor
-  processor: "@ttfx/ttfx",
+  // Process all .ts/.tsx files through the lightweight typesugar processor
+  processor: "@typesugar/typesugar",
   languageOptions: {
     parserOptions: {
       ecmaVersion: "latest",
@@ -70,13 +70,13 @@ const recommendedConfig: Linter.Config = {
   },
 };
 
-// Full config - uses actual ttfx transformer (slower but accurate)
+// Full config - uses actual typesugar transformer (slower but accurate)
 const fullConfig: Linter.Config = {
-  name: "@ttfx/full",
+  name: "@typesugar/full",
   plugins: {
-    "@ttfx": plugin,
+    "@typesugar": plugin,
   },
-  processor: "@ttfx/ttfx-full",
+  processor: "@typesugar/typesugar-full",
   languageOptions: {
     parserOptions: {
       ecmaVersion: "latest",
@@ -92,7 +92,7 @@ const fullConfig: Linter.Config = {
 // Strict config - enables additional checks
 const strictConfig: Linter.Config = {
   ...recommendedConfig,
-  name: "@ttfx/strict",
+  name: "@typesugar/strict",
   rules: {
     ...recommendedConfig.rules,
   },

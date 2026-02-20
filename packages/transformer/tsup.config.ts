@@ -11,7 +11,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   splitting: false,
-  external: ["typescript", "@ttfx/core"],
+  external: ["typescript", "@typesugar/core"],
   cjsInterop: true,
   shims: true,
 });

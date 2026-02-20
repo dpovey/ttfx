@@ -19,7 +19,7 @@ import {
   MacroContext,
   DeriveTypeInfo,
   DeriveFieldInfo,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Eq - Generate equality comparison function

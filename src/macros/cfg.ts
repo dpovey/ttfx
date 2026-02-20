@@ -7,14 +7,14 @@
  *
  * Conditions are evaluated against a configuration object that can be set via:
  * - Transformer config in tsconfig.json: `{ "cfg": { "debug": true } }`
- * - Environment variables: `TTFX_CFG_DEBUG=1`
- * - `ttfx.config.ts` / `ttfx.config.json`
+ * - Environment variables: `TYPESUGAR_CFG_DEBUG=1`
+ * - `typesugar.config.ts` / `typesugar.config.json`
  *
  * Inspired by: Rust `#[cfg(...)]`, C `#ifdef`, Zig `@import("builtin")`
  *
  * @example
  * ```typescript
- * import { cfg } from "ttfx";
+ * import { cfg } from "typesugar";
  *
  * // Expression-level: evaluates to the expression or undefined
  * const debugInfo = cfg("debug", () => collectDebugInfo());
@@ -66,16 +66,16 @@ export function getCfgConfig(): Record<string, unknown> {
 
 /**
  * Initialize cfg configuration from environment variables.
- * Environment variables prefixed with TTFX_CFG_ are included.
- * E.g., TTFX_CFG_DEBUG=1 → { debug: true }
+ * Environment variables prefixed with TYPESUGAR_CFG_ are included.
+ * E.g., TYPESUGAR_CFG_DEBUG=1 → { debug: true }
  */
 function initializeFromEnvironment(): void {
   cfgInitialized = true;
 
   for (const [key, value] of Object.entries(process.env)) {
-    if (key.startsWith("TTFX_CFG_")) {
+    if (key.startsWith("TYPESUGAR_CFG_")) {
       const cfgKey = key
-        .slice("TTFX_CFG_".length)
+        .slice("TYPESUGAR_CFG_".length)
         .toLowerCase()
         .replace(/__/g, ".");
 

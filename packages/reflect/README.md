@@ -1,19 +1,19 @@
-# @ttfx/reflect
+# @typesugar/reflect
 
 > Compile-time type reflection macros.
 
 ## Overview
 
-`@ttfx/reflect` provides compile-time type introspection capabilities. Examine types, extract metadata, and generate code based on type information — all at compile time with zero runtime overhead.
+`@typesugar/reflect` provides compile-time type introspection capabilities. Examine types, extract metadata, and generate code based on type information — all at compile time with zero runtime overhead.
 
 Inspired by Rust's proc_macro, Zig's @typeInfo, and Java/C# reflection (but without the runtime cost).
 
 ## Installation
 
 ```bash
-npm install @ttfx/reflect
+npm install @typesugar/reflect
 # or
-pnpm add @ttfx/reflect
+pnpm add @typesugar/reflect
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ pnpm add @ttfx/reflect
 ### typeInfo<T>() — Get Type Metadata
 
 ```typescript
-import { typeInfo } from "@ttfx/reflect";
+import { typeInfo } from "@typesugar/reflect";
 
 interface User {
   id: number;
@@ -45,7 +45,7 @@ const meta = typeInfo<User>();
 ### fieldNames<T>() — Get Field Names
 
 ```typescript
-import { fieldNames } from "@ttfx/reflect";
+import { fieldNames } from "@typesugar/reflect";
 
 interface User {
   id: number;
@@ -59,7 +59,7 @@ const fields = fieldNames<User>();
 ### validator<T>() — Generate Runtime Validator
 
 ```typescript
-import { validator, ValidationResult } from "@ttfx/reflect";
+import { validator, ValidationResult } from "@typesugar/reflect";
 
 interface User {
   id: number;
@@ -81,7 +81,7 @@ if (result.success) {
 ### @reflect — Enable Reflection Metadata
 
 ```typescript
-import { reflect } from "@ttfx/reflect";
+import { reflect } from "@typesugar/reflect";
 
 @reflect
 interface User {

@@ -84,7 +84,7 @@ export function debugOnly(fn: () => void): void {
 
 export const invariantMacro = defineExpressionMacro({
   name: "invariant",
-  module: "@ttfx/core",
+  module: "@typesugar/core",
   description:
     "Runtime invariant — compiles to a conditional throw (strippable in prod)",
 
@@ -138,7 +138,7 @@ export const invariantMacro = defineExpressionMacro({
 
 export const unreachableMacro = defineExpressionMacro({
   name: "unreachable",
-  module: "@ttfx/core",
+  module: "@typesugar/core",
   description: "Marks unreachable code — compiles to throw",
 
   expand(
@@ -176,7 +176,7 @@ export const unreachableMacro = defineExpressionMacro({
 
 export const debugOnlyMacro = defineExpressionMacro({
   name: "debugOnly",
-  module: "@ttfx/core",
+  module: "@typesugar/core",
   description:
     "Dev-only code block — inlined in dev, completely erased in prod",
 

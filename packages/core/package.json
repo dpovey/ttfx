@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/core",
+  "name": "@typesugar/core",
   "version": "0.1.0",
-  "description": "Core types and registry for ttfx macro system",
+  "description": "Core types and registry for typesugar macro system",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

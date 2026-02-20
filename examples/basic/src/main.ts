@@ -17,11 +17,11 @@ import {
   pipe,
   // Namespaces are also available:
   // comptime, derive, operators, reflect, typeclass, specialize
-} from "ttfx";
+} from "typesugar";
 
 // Alternatively, you can import directly from specific packages:
-// import { comptime } from "@ttfx/comptime";
-// import { ops, pipe, compose } from "@ttfx/operators";
+// import { comptime } from "@typesugar/comptime";
+// import { ops, pipe, compose } from "@typesugar/operators";
 
 // ============================================================================
 // 1. Compile-Time Evaluation

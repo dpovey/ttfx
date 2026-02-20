@@ -1,7 +1,7 @@
 /**
- * @ttfx/testing — Compile-time testing superpowers for TypeScript
+ * @typesugar/testing — Compile-time testing superpowers for TypeScript
  *
- * Import from "@ttfx/testing" to use these macros in your test files.
+ * Import from "@typesugar/testing" to use these macros in your test files.
  * The transformer will expand them at compile time.
  *
  * @example
@@ -14,7 +14,7 @@
  *   forAll,
  *   type Equal,
  *   type Extends,
- * } from "@ttfx/testing";
+ * } from "@typesugar/testing";
  *
  * // Power assertions — sub-expression capture on failure
  * assert(users.length === activeIds.filter(id => id > 0).length);
@@ -36,7 +36,7 @@
  *
  * For parameterized tests, use the @testCases decorator:
  * ```typescript
- * import { testCases } from "@ttfx/testing";
+ * import { testCases } from "@typesugar/testing";
  *
  * @testCases([
  *   { input: "", expected: true },
@@ -49,7 +49,7 @@
  *
  * For property-based testing, use @derive(Arbitrary):
  * ```typescript
- * import { derive } from "ttfx";
+ * import { derive } from "typesugar";
  *
  * @derive(Arbitrary)
  * interface User {
@@ -77,7 +77,7 @@ export {
   type IsAny,
   type IsUnknown,
   type Equals, // deprecated alias
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 // ============================================================================
 // Power Assertions
@@ -114,7 +114,7 @@ export function assert(condition: boolean, message?: string): void {
   if (!condition) {
     throw new Error(
       message ??
-        "Power assertion failed (run with ttfx transformer for detailed output)",
+        "Power assertion failed (run with typesugar transformer for detailed output)",
     );
   }
 }

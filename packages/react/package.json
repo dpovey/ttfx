@@ -1,5 +1,5 @@
 {
-  "name": "@ttfx/react",
+  "name": "@typesugar/react",
   "version": "0.1.0",
   "description": "Compile-time React macros — Vue/Svelte-style reactivity with automatic dependency tracking",
   "type": "module",
@@ -31,7 +31,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*"
+    "@typesugar/core": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

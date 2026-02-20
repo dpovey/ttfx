@@ -3,13 +3,13 @@
  *
  * A generic attribute macro for verifying algebraic laws on any interface.
  * This is the low-level building block used by domain-specific macros
- * like @ttfx/fp's @verifyLaws.
+ * like @typesugar/fp's @verifyLaws.
  *
  * ## Usage
  *
  * ```typescript
- * import { laws } from "@ttfx/contracts/laws";
- * import type { Law, LawSet } from "@ttfx/contracts/laws";
+ * import { laws } from "@typesugar/contracts/laws";
+ * import type { Law, LawSet } from "@typesugar/contracts/laws";
  *
  * // Define laws for your interface
  * function cacheLaws<K, V>(cache: Cache<K, V>, eq: Eq<V>): LawSet {
@@ -38,8 +38,8 @@
  */
 
 import * as ts from "typescript";
-import { defineAttributeMacro, globalRegistry } from "@ttfx/core";
-import type { MacroContext } from "@ttfx/core";
+import { defineAttributeMacro, globalRegistry } from "@typesugar/core";
+import type { MacroContext } from "@typesugar/core";
 import type {
   LawSet,
   VerificationMode,
@@ -70,7 +70,7 @@ export interface LawsDecoratorOptions {
 
 export const lawsAttribute = defineAttributeMacro({
   name: "laws",
-  module: "@ttfx/contracts",
+  module: "@typesugar/contracts",
   description: "Verify algebraic laws for an interface implementation",
   validTargets: ["property", "class"],
 
@@ -165,7 +165,7 @@ function expandCompileTime(
   for (const _law of _laws) {
     // Compile-time prover invocation would go here
     // For now, emit debug info if enabled
-    if (typeof process !== "undefined" && process.env.TTFX_LAWS_DEBUG) {
+    if (typeof process !== "undefined" && process.env.TYPESUGAR_LAWS_DEBUG) {
       console.log(\`[laws] Verifying: \${_law.name}\`);
     }
   }

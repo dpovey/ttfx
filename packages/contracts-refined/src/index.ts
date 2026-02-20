@@ -1,22 +1,22 @@
 /**
- * @ttfx/contracts-refined
+ * @typesugar/contracts-refined
  *
- * Integrates @ttfx/contracts with @ttfx/type-system refinement types.
+ * Integrates @typesugar/contracts with @typesugar/type-system refinement types.
  *
  * This module provides a single source of truth for refinement predicates:
- * - Predicate definitions live in @ttfx/type-system (where the types are defined)
- * - This module registers them with @ttfx/contracts prover
+ * - Predicate definitions live in @typesugar/type-system (where the types are defined)
+ * - This module registers them with @typesugar/contracts prover
  * - Users import this module once to enable the integration
  *
  * ## Usage
  *
  * ```typescript
  * // In your entry point or setup file:
- * import "@ttfx/contracts-refined";
+ * import "@typesugar/contracts-refined";
  *
  * // Now refined types work seamlessly with contracts:
- * import { Positive, Byte, Port } from "@ttfx/type-system";
- * import { requires, ensures } from "@ttfx/contracts";
+ * import { Positive, Byte, Port } from "@typesugar/type-system";
+ * import { requires, ensures } from "@typesugar/contracts";
  *
  * @contract
  * function add(a: Positive, b: Positive): number {
@@ -28,7 +28,7 @@
  *
  * ## What Gets Registered
  *
- * All built-in refinement types from @ttfx/type-system:
+ * All built-in refinement types from @typesugar/type-system:
  * - Numeric: Positive, NonNegative, Negative, Int, Byte, Port, Percentage, Finite
  * - String: NonEmpty, Trimmed, Lowercase, Uppercase, Email, Url, Uuid
  * - Array: NonEmptyArray
@@ -48,7 +48,7 @@
  * For custom refinement types, you can register additional predicates:
  *
  * ```typescript
- * import { registerRefinementPredicate } from "@ttfx/contracts-refined";
+ * import { registerRefinementPredicate } from "@typesugar/contracts-refined";
  *
  * // Register your custom refinement
  * registerRefinementPredicate("PositiveEven", "$ > 0 && $ % 2 === 0");
@@ -71,7 +71,7 @@ import {
   VEC_PREDICATE_PATTERN,
   extractVecLength,
   generateVecPredicate,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 import {
   registerRefinementPredicate as coreRegister,
@@ -94,7 +94,7 @@ import {
   type DecidabilityInfo,
   // Dynamic predicate generators (for parameterized types)
   registerDynamicPredicateGenerator,
-} from "@ttfx/contracts";
+} from "@typesugar/contracts";
 
 // Re-export for convenience
 export {
@@ -117,7 +117,7 @@ export {
   type DecidabilityInfo,
   // Dynamic predicate generators
   registerDynamicPredicateGenerator,
-} from "@ttfx/contracts";
+} from "@typesugar/contracts";
 export {
   type RefinementPredicate,
   type SubtypingDeclaration,
@@ -139,7 +139,7 @@ export {
   VEC_PREDICATE_PATTERN,
   extractVecLength,
   generateVecPredicate,
-} from "@ttfx/type-system";
+} from "@typesugar/type-system";
 
 /**
  * Register a custom refinement predicate for use with contracts.
@@ -200,7 +200,7 @@ export function hasRefinementPredicate(brand: string): boolean {
 // ============================================================================
 
 /**
- * Register all built-in refinement predicates from @ttfx/type-system.
+ * Register all built-in refinement predicates from @typesugar/type-system.
  * This runs automatically when the module is imported.
  */
 function registerBuiltinPredicates(): void {
@@ -211,7 +211,7 @@ function registerBuiltinPredicates(): void {
 }
 
 /**
- * Register all built-in subtyping rules from @ttfx/type-system.
+ * Register all built-in subtyping rules from @typesugar/type-system.
  * This enables the prover to verify safe widening at compile time.
  */
 function registerBuiltinSubtypingRules(): void {
@@ -270,6 +270,6 @@ if (process.env.NODE_ENV === "development") {
   const subtypingRules = getAllSubtypingDeclarations();
   const decidabilityInfo = getAllDecidabilityInfo();
   console.log(
-    `[@ttfx/contracts-refined] Registered ${REFINEMENT_PREDICATES.length} predicates, ${subtypingRules.length} subtyping rules, ${decidabilityInfo.length} decidability annotations`,
+    `[@typesugar/contracts-refined] Registered ${REFINEMENT_PREDICATES.length} predicates, ${subtypingRules.length} subtyping rules, ${decidabilityInfo.length} decidability annotations`,
   );
 }

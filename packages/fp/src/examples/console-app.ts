@@ -2,7 +2,7 @@
  * Console App Example
  *
  * A complete interactive console application demonstrating IO monad usage
- * with the full @ttfx/fp system.
+ * with the full @typesugar/fp system.
  *
  * Features:
  * - Interactive menu system

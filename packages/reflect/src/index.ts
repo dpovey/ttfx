@@ -34,7 +34,7 @@ import {
   globalRegistry,
   MacroContext,
   AttributeTarget,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Type Information Structures
@@ -89,7 +89,7 @@ export interface ParameterInfo {
 
 export const reflectAttribute = defineAttributeMacro({
   name: "reflect",
-  module: "@ttfx/reflect",
+  module: "@typesugar/reflect",
   description: "Enable compile-time reflection for a type",
   validTargets: ["interface", "class", "type"] as AttributeTarget[],
 
@@ -425,7 +425,7 @@ function generateTypeInfoDeclaration(
 
 export const typeInfoMacro = defineExpressionMacro({
   name: "typeInfo",
-  module: "@ttfx/reflect",
+  module: "@typesugar/reflect",
   description: "Get compile-time type information",
 
   expand(
@@ -529,7 +529,7 @@ export const typeInfoMacro = defineExpressionMacro({
 
 export const fieldNamesMacro = defineExpressionMacro({
   name: "fieldNames",
-  module: "@ttfx/reflect",
+  module: "@typesugar/reflect",
   description: "Get field names of a type as an array",
 
   expand(
@@ -563,7 +563,7 @@ export const fieldNamesMacro = defineExpressionMacro({
 
 export const validatorMacro = defineExpressionMacro({
   name: "validator",
-  module: "@ttfx/reflect",
+  module: "@typesugar/reflect",
   description: "Generate a runtime validator for a type",
 
   expand(
@@ -827,7 +827,7 @@ export function sizeof<_T>(): number {
 
 export const sizeofMacro = defineExpressionMacro({
   name: "sizeof",
-  module: "@ttfx/reflect",
+  module: "@typesugar/reflect",
   description:
     "Compile-time sizeof — returns number of properties on a type as a literal",
 

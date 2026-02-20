@@ -1,13 +1,13 @@
 /**
  * Tests for derive macro functionality
  *
- * This test file demonstrates dogfooding @ttfx/testing macros:
+ * This test file demonstrates dogfooding @typesugar/testing macros:
  * - assert() for power assertions with sub-expression capture
  * - typeAssert<>() for compile-time type checks
  */
 
 import { describe, it, expect } from "vitest";
-import { assert, typeAssert, type Equal } from "@ttfx/testing";
+import { assert, typeAssert, type Equal } from "@typesugar/testing";
 import {
   deriveMacros,
   createDerivedFunctionName,

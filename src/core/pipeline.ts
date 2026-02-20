@@ -8,7 +8,7 @@
  *
  * @example
  * ```typescript
- * import { pipeline, defineExpressionMacro } from "ttfx";
+ * import { pipeline, defineExpressionMacro } from "typesugar";
  *
  * // Compose macros: first validate, then transform, then optimize
  * const myMacro = pipeline("myMacro")

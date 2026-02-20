@@ -1,17 +1,17 @@
-# @ttfx/typeclass
+# @typesugar/typeclass
 
 > Scala 3-style typeclasses with compile-time resolution.
 
 ## Overview
 
-`@ttfx/typeclass` brings Scala's powerful typeclass pattern to TypeScript. Define typeclasses, provide instances, auto-derive implementations, and summon instances at compile time — no runtime dictionary passing overhead.
+`@typesugar/typeclass` brings Scala's powerful typeclass pattern to TypeScript. Define typeclasses, provide instances, auto-derive implementations, and summon instances at compile time — no runtime dictionary passing overhead.
 
 ## Installation
 
 ```bash
-npm install @ttfx/typeclass
+npm install @typesugar/typeclass
 # or
-pnpm add @ttfx/typeclass
+pnpm add @typesugar/typeclass
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @ttfx/typeclass
 ### Define a Typeclass
 
 ```typescript
-import { typeclass } from "@ttfx/typeclass";
+import { typeclass } from "@typesugar/typeclass";
 
 @typeclass
 interface Show<A> {
@@ -40,7 +40,7 @@ interface Ord<A> extends Eq<A> {
 ### Provide Instances
 
 ```typescript
-import { instance } from "@ttfx/typeclass";
+import { instance } from "@typesugar/typeclass";
 
 @instance(Show, Number)
 const numberShow: Show<number> = {
@@ -56,7 +56,7 @@ const stringEq: Eq<string> = {
 ### Auto-Derive Instances
 
 ```typescript
-import { deriving } from "@ttfx/typeclass";
+import { deriving } from "@typesugar/typeclass";
 
 @deriving(Show, Eq, Ord)
 interface User {
@@ -73,7 +73,7 @@ interface User {
 ### Summon Instances
 
 ```typescript
-import { summon } from "@ttfx/typeclass";
+import { summon } from "@typesugar/typeclass";
 
 // Get a typeclass instance at compile time
 const showNumber = summon<Show<number>>();
@@ -85,7 +85,7 @@ console.log(showNumber.show(42)); // "42"
 ### Extension Methods with extend()
 
 ```typescript
-import { extend } from "@ttfx/typeclass";
+import { extend } from "@typesugar/typeclass";
 
 // Add typeclass methods to a value
 const result = extend(42).show();

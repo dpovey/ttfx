@@ -1,24 +1,24 @@
-# @ttfx/contracts-z3
+# @typesugar/contracts-z3
 
-> Z3 SMT solver integration for @ttfx/contracts.
+> Z3 SMT solver integration for @typesugar/contracts.
 
 ## Overview
 
-`@ttfx/contracts-z3` provides a prover plugin that uses the Z3 theorem prover to verify contract conditions at compile time. For conditions that the built-in algebraic rules can't handle, Z3 can prove complex arithmetic, logical formulas, and array bounds.
+`@typesugar/contracts-z3` provides a prover plugin that uses the Z3 theorem prover to verify contract conditions at compile time. For conditions that the built-in algebraic rules can't handle, Z3 can prove complex arithmetic, logical formulas, and array bounds.
 
 ## Installation
 
 ```bash
-npm install @ttfx/contracts-z3
+npm install @typesugar/contracts-z3
 # or
-pnpm add @ttfx/contracts-z3
+pnpm add @typesugar/contracts-z3
 ```
 
 ## Usage
 
 ```typescript
-import { registerProverPlugin } from "@ttfx/contracts";
-import { z3ProverPlugin } from "@ttfx/contracts-z3";
+import { registerProverPlugin } from "@typesugar/contracts";
+import { z3ProverPlugin } from "@typesugar/contracts-z3";
 
 // Option 1: Auto-initialize (first proof may be slower)
 registerProverPlugin(z3ProverPlugin({ timeout: 2000 }));
@@ -39,8 +39,8 @@ registerProverPlugin(z3);
 ## Example
 
 ```typescript
-import { contract } from "@ttfx/contracts";
-import "@ttfx/contracts-z3"; // Registers Z3 as a prover plugin
+import { contract } from "@typesugar/contracts";
+import "@typesugar/contracts-z3"; // Registers Z3 as a prover plugin
 
 @contract
 function sqrt(x: number): number {
@@ -56,12 +56,12 @@ function sqrt(x: number): number {
 
 The Z3 plugin parses and translates:
 
-| Category | Operators |
-|----------|-----------|
-| **Arithmetic** | `+`, `-`, `*`, `/`, `%` |
-| **Comparisons** | `>`, `>=`, `<`, `<=`, `===`, `!==`, `==`, `!=` |
-| **Logical** | `&&`, `\|\|`, `!` |
-| **Other** | Parentheses, property access (`obj.prop`), numeric/boolean literals |
+| Category        | Operators                                                           |
+| --------------- | ------------------------------------------------------------------- |
+| **Arithmetic**  | `+`, `-`, `*`, `/`, `%`                                             |
+| **Comparisons** | `>`, `>=`, `<`, `<=`, `===`, `!==`, `==`, `!=`                      |
+| **Logical**     | `&&`, `\|\|`, `!`                                                   |
+| **Other**       | Parentheses, property access (`obj.prop`), numeric/boolean literals |
 
 ## API Reference
 
@@ -79,6 +79,7 @@ interface Z3PluginOptions {
 ```
 
 Returns a `Z3ProverPlugin` with:
+
 - `init()` — Pre-initialize Z3 WASM module
 - `isReady()` — Check if Z3 is initialized
 - `prove(goal, facts, timeout?)` — Prove a goal given type facts
@@ -88,15 +89,12 @@ Returns a `Z3ProverPlugin` with:
 Standalone function for one-off proofs:
 
 ```typescript
-import { proveWithZ3Async } from "@ttfx/contracts-z3";
+import { proveWithZ3Async } from "@typesugar/contracts-z3";
 
-const result = await proveWithZ3Async(
-  "x + y > 0",
-  [
-    { variable: "x", predicate: "x > 0" },
-    { variable: "y", predicate: "y >= 0" },
-  ],
-);
+const result = await proveWithZ3Async("x + y > 0", [
+  { variable: "x", predicate: "x > 0" },
+  { variable: "y", predicate: "y >= 0" },
+]);
 
 if (result.proven) {
   console.log("Goal proven via Z3");

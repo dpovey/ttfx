@@ -1,14 +1,14 @@
 /**
- * Law Definition Types for @ttfx/fp
+ * Law Definition Types for @typesugar/fp
  *
- * Re-exports generic law types from @ttfx/contracts and provides
- * @ttfx/fp-specific type aliases and utilities for typeclass law verification.
+ * Re-exports generic law types from @typesugar/contracts and provides
+ * @typesugar/fp-specific type aliases and utilities for typeclass law verification.
  *
  * @module
  */
 
 // ============================================================================
-// Re-export Generic Types from @ttfx/contracts
+// Re-export Generic Types from @typesugar/contracts
 // ============================================================================
 
 export {
@@ -28,10 +28,10 @@ export {
   combineLaws,
   filterLaws,
   filterByHint,
-} from "@ttfx/contracts";
+} from "@typesugar/contracts";
 
 // ============================================================================
-// @ttfx/fp-Specific Types
+// @typesugar/fp-Specific Types
 // ============================================================================
 
 import type { $ } from "../hkt.js";
@@ -54,7 +54,7 @@ export type EqF<F, A> = {
 export type EqFA<F, A> = EqF<F, A>;
 
 /**
- * Options for the @verifyLaws macro (@ttfx/fp-specific version).
+ * Options for the @verifyLaws macro (@typesugar/fp-specific version).
  * Extends the base verification options with typeclass-specific fields.
  */
 export interface VerifyLawsOptions<A = unknown> {
@@ -93,7 +93,7 @@ export interface VerifyLawsOptions<A = unknown> {
 export type ValueLawGenerator<TC, A> = (
   instance: TC,
   eq: { readonly eqv: (x: A, y: A) => boolean },
-) => readonly import("@ttfx/contracts").Law[];
+) => readonly import("@typesugar/contracts").Law[];
 
 /**
  * Law generator for HKT typeclasses (Functor, Monad, etc.).
@@ -102,4 +102,4 @@ export type ValueLawGenerator<TC, A> = (
 export type HKTLawGenerator<TC, F, A> = (
   instance: TC,
   eqFA: EqFA<F, A>,
-) => readonly import("@ttfx/contracts").Law[];
+) => readonly import("@typesugar/contracts").Law[];

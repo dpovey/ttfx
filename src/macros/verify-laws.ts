@@ -4,7 +4,7 @@
  * An attribute macro that verifies typeclass law compliance at compile time
  * or generates property-based tests for runtime verification.
  *
- * This is a cats-specific wrapper around @ttfx/contracts generic @laws macro,
+ * This is a cats-specific wrapper around @typesugar/contracts generic @laws macro,
  * adding automatic typeclass detection and law generator inference.
  *
  * ## Usage
@@ -24,8 +24,8 @@
  * Controlled by `cats.verifyLaws` config option:
  *
  * - `false` (default): Decorator is erased completely — zero cost
- * - `"compile-time"`: Uses @ttfx/contracts prover for static verification
- * - `"property-test"`: Generates forAll() property tests via @ttfx/testing
+ * - `"compile-time"`: Uses @typesugar/contracts prover for static verification
+ * - `"property-test"`: Generates forAll() property tests via @typesugar/testing
  *
  * ## Zero-Cost Guarantee
  *
@@ -36,12 +36,12 @@
  *
  * ## Generic vs Cats-Specific
  *
- * This macro extends `@ttfx/contracts`' generic `@laws` macro with:
+ * This macro extends `@typesugar/contracts`' generic `@laws` macro with:
  * - Automatic typeclass detection from type annotations
  * - Built-in law generator inference for cats typeclasses
  * - Naming convention-based fallbacks
  *
- * For non-typeclass use cases, use `@laws` from `@ttfx/contracts` directly.
+ * For non-typeclass use cases, use `@laws` from `@typesugar/contracts` directly.
  *
  * @module
  */
@@ -50,7 +50,7 @@ import * as ts from "typescript";
 import { defineAttributeMacro, globalRegistry } from "../core/registry.js";
 import type { MacroContext } from "../core/types.js";
 import { config } from "../core/config.js";
-import type { VerificationMode, UndecidableAction } from "@ttfx/contracts";
+import type { VerificationMode, UndecidableAction } from "@typesugar/contracts";
 
 // ============================================================================
 // Types
@@ -86,7 +86,7 @@ function getVerifyLawsConfig(): VerifyLawsConfig {
 
 export const verifyLawsAttribute = defineAttributeMacro({
   name: "verifyLaws",
-  module: "ttfx",
+  module: "typesugar",
   description:
     "Verify typeclass law compliance at compile time or via property tests",
   validTargets: ["property", "class"],
@@ -376,7 +376,7 @@ function generateCompileTimeCheck(verifyCtx: VerificationContext): string {
   // For HKT typeclasses, we need more sophisticated handling
 
   // Simple approach: emit a static assertion block that runs at module load
-  // In a full implementation, this would use tryProve() from @ttfx/contracts
+  // In a full implementation, this would use tryProve() from @typesugar/contracts
   return `
 // Compile-time law verification for ${instanceName}: ${typeclassName}<${forType}>
 (function __verifyLaws_${instanceName}() {
@@ -384,7 +384,7 @@ function generateCompileTimeCheck(verifyCtx: VerificationContext): string {
   for (const law of laws) {
     // In compile-time mode, the prover would attempt to prove each law statically
     // Placeholder: log that verification was requested
-    if (typeof process !== "undefined" && process.env.TTFX_CATS_VERIFY_DEBUG) {
+    if (typeof process !== "undefined" && process.env.TYPESUGAR_CATS_VERIFY_DEBUG) {
       console.log(\`[verifyLaws] Would verify: \${law.name}\`);
     }
   }

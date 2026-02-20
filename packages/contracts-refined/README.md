@@ -1,28 +1,28 @@
-# @ttfx/contracts-refined
+# @typesugar/contracts-refined
 
-> Refinement type integration for @ttfx/contracts.
+> Refinement type integration for @typesugar/contracts.
 
 ## Overview
 
-`@ttfx/contracts-refined` bridges `@ttfx/type-system` refinement types with `@ttfx/contracts` compile-time verification. Import this module once to enable the prover to understand and verify refinement type predicates automatically.
+`@typesugar/contracts-refined` bridges `@typesugar/type-system` refinement types with `@typesugar/contracts` compile-time verification. Import this module once to enable the prover to understand and verify refinement type predicates automatically.
 
 ## Installation
 
 ```bash
-npm install @ttfx/contracts-refined
+npm install @typesugar/contracts-refined
 # or
-pnpm add @ttfx/contracts-refined
+pnpm add @typesugar/contracts-refined
 ```
 
 ## Usage
 
 ```typescript
 // In your entry point or setup file:
-import "@ttfx/contracts-refined";
+import "@typesugar/contracts-refined";
 
 // Now refined types work seamlessly with contracts:
-import { Positive, Byte, Port } from "@ttfx/type-system";
-import { contract } from "@ttfx/contracts";
+import { Positive, Byte, Port } from "@typesugar/type-system";
+import { contract } from "@typesugar/contracts";
 
 @contract
 function add(a: Positive, b: Positive): number {
@@ -34,14 +34,14 @@ function add(a: Positive, b: Positive): number {
 
 ## What Gets Registered
 
-All built-in refinement types from `@ttfx/type-system`:
+All built-in refinement types from `@typesugar/type-system`:
 
-| Category | Types |
-|----------|-------|
-| **Numeric** | `Positive`, `NonNegative`, `Negative`, `Int`, `Byte`, `Port`, `Percentage`, `Finite` |
-| **String** | `NonEmpty`, `Trimmed`, `Lowercase`, `Uppercase`, `Email`, `Url`, `Uuid` |
-| **Array** | `NonEmptyArray` |
-| **Dependent** | `Vec<N>` (length-indexed vectors) |
+| Category      | Types                                                                                |
+| ------------- | ------------------------------------------------------------------------------------ |
+| **Numeric**   | `Positive`, `NonNegative`, `Negative`, `Int`, `Byte`, `Port`, `Percentage`, `Finite` |
+| **String**    | `NonEmpty`, `Trimmed`, `Lowercase`, `Uppercase`, `Email`, `Url`, `Uuid`              |
+| **Array**     | `NonEmptyArray`                                                                      |
+| **Dependent** | `Vec<N>` (length-indexed vectors)                                                    |
 
 ## Subtyping Coercions
 
@@ -59,7 +59,7 @@ This allows the prover to verify safe coercions at compile time.
 Register predicates for custom refinement types:
 
 ```typescript
-import { registerRefinementPredicate } from "@ttfx/contracts-refined";
+import { registerRefinementPredicate } from "@typesugar/contracts-refined";
 
 // Register your custom refinement
 registerRefinementPredicate("PositiveEven", "$ > 0 && $ % 2 === 0");
@@ -82,13 +82,13 @@ function halve(n: PositiveEven): number {
 - `getRegisteredPredicates()` — Get all registered predicates (built-in + custom)
 - `hasRefinementPredicate(brand)` — Check if a predicate is registered
 
-### Re-exports from @ttfx/contracts
+### Re-exports from @typesugar/contracts
 
 - `getRefinementPredicate()`, `registerSubtypingRule()`, `canWiden()`
 - `registerDecidability()`, `getDecidability()`, `isCompileTimeDecidable()`
 - `registerDynamicPredicateGenerator()` — For parameterized types like `Vec<N>`
 
-### Re-exports from @ttfx/type-system
+### Re-exports from @typesugar/type-system
 
 - All refinement types and their utilities
 - `Vec`, `isVec`, `extractVecLength`, `generateVecPredicate`

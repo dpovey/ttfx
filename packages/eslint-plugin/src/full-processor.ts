@@ -1,12 +1,12 @@
 /**
- * Full ESLint Processor for ttfx
+ * Full ESLint Processor for typesugar
  *
- * This processor runs the ACTUAL ttfx macro transformer, not just pattern matching.
+ * This processor runs the ACTUAL typesugar macro transformer, not just pattern matching.
  * It produces properly transformed output with accurate source mappings.
  *
  * Requirements:
  * - TypeScript must be available
- * - ttfx transformer must be built
+ * - typesugar transformer must be built
  * - Uses more memory (creates TS programs per file)
  *
  * Trade-offs vs the lightweight processor:
@@ -18,17 +18,18 @@
 
 import type { Linter } from "eslint";
 import * as ts from "typescript";
+import { preprocess as preprocessCustomSyntax } from "@typesugar/preprocessor";
 
 // Dynamically import the transformer to avoid circular dependencies
-let transformerFactory: typeof import("@ttfx/transformer").default | undefined;
+let transformerFactory: typeof import("@typesugar/transformer").default | undefined;
 
 async function loadTransformer() {
   if (!transformerFactory) {
     try {
-      const mod = await import("@ttfx/transformer");
+      const mod = await import("@typesugar/transformer");
       transformerFactory = mod.default;
     } catch (e) {
-      console.warn("[ttfx-eslint] Could not load transformer:", e);
+      console.warn("[typesugar-eslint] Could not load transformer:", e);
     }
   }
   return transformerFactory;
@@ -46,7 +47,7 @@ const transformCache = new Map<
 >();
 
 /**
- * Create a TypeScript program and run the ttfx transformer
+ * Create a TypeScript program and run the typesugar transformer
  */
 function transformWithTtfx(fileName: string, source: string): TransformResult {
   // Check cache
@@ -56,6 +57,11 @@ function transformWithTtfx(fileName: string, source: string): TransformResult {
   }
 
   const sourceMap = new Map<number, number>();
+
+  // First: Run the preprocessor to handle custom syntax (F<_> HKT, |>, ::)
+  // This converts non-standard TypeScript to valid TypeScript before the TS compiler sees it
+  const preprocessResult = preprocessCustomSyntax(source, { fileName });
+  const preprocessedSource = preprocessResult.code;
 
   // Create compiler options
   const compilerOptions: ts.CompilerOptions = {
@@ -72,7 +78,7 @@ function transformWithTtfx(fileName: string, source: string): TransformResult {
 
   // Create a virtual file system
   const files = new Map<string, string>();
-  files.set(fileName, source);
+  files.set(fileName, preprocessedSource);
 
   // Create compiler host
   const host = ts.createCompilerHost(compilerOptions);
@@ -172,7 +178,7 @@ const fileStates = new Map<
 >();
 
 /**
- * Create the full processor that uses the actual ttfx transformer
+ * Create the full processor that uses the actual typesugar transformer
  */
 export function createFullProcessor(): Linter.Processor {
   // Eagerly load transformer
@@ -180,7 +186,7 @@ export function createFullProcessor(): Linter.Processor {
 
   return {
     meta: {
-      name: "ttfx-full",
+      name: "typesugar-full",
       version: "0.1.0",
     },
 
@@ -195,7 +201,7 @@ export function createFullProcessor(): Linter.Processor {
         return [text];
       }
 
-      // Transform using the full ttfx transformer
+      // Transform using the full typesugar transformer
       const { transformed, sourceMap } = transformWithTtfx(filename, text);
 
       fileStates.set(filename, {

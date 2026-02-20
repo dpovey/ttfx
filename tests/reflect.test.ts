@@ -1,13 +1,13 @@
 /**
  * Tests for compile-time reflection macros
  *
- * This test file demonstrates dogfooding @ttfx/testing macros:
+ * This test file demonstrates dogfooding @typesugar/testing macros:
  * - assert() for power assertions with sub-expression capture
  * - typeAssert<>() for compile-time type checks
  */
 
 import { describe, it, expect } from "vitest";
-import { assert, typeAssert, type Equal, type Extends } from "@ttfx/testing";
+import { assert, typeAssert, type Equal, type Extends } from "@typesugar/testing";
 import type { TypeInfo, FieldInfo, MethodInfo } from "../src/macros/reflect.js";
 
 describe("TypeInfo structure", () => {

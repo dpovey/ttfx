@@ -1,5 +1,5 @@
 /**
- * @ttfx/fp — Functional Programming for TypeScript
+ * @typesugar/fp — Functional Programming for TypeScript
  *
  * A complete functional programming system inspired by Scala's Cats library.
  *
@@ -19,7 +19,7 @@
  *   Either, Left, Right,
  *   IO, runIO,
  *   pipe, flow
- * } from '@ttfx/fp';
+ * } from '@typesugar/fp';
  *
  * // Option example
  * const result = Option.flatMap(Some(2), x => Some(x * 3));
@@ -134,10 +134,10 @@ export * from "./syntax/index.js";
 export * as ZeroCost from "./zero-cost/index.js";
 
 // ============================================================================
-// @ttfx/std FlatMap Bridge
+// @typesugar/std FlatMap Bridge
 // ============================================================================
-// FlatMap instances compatible with @ttfx/std's FlatMap typeclass.
-// Use registerFpFlatMapInstances() to register with @ttfx/std.
+// FlatMap instances compatible with @typesugar/std's FlatMap typeclass.
+// Use registerFpFlatMapInstances() to register with @typesugar/std.
 
 export {
   flatMapOption,

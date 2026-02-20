@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ["typescript", "@ttfx/contracts", "z3-solver"],
+  external: ["typescript", "@typesugar/contracts", "z3-solver"],
 });

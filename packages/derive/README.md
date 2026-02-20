@@ -1,23 +1,23 @@
-# @ttfx/derive
+# @typesugar/derive
 
 > Auto-derive common implementations for TypeScript types.
 
 ## Overview
 
-`@ttfx/derive` provides Rust-style derive macros for TypeScript. Annotate your interfaces, classes, or type aliases with `@derive()` and the macro generates implementations at compile time — no runtime reflection, no code generation scripts.
+`@typesugar/derive` provides Rust-style derive macros for TypeScript. Annotate your interfaces, classes, or type aliases with `@derive()` and the macro generates implementations at compile time — no runtime reflection, no code generation scripts.
 
 ## Installation
 
 ```bash
-npm install @ttfx/derive
+npm install @typesugar/derive
 # or
-pnpm add @ttfx/derive
+pnpm add @typesugar/derive
 ```
 
 ## Usage
 
 ```typescript
-import { derive } from "@ttfx/derive";
+import { derive } from "@typesugar/derive";
 
 @derive(Eq, Ord, Clone, Debug, Hash, Default, Json, Builder)
 interface User {

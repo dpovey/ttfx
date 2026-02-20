@@ -1,17 +1,17 @@
-# @ttfx/testing
+# @typesugar/testing
 
 > Compile-time testing macros — power assertions, property-based testing, and more.
 
 ## Overview
 
-`@ttfx/testing` provides compile-time testing superpowers: power assertions with sub-expression capture, compile-time assertions that fail the build, parameterized tests, snapshot testing with source capture, and property-based testing.
+`@typesugar/testing` provides compile-time testing superpowers: power assertions with sub-expression capture, compile-time assertions that fail the build, parameterized tests, snapshot testing with source capture, and property-based testing.
 
 ## Installation
 
 ```bash
-npm install @ttfx/testing
+npm install @typesugar/testing
 # or
-pnpm add @ttfx/testing
+pnpm add @typesugar/testing
 ```
 
 ## Quick Start
@@ -23,7 +23,7 @@ import {
   typeAssert, // Type-level assertions
   type Equal, // Type equality check
   type Extends, // Type extends check
-} from "@ttfx/testing";
+} from "@typesugar/testing";
 
 // Runtime assertion — captures sub-expression values on failure
 assert(users.length === expected.length);
@@ -42,7 +42,7 @@ typeAssert<Equal<ReturnType<typeof parse>, AST>>();
 On failure, shows the value of every sub-expression.
 
 ```typescript
-import { assert } from "@ttfx/testing";
+import { assert } from "@typesugar/testing";
 
 assert(users.length === filtered.length);
 
@@ -64,7 +64,7 @@ assert(users.length === filtered.length);
 Fail the BUILD, not the test. Zero runtime cost.
 
 ```typescript
-import { staticAssert } from "@ttfx/testing";
+import { staticAssert } from "@typesugar/testing";
 
 staticAssert(3 + 4 === 7, "basic math must work");
 staticAssert(SUPPORTED_LOCALES.length > 0, "must have locales");
@@ -78,7 +78,7 @@ staticAssert(SUPPORTED_LOCALES.length > 0, "must have locales");
 Verify type relationships at compile time.
 
 ```typescript
-import { typeAssert, Equal, Extends } from "@ttfx/testing";
+import { typeAssert, Equal, Extends } from "@typesugar/testing";
 
 typeAssert<Equal<1 + 1, 2>>();
 typeAssert<Extends<"hello", string>>();
@@ -92,7 +92,7 @@ typeAssert<Equal<ReturnType<typeof parse>, AST>>();
 Expand one test function into multiple cases.
 
 ```typescript
-import { testCases } from "@ttfx/testing";
+import { testCases } from "@typesugar/testing";
 
 @testCases([
   { input: "", expected: true },
@@ -114,7 +114,7 @@ function testIsBlank(input: string, expected: boolean) {
 Snapshot testing with compile-time source capture.
 
 ```typescript
-import { assertSnapshot } from "@ttfx/testing";
+import { assertSnapshot } from "@typesugar/testing";
 
 assertSnapshot(formatUser(testUser));
 // Label: "file.ts:42 — formatUser(testUser)"
@@ -128,8 +128,8 @@ assertSnapshot(renderComponent(props), "dark mode");
 Test properties with auto-generated values.
 
 ```typescript
-import { forAll } from "@ttfx/testing";
-import { derive } from "@ttfx/derive";
+import { forAll } from "@typesugar/testing";
+import { derive } from "@typesugar/derive";
 
 @derive(Arbitrary)
 interface User {
@@ -166,7 +166,7 @@ import {
   IsNever, // Check for never
   IsAny, // Check for any
   IsUnknown, // Check for unknown
-} from "@ttfx/testing";
+} from "@typesugar/testing";
 
 // Use with typeAssert
 typeAssert<Equal<A, B>>();
@@ -179,7 +179,7 @@ typeAssert<And<Extends<A, B>, Extends<B, C>>>();
 
 See the [`examples/`](./examples/) directory for real-world patterns:
 
-- **basic.ts** — Core testing patterns from dogfooding ttfx's own test suite
+- **basic.ts** — Core testing patterns from dogfooding typesugar's own test suite
 
 ## API Reference
 
@@ -217,11 +217,11 @@ See the [`examples/`](./examples/) directory for real-world patterns:
 
 ## Vitest Integration
 
-To use `@ttfx/testing` macros in your vitest tests, add the ttfx transformer plugin to your `vitest.config.ts`:
+To use `@typesugar/testing` macros in your vitest tests, add the typesugar transformer plugin to your `vitest.config.ts`:
 
 ```typescript
 import { defineConfig } from "vitest/config";
-import typemacro from "unplugin-ttfx/vite";
+import typemacro from "unplugin-typesugar/vite";
 
 export default defineConfig({
   plugins: [typemacro()],
@@ -235,7 +235,7 @@ Then import and use the macros in your test files:
 
 ```typescript
 import { describe, it } from "vitest";
-import { assert, typeAssert, type Equal } from "@ttfx/testing";
+import { assert, typeAssert, type Equal } from "@typesugar/testing";
 
 describe("my tests", () => {
   it("uses power assertions", () => {

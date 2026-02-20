@@ -22,7 +22,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // specialize() - Create specialized function at compile time
@@ -30,7 +30,7 @@ import {
 
 export const specializeMacro = defineExpressionMacro({
   name: "specialize",
-  module: "@ttfx/specialize",
+  module: "@typesugar/specialize",
   description: "Create a specialized version of a generic function",
 
   expand(
@@ -141,7 +141,7 @@ export const specializeMacro = defineExpressionMacro({
 
 export const specializeInlineMacro = defineExpressionMacro({
   name: "specialize$",
-  module: "@ttfx/specialize",
+  module: "@typesugar/specialize",
   description: "Inline a specialized function call",
 
   expand(
@@ -212,7 +212,7 @@ export const specializeInlineMacro = defineExpressionMacro({
 
 export const monoMacro = defineExpressionMacro({
   name: "mono",
-  module: "@ttfx/specialize",
+  module: "@typesugar/specialize",
   description: "Monomorphize a generic function for specific type arguments",
 
   expand(
@@ -298,7 +298,7 @@ export const monoMacro = defineExpressionMacro({
 
 export const inlineCallMacro = defineExpressionMacro({
   name: "inlineCall",
-  module: "@ttfx/specialize",
+  module: "@typesugar/specialize",
   description: "Attempt to inline a function call at compile time",
 
   expand(

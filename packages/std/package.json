@@ -1,5 +1,5 @@
 {
-  "name": "@ttfx/std",
+  "name": "@typesugar/std",
   "version": "0.1.0",
   "description": "Standard typeclasses and extension methods for enriching basic TypeScript types",
   "type": "module",
@@ -51,14 +51,14 @@
     "standard-library",
     "typeclasses",
     "extension-methods",
-    "ttfx"
+    "typesugar"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*",
-    "@ttfx/typeclass": "workspace:*",
-    "@ttfx/type-system": "workspace:*"
+    "@typesugar/core": "workspace:*",
+    "@typesugar/typeclass": "workspace:*",
+    "@typesugar/type-system": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

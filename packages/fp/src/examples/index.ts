@@ -3,7 +3,7 @@
  *
  * Re-exports all example modules.
  *
- * Each example demonstrates different aspects of the @ttfx/fp system:
+ * Each example demonstrates different aspects of the @typesugar/fp system:
  *
  * - validation-pipeline: Error accumulation with Validated/ValidatedNel
  * - console-app: Interactive console app with IO, Ref, and State
@@ -32,9 +32,7 @@ export function runAllExamples(): void {
   console.log(
     "╔═══════════════════════════════════════════════════════════════╗",
   );
-  console.log(
-    "║                @ttfx/fp EXAMPLES                        ║",
-  );
+  console.log("║                @typesugar/fp EXAMPLES                        ║");
   console.log(
     "╚═══════════════════════════════════════════════════════════════╝",
   );
@@ -60,9 +58,7 @@ export async function runAllExamplesAsync(): Promise<void> {
   console.log(
     "╔═══════════════════════════════════════════════════════════════╗",
   );
-  console.log(
-    "║                @ttfx/fp EXAMPLES                        ║",
-  );
+  console.log("║                @typesugar/fp EXAMPLES                        ║");
   console.log(
     "╚═══════════════════════════════════════════════════════════════╝",
   );

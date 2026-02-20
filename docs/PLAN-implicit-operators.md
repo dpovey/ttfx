@@ -28,13 +28,13 @@ given Semigroup[List[Int]] with
 List(1, 2) |+| List(3, 4)
 ```
 
-## ttfx Approach: `Op<S>` Branded Type
+## typesugar Approach: `Op<S>` Branded Type
 
-Instead of separate syntax declarations, ttfx uses a branded intersection type
+Instead of separate syntax declarations, typesugar uses a branded intersection type
 `Op<S>` on method return types to declare operator mappings inline:
 
 ```typescript
-import { Op } from "ttfx";
+import { Op } from "typesugar";
 
 @typeclass
 interface Semigroup<A> {
@@ -251,7 +251,7 @@ system works globally without `ops()` wrapping.
 
 ### Problem
 
-Currently `unplugin-ttfx` creates the TypeScript Program at `buildStart` with
+Currently `unplugin-typesugar` creates the TypeScript Program at `buildStart` with
 original source files, then preprocessing happens later in the `load` hook.
 This means the type checker sees original content (`F<_>`), not preprocessed
 content (`$<F, A>`), breaking type-aware macro transformations.
@@ -289,7 +289,7 @@ buildStart() {
 
 To avoid loading all preprocessed files into memory:
 
-1. **Disk-based cache**: Store in `.ttfx-cache/` or `node_modules/.cache/ttfx/`
+1. **Disk-based cache**: Store in `.typesugar-cache/` or `node_modules/.cache/typesugar/`
 2. **Content-addressed**: Key = hash of (file content + preprocessor version)
 3. **Lazy loading**: Only preprocess when CompilerHost requests the file
 4. **Store source maps**: Alongside preprocessed content for accurate error locations

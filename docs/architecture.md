@@ -1,10 +1,10 @@
-# ttfx Macro Architecture
+# typesugar Macro Architecture
 
-This document describes the internal architecture of the ttfx macro system. It is intended for contributors and maintainers who need to understand how the compilation pipeline works.
+This document describes the internal architecture of the typesugar macro system. It is intended for contributors and maintainers who need to understand how the compilation pipeline works.
 
 ## Overview
 
-ttfx transforms TypeScript source code in two phases:
+typesugar transforms TypeScript source code in two phases:
 
 1. **Lexical Preprocessing** — Text-level transformations for custom syntax (HKT, custom operators)
 2. **AST Transformation** — Macro expansion, specialization, and extension method rewriting
@@ -41,7 +41,7 @@ Source Code with Custom Syntax
 
 ---
 
-## 1. Lexical Preprocessor (`@ttfx/preprocessor`)
+## 1. Lexical Preprocessor (`@typesugar/preprocessor`)
 
 The preprocessor operates on text before TypeScript parsing. It transforms custom syntax into valid TypeScript that the standard compiler can understand.
 
@@ -104,7 +104,7 @@ An operator is suppressed when `typeAnnotationDepth > 0 || angleBracketDepth > 0
 
 ---
 
-## 2. AST Transformer (`@ttfx/transformer`)
+## 2. AST Transformer (`@typesugar/transformer`)
 
 The transformer is a TypeScript compiler plugin (ts-patch) that expands macros during compilation.
 
@@ -178,7 +178,7 @@ Functions marked with `@implicits` propagate their typeclass instance parameters
 
 ---
 
-## 3. Core Infrastructure (`@ttfx/core`)
+## 3. Core Infrastructure (`@typesugar/core`)
 
 The core package provides shared infrastructure for macro definitions and expansion.
 
@@ -186,9 +186,9 @@ The core package provides shared infrastructure for macro definitions and expans
 
 There are two `core` directories, serving different roles:
 
-**`packages/core/src/` — Public API package (`@ttfx/core`)**
+**`packages/core/src/` — Public API package (`@typesugar/core`)**
 
-This is the published npm package. It contains the types and registries that external packages (like `@ttfx/transformer`) import:
+This is the published npm package. It contains the types and registries that external packages (like `@typesugar/transformer`) import:
 
 ```
 packages/core/src/
@@ -257,7 +257,7 @@ Every macro's `expand()` function receives a `MacroContext` providing:
 
 ### Macro Kinds
 
-ttfx supports six kinds of macros:
+typesugar supports six kinds of macros:
 
 | Kind            | Trigger              | Signature                                            |
 | --------------- | -------------------- | ---------------------------------------------------- |
@@ -387,7 +387,7 @@ When the transformer encounters `__binop__(left, op, right)`:
 
 ### HKT Conventions
 
-ttfx uses indexed-access types for higher-kinded type encoding:
+typesugar uses indexed-access types for higher-kinded type encoding:
 
 ```typescript
 type $<F, A> = (F & { readonly _: A })["_"];
@@ -441,7 +441,7 @@ Pre-registered instances for: `Array`, `Promise`, `Option`, `Either` with their 
 
 ## 7. Built-in Macro Subsystems
 
-Beyond the core typeclass and specialization macros, ttfx provides several additional macro subsystems.
+Beyond the core typeclass and specialization macros, typesugar provides several additional macro subsystems.
 
 ### Derive System (`src/macros/derive.ts`, `src/macros/custom-derive.ts`)
 
@@ -483,7 +483,7 @@ const value = cfg("debug", debugImpl, releaseImpl);
 function experimentalFeature() { ... } // removed if condition is false
 ```
 
-The condition evaluator supports `&&`, `||`, `!`, `==`, `!=`, parentheses, and dotted config paths. Config values come from transformer options, environment variables (`TTFX_CFG_*`), and config files.
+The condition evaluator supports `&&`, `||`, `!`, `==`, `!=`, parentheses, and dotted config paths. Config values come from transformer options, environment variables (`TYPESUGAR_CFG_*`), and config files.
 
 ### Pattern-Based Macros (`src/macros/syntax-macro.ts`)
 
@@ -594,7 +594,7 @@ globalExpansionTracker.toJSON(); // machine-readable format
 
 ## 8. Extension Methods
 
-ttfx supports two extension mechanisms:
+typesugar supports two extension mechanisms:
 
 ### Typeclass Extensions (Implicit)
 
@@ -625,14 +625,14 @@ These are stored in `standaloneExtensionRegistry` and resolved before typeclass 
 
 ---
 
-## 9. Build Tool Integration (`unplugin-ttfx`)
+## 9. Build Tool Integration (`unplugin-typesugar`)
 
 The unplugin provides universal integration with build tools (Vite, esbuild, Webpack, Rollup).
 
 ### Location
 
 ```
-packages/unplugin-ttfx/src/unplugin.ts
+packages/unplugin-typesugar/src/unplugin.ts
 ```
 
 ### Hooks
@@ -667,7 +667,7 @@ Tests run via vitest with a workspace configuration. The root `vitest.config.ts`
 
 ```
 pnpm test                           # all tests via vitest workspace
-pnpm --filter @ttfx/preprocessor test  # single package
+pnpm --filter @typesugar/preprocessor test  # single package
 ```
 
 Package-level vitest configs typically set a project name matching the package, used for test filtering.
@@ -680,7 +680,7 @@ Each package extends `tsconfig.base.json` from the monorepo root. The base confi
 
 ## Summary
 
-The ttfx macro system is built on these principles:
+The typesugar macro system is built on these principles:
 
 1. **Two-phase compilation** — Lexical preprocessing followed by AST transformation
 2. **Zero-cost abstractions** — Specialize generic code to eliminate runtime overhead
@@ -713,7 +713,7 @@ This section documents known limitations and planned enhancements.
 
 ### unplugin Type-Aware Transformation
 
-**Current State:** The `unplugin-ttfx` creates the `ts.Program` at `buildStart` with original source files. Preprocessing happens later in the `load` hook. This means the type checker sees original content (`F<_>`) rather than preprocessed content (`$<F, A>`).
+**Current State:** The `unplugin-typesugar` creates the `ts.Program` at `buildStart` with original source files. Preprocessing happens later in the `load` hook. This means the type checker sees original content (`F<_>`) rather than preprocessed content (`$<F, A>`).
 
 **Impact:** Macros that rely on accurate type information may produce incorrect results when custom syntax is involved.
 
@@ -721,7 +721,7 @@ This section documents known limitations and planned enhancements.
 
 1. Preprocess files **before** creating the Program using a custom `CompilerHost`
 2. Implement disk-based caching for preprocessed content:
-   - Cache directory: `.ttfx-cache/` or `node_modules/.cache/ttfx/`
+   - Cache directory: `.typesugar-cache/` or `node_modules/.cache/typesugar/`
    - Key: hash of (file content + preprocessor version)
    - Store preprocessed code + source map
    - LRU eviction for cache size limits
@@ -782,7 +782,7 @@ See `docs/PLAN-implicit-operators.md` for the detailed implementation plan.
 1. Add macro stack traces showing the expansion chain
 2. Provide a "macro expansion view" that shows intermediate results
 3. Integrate with IDE language service for macro-aware debugging
-4. Generate `.ttfx-expanded/` directory with fully expanded source for inspection
+4. Generate `.typesugar-expanded/` directory with fully expanded source for inspection
 
 **Complexity:** Medium — mostly additive features.
 

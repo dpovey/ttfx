@@ -1,17 +1,17 @@
-# @ttfx/react
+# @typesugar/react
 
 > Compile-time React macros — Vue/Svelte-style reactivity for React.
 
 ## Overview
 
-`@ttfx/react` brings modern reactivity patterns to React through compile-time macros. Write cleaner component code with automatic dependency tracking — no more manual dependency arrays.
+`@typesugar/react` brings modern reactivity patterns to React through compile-time macros. Write cleaner component code with automatic dependency tracking — no more manual dependency arrays.
 
 ## Installation
 
 ```bash
-npm install @ttfx/react
+npm install @typesugar/react
 # or
-pnpm add @ttfx/react
+pnpm add @typesugar/react
 ```
 
 Requires React 18+ as a peer dependency.
@@ -21,7 +21,7 @@ Requires React 18+ as a peer dependency.
 ### state() — Reactive State
 
 ```typescript
-import { state } from "@ttfx/react";
+import { state } from "@typesugar/react";
 
 function Counter() {
   const count = state(0);
@@ -41,7 +41,7 @@ function Counter() {
 ### derived() — Computed Values
 
 ```typescript
-import { state, derived } from "@ttfx/react";
+import { state, derived } from "@typesugar/react";
 
 function Example() {
   const count = state(0);
@@ -57,7 +57,7 @@ function Example() {
 ### effect() — Side Effects
 
 ```typescript
-import { state, effect } from "@ttfx/react";
+import { state, effect } from "@typesugar/react";
 
 function DocumentTitle() {
   const title = state("Hello");
@@ -76,7 +76,7 @@ function DocumentTitle() {
 ### watch() — Explicit Dependencies
 
 ```typescript
-import { state, watch } from "@ttfx/react";
+import { state, watch } from "@typesugar/react";
 
 function UserProfile() {
   const userId = state(1);
@@ -93,7 +93,7 @@ function UserProfile() {
 ### component() — Embedded Components
 
 ```typescript
-import { component, each } from "@ttfx/react";
+import { component, each } from "@typesugar/react";
 
 function TodoList() {
   const todos = state([]);
@@ -114,7 +114,7 @@ function TodoList() {
 ### match() — Pattern Matching
 
 ```typescript
-import { match } from "@ttfx/react";
+import { match } from "@typesugar/react";
 
 type Status =
   | { _tag: "loading" }
@@ -170,7 +170,7 @@ Compiles to Solid.js-style signals for true fine-grained reactivity without VDOM
 ```typescript
 // Configure in transformer options
 {
-  plugins: [ttfxPlugin({ reactMode: "fine-grained" })];
+  plugins: [typesugarPlugin({ reactMode: "fine-grained" })];
 }
 ```
 

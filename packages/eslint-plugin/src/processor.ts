@@ -1,12 +1,13 @@
 /**
- * ESLint Processor for ttfx
+ * ESLint Processor for typesugar
  *
- * This processor runs the ttfx macro transformer on source files before ESLint
+ * This processor runs the typesugar macro transformer on source files before ESLint
  * lints them. ESLint sees the transformed output, which is standard TypeScript
  * with all macro syntax expanded.
  *
  * How it works:
- * 1. preprocess(): Receives source code, runs ttfx transformer, returns transformed code
+ * 1. preprocess(): Receives source code, runs typesugar preprocessor (HKT, operators) then
+ *    pattern-based transforms, returns transformed code
  * 2. ESLint lints the transformed code (no false positives from macro syntax)
  * 3. postprocess(): Maps lint messages back to original source locations
  *
@@ -15,6 +16,7 @@
 
 import type { Linter } from "eslint";
 import * as ts from "typescript";
+import { preprocess as preprocessCustomSyntax } from "@typesugar/preprocessor";
 
 interface SourceMapping {
   originalFile: string;
@@ -47,7 +49,7 @@ function createSingleFileProgram(fileName: string, source: string): ts.Program {
     skipLibCheck: true,
     declaration: false,
     noEmit: true,
-    // Enable experimental decorators for ttfx syntax
+    // Enable experimental decorators for typesugar syntax
     experimentalDecorators: true,
   };
 
@@ -78,7 +80,7 @@ function createSingleFileProgram(fileName: string, source: string): ts.Program {
 }
 
 /**
- * Run the ttfx transformer on source code
+ * Run the typesugar transformer on source code
  */
 function transformSource(
   fileName: string,
@@ -90,28 +92,30 @@ function transformSource(
   const mappings: SourceMapping[] = [];
 
   try {
+    // First: Run the preprocessor to handle custom syntax (F<_> HKT, |>, ::)
+    // This converts non-standard TypeScript to valid TypeScript
+    const preprocessResult = preprocessCustomSyntax(source, { fileName });
+    let transformed = preprocessResult.code;
+
     // Import the transformer dynamically to avoid circular deps at load time
     // For now, we'll use a simpler approach: just run the TS compiler
     // with the transformer loaded
 
-    const program = createSingleFileProgram(fileName, source);
+    const program = createSingleFileProgram(fileName, transformed);
     const sourceFile = program.getSourceFile(fileName);
 
     if (!sourceFile) {
-      return { transformed: source, mappings };
+      return { transformed, mappings };
     }
 
     // For the initial implementation, we'll create a lightweight transform
     // that handles the most common patterns. A full implementation would
-    // integrate with the actual ttfx transformer.
+    // integrate with the actual typesugar transformer.
 
     // Transform patterns that cause ESLint false positives:
     // 1. @derive(Eq, Clone) -> remove decorator (ESLint doesn't need to see it)
     // 2. requires: { ... } -> /* requires: { ... } */ (comment out)
     // 3. comptime(...) -> /* comptime(...) */ (the value is inlined)
-
-    let transformed = source;
-    let offset = 0;
 
     // Simple pattern-based transformation for the most common cases
     // This is a heuristic approach - the full solution would use the actual transformer
@@ -138,6 +142,7 @@ function transformSource(
     // Keep comptime for now - it's typed properly and shouldn't cause issues
 
     // Build basic line-to-line mappings (1:1 for unchanged lines)
+    // TODO: Compose with preprocessor source map for accurate position tracking
     const originalLines = source.split("\n");
     const transformedLines = transformed.split("\n");
 
@@ -158,7 +163,7 @@ function transformSource(
     return { transformed, mappings };
   } catch (error) {
     // If transformation fails, return original source
-    console.warn(`[ttfx-eslint] Transform failed for ${fileName}:`, error);
+    console.warn(`[typesugar-eslint] Transform failed for ${fileName}:`, error);
     return { transformed: source, mappings };
   }
 }
@@ -194,7 +199,7 @@ function mapToOriginal(
 export function createProcessor(): Linter.Processor {
   return {
     meta: {
-      name: "ttfx",
+      name: "typesugar",
       version: "0.1.0",
     },
 
@@ -213,7 +218,9 @@ export function createProcessor(): Linter.Processor {
         return [text];
       }
 
-      // Quick check: does this file even use ttfx patterns?
+      // Quick check: does this file even use typesugar patterns?
+      // For :: we use a regex to avoid false positives with TypeScript's :: in labels
+      // (e.g., `foo::bar` vs `foo: { label: ... }`)
       const usesTtfx =
         text.includes("@derive") ||
         text.includes("@typeclass") ||
@@ -224,10 +231,13 @@ export function createProcessor(): Linter.Processor {
         text.includes("requires:") ||
         text.includes("ensures:") ||
         text.includes("@operators") ||
-        text.includes("@reflect");
+        text.includes("@reflect") ||
+        text.includes("<_>") || // HKT syntax
+        text.includes("|>") || // Pipeline operator
+        /[)\]}\w]\s*::\s*[(\[{A-Za-z_$]/.test(text); // Cons operator (value :: value context)
 
       if (!usesTtfx) {
-        // No ttfx patterns - pass through unchanged
+        // No typesugar patterns - pass through unchanged
         fileStates.set(filename, {
           originalSource: text,
           transformedSource: text,

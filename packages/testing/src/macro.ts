@@ -27,7 +27,7 @@ import {
   type DeriveTypeInfo,
   type DeriveFieldInfo,
   type AttributeTarget,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // powerAssert() — Power Assertions with Sub-Expression Capture
@@ -91,7 +91,7 @@ function collectSubExpressions(
 
 export const assertMacro = defineExpressionMacro({
   name: "assert",
-  module: "@ttfx/testing",
+  module: "@typesugar/testing",
   description:
     "Assert with sub-expression capture — on failure, shows the value of every sub-expression",
 
@@ -376,7 +376,7 @@ function getArbitraryForBaseType(typeStr: string): string {
 
 export const staticAssertMacro = defineExpressionMacro({
   name: "staticAssert",
-  module: "@ttfx/testing",
+  module: "@typesugar/testing",
   description:
     "Assert a condition at compile time — fails the BUILD if the condition is false",
 
@@ -450,7 +450,7 @@ export const staticAssertMacro = defineExpressionMacro({
 
 export const testCasesAttribute = defineAttributeMacro({
   name: "testCases",
-  module: "@ttfx/testing",
+  module: "@typesugar/testing",
   description:
     "Expand a single test function into multiple parameterized test cases",
   validTargets: ["function"] as AttributeTarget[],
@@ -561,7 +561,7 @@ it("${fnName} (case #${i + 1}: ${caseLabel.replace(/"/g, '\\"')})", () => {
 
 export const assertSnapshotMacro = defineExpressionMacro({
   name: "assertSnapshot",
-  module: "@ttfx/testing",
+  module: "@typesugar/testing",
   description:
     "Snapshot testing macro that captures the source expression text alongside the value",
 
@@ -639,7 +639,7 @@ export const assertSnapshotMacro = defineExpressionMacro({
 
 export const typeAssertMacro = defineExpressionMacro({
   name: "typeAssert",
-  module: "@ttfx/testing",
+  module: "@typesugar/testing",
   description:
     "Assert type relationships at compile time — fails the build if the type constraint is not satisfied",
 
@@ -724,7 +724,7 @@ export const typeAssertMacro = defineExpressionMacro({
 
 export const forAllMacro = defineExpressionMacro({
   name: "forAll",
-  module: "@ttfx/testing",
+  module: "@typesugar/testing",
   description:
     "Run a property-based test with auto-generated values. Uses @derive(Arbitrary) generators.",
 

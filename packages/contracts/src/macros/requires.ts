@@ -35,7 +35,7 @@ import {
   defineExpressionMacro,
   globalRegistry,
   MacroContext,
-} from "@ttfx/core";
+} from "@typesugar/core";
 import { shouldEmitCheck } from "../config.js";
 import { normalizeExpression } from "../parser/predicate.js";
 
@@ -51,7 +51,7 @@ export function requires(condition: boolean, message?: string): void {
 
 export const requiresMacro = defineExpressionMacro({
   name: "requires",
-  module: "@ttfx/contracts",
+  module: "@typesugar/contracts",
   description:
     "Precondition check — asserts a condition at function entry. Strippable in production.",
 

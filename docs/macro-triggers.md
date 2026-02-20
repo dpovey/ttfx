@@ -1,6 +1,6 @@
 # Macro Trigger Patterns
 
-This document describes all the ways macros can be triggered in the ttfx transformer. Understanding these patterns is essential for both using existing macros and implementing new ones.
+This document describes all the ways macros can be triggered in the typesugar transformer. Understanding these patterns is essential for both using existing macros and implementing new ones.
 
 ## Overview
 

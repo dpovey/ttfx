@@ -61,6 +61,21 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  packages/collections:
+    dependencies:
+      '@ttfx/fp':
+        specifier: workspace:*
+        version: link:../fp
+      '@ttfx/std':
+        specifier: workspace:*
+        version: link:../std
+      '@ttfx/type-system':
+        specifier: workspace:*
+        version: link:../type-system
+      typescript:
+        specifier: '>=5.0.0'
+        version: 5.9.3
+
   packages/comptime:
     dependencies:
       '@ttfx/core':
@@ -142,6 +157,9 @@ importers:
       '@ttfx/core':
         specifier: workspace:*
         version: link:../core
+      '@ttfx/preprocessor':
+        specifier: workspace:*
+        version: link:../preprocessor
       '@ttfx/transformer':
         specifier: workspace:*
         version: link:../transformer
@@ -195,6 +213,22 @@ importers:
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
+
+  packages/preprocessor:
+    dependencies:
+      magic-string:
+        specifier: ^0.30.21
+        version: 0.30.21
+    devDependencies:
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@22.19.11)
 
   packages/react:
     dependencies:
@@ -346,6 +380,9 @@ importers:
 
   packages/unplugin-ttfx:
     dependencies:
+      '@ttfx/preprocessor':
+        specifier: workspace:*
+        version: link:../preprocessor
       '@ttfx/transformer':
         specifier: workspace:*
         version: link:../transformer

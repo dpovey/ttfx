@@ -17,8 +17,8 @@ import * as ts from "typescript";
 import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
-import { globalRegistry, defineExpressionMacro } from "@ttfx/core";
-import type { ExpressionMacro } from "@ttfx/core";
+import { globalRegistry, defineExpressionMacro } from "@typesugar/core";
+import type { ExpressionMacro } from "@typesugar/core";
 import macroTransformerFactory from "../src/index.js";
 
 // Register a test macro that expands `testMacro(...)` → the first argument.

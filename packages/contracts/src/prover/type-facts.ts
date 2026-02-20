@@ -6,15 +6,15 @@
  * This allows the prover to skip runtime checks that are guaranteed
  * by the type system.
  *
- * ## Integration with @ttfx/type-system
+ * ## Integration with @typesugar/type-system
  *
- * The predicate registry is populated by @ttfx/contracts-refined, which
- * imports predicate definitions from @ttfx/type-system. This ensures a
+ * The predicate registry is populated by @typesugar/contracts-refined, which
+ * imports predicate definitions from @typesugar/type-system. This ensures a
  * single source of truth for refinement predicates.
  *
  * To enable the integration:
  * ```typescript
- * import "@ttfx/contracts-refined";
+ * import "@typesugar/contracts-refined";
  * ```
  *
  * ## Subtyping Coercions (Coq-inspired)
@@ -40,7 +40,7 @@
  */
 
 import * as ts from "typescript";
-import type { MacroContext } from "@ttfx/core";
+import type { MacroContext } from "@typesugar/core";
 
 /**
  * A fact known about a variable from its type.
@@ -99,7 +99,7 @@ export interface DecidabilityInfo {
  * Maps brand name → predicate template ($ = the variable).
  *
  * This registry starts empty. Predicates are registered by:
- * - @ttfx/contracts-refined (auto-registers all @ttfx/type-system predicates)
+ * - @typesugar/contracts-refined (auto-registers all @typesugar/type-system predicates)
  * - User code via registerRefinementPredicate()
  */
 const REFINEMENT_PREDICATES: Record<string, string> = {};

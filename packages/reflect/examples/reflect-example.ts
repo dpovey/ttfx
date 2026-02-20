@@ -14,7 +14,7 @@ import {
   validator,
   TypeInfo,
   ValidationResult,
-} from "@ttfx/reflect";
+} from "@typesugar/reflect";
 
 console.log("=== Type Reflection Example ===\n");
 

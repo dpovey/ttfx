@@ -1,8 +1,8 @@
-# ttfx Philosophy
+# typesugar Philosophy
 
 **Zero-cost abstractions through compile-time transformation.**
 
-This document captures the design principles that guide ttfx development, distilled from building real systems and learning what works.
+This document captures the design principles that guide typesugar development, distilled from building real systems and learning what works.
 
 ---
 
@@ -10,7 +10,7 @@ This document captures the design principles that guide ttfx development, distil
 
 The central philosophy: **abstractions should have no runtime cost**.
 
-TypeScript developers often face a choice between expressive, type-safe code and fast, minimal code. ttfx eliminates this trade-off. Write beautiful, abstract code; the macro system compiles it down to what you would have written by hand.
+TypeScript developers often face a choice between expressive, type-safe code and fast, minimal code. typesugar eliminates this trade-off. Write beautiful, abstract code; the macro system compiles it down to what you would have written by hand.
 
 ### What "zero-cost" means
 
@@ -200,7 +200,7 @@ The implementation:
 
 - Did not actually narrow type parameters
 - Required wrapper types and manual registration
-- Duplicated the `match` macro from `@ttfx/fp`
+- Duplicated the `match` macro from `@typesugar/fp`
 - Was strictly less capable than native TypeScript discriminated unions
 
 **Decision**: Drop it entirely. Document real GADTs (with type-parameter narrowing via type-checker integration) as a future project worth doing properly.
@@ -230,7 +230,7 @@ The lesson isn't "don't build ambitious features." It's "be honest about what yo
 
 ## Summary
 
-ttfx exists to prove that TypeScript developers don't have to choose between expressiveness and performance. Through compile-time transformation:
+typesugar exists to prove that TypeScript developers don't have to choose between expressiveness and performance. Through compile-time transformation:
 
 - **Abstract code becomes concrete** -- Generics resolve, dictionaries inline
 - **Type information drives code generation** -- Reflection replaces boilerplate

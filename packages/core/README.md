@@ -1,27 +1,27 @@
-# @ttfx/core
+# @typesugar/core
 
-> Foundation types, registry, and context for the ttfx macro system.
+> Foundation types, registry, and context for the typesugar macro system.
 
 ## Overview
 
-`@ttfx/core` is the foundational package of the ttfx ecosystem. It defines the interfaces that all macros implement, the global registry where macros are registered, and the `MacroContext` that provides type checker access during macro expansion.
+`@typesugar/core` is the foundational package of the typesugar ecosystem. It defines the interfaces that all macros implement, the global registry where macros are registered, and the `MacroContext` that provides type checker access during macro expansion.
 
-**You need this package if you're writing custom macros.** If you're just using ttfx macros, import from `ttfx` instead.
+**You need this package if you're writing custom macros.** If you're just using typesugar macros, import from `typesugar` instead.
 
 ## Installation
 
 ```bash
-npm install @ttfx/core
+npm install @typesugar/core
 # or
-pnpm add @ttfx/core
+pnpm add @typesugar/core
 ```
 
 ## Runtime Safety Primitives
 
-In addition to macro infrastructure, `@ttfx/core` provides fundamental runtime safety utilities:
+In addition to macro infrastructure, `@typesugar/core` provides fundamental runtime safety utilities:
 
 ```typescript
-import { invariant, unreachable, debugOnly } from "@ttfx/core";
+import { invariant, unreachable, debugOnly } from "@typesugar/core";
 
 // Assert invariants (strippable in production)
 function divide(a: number, b: number): number {
@@ -48,7 +48,7 @@ debugOnly(() => {
 
 ## Macro Types
 
-ttfx supports six kinds of macros:
+typesugar supports six kinds of macros:
 
 | Kind | Interface | Trigger | Example |
 |------|-----------|---------|---------|
@@ -64,7 +64,7 @@ ttfx supports six kinds of macros:
 ### Expression Macro
 
 ```typescript
-import { defineExpressionMacro, globalRegistry } from "@ttfx/core";
+import { defineExpressionMacro, globalRegistry } from "@typesugar/core";
 
 const myMacro = defineExpressionMacro({
   name: "myMacro",
@@ -87,7 +87,7 @@ globalRegistry.register(myMacro);
 ### Tagged Template Macro
 
 ```typescript
-import { defineTaggedTemplateMacro, globalRegistry } from "@ttfx/core";
+import { defineTaggedTemplateMacro, globalRegistry } from "@typesugar/core";
 
 const greetMacro = defineTaggedTemplateMacro({
   name: "greet",
@@ -136,7 +136,7 @@ interface MacroContext {
 The `globalRegistry` is a singleton that holds all registered macros:
 
 ```typescript
-import { globalRegistry } from "@ttfx/core";
+import { globalRegistry } from "@typesugar/core";
 
 // Register a macro
 globalRegistry.register(myMacro);

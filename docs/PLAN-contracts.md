@@ -1,10 +1,10 @@
-# Design by Contract for ttfx
+# Design by Contract for typesugar
 
 > **Status**: Implemented (Phase 1-4). Z3 integration scaffolded. Coq-inspired extensions complete.
 
 ## Overview
 
-`@ttfx/contracts` provides Design by Contract macros with:
+`@typesugar/contracts` provides Design by Contract macros with:
 
 - **`requires()`** — Precondition (inline or `requires:` labeled block)
 - **`ensures()`** — Postcondition (inline or `ensures:` labeled block)
@@ -13,7 +13,7 @@
 - **`@invariant`** — Class invariant (checked after public methods)
 - **Configurable stripping** — `mode: "full" | "assertions" | "none"`
 - **Compile-time proofs** — Constant eval, type deduction, algebraic rules
-- **Z3 plugin** — `@ttfx/contracts-z3` (separate package)
+- **Z3 plugin** — `@typesugar/contracts-z3` (separate package)
 
 ## Terminology
 
@@ -31,7 +31,7 @@ Aligned with modern convention (Dafny, Rust, Swift):
 ### Inline style
 
 ```typescript
-import { requires, ensures, old } from "@ttfx/contracts";
+import { requires, ensures, old } from "@typesugar/contracts";
 
 function withdraw(account: Account, amount: Positive): number {
   requires(account.balance >= amount, "Insufficient funds");
@@ -44,7 +44,7 @@ function withdraw(account: Account, amount: Positive): number {
 ### Block style
 
 ```typescript
-import { contract, old } from "@ttfx/contracts";
+import { contract, old } from "@typesugar/contracts";
 
 @contract
 function withdraw(account: Account, amount: Positive): Balance {
@@ -63,7 +63,7 @@ function withdraw(account: Account, amount: Positive): Balance {
 ### Class invariants
 
 ```typescript
-import { invariant } from "@ttfx/contracts";
+import { invariant } from "@typesugar/contracts";
 
 @invariant((self) => self.balance >= 0, "Balance must be non-negative")
 class BankAccount {
@@ -86,7 +86,7 @@ In `tsconfig.json`:
   "compilerOptions": {
     "plugins": [
       {
-        "transform": "ttfx",
+        "transform": "typesugar",
         "contracts": {
           "mode": "full",
           "proveAtCompileTime": true
@@ -117,7 +117,7 @@ Layers run in order, stopping at first success:
 2. **Type deduction** — Extract facts from `Refined<T, Brand>` parameters
 3. **Algebraic rules** — Pattern-match on normalized predicates
 4. **Linear arithmetic** — Fourier-Motzkin elimination for inequalities
-5. **Prover plugins** — SMT solver for complex formulas (via `@ttfx/contracts-z3`)
+5. **Prover plugins** — SMT solver for complex formulas (via `@typesugar/contracts-z3`)
 
 ## Coq-Inspired Extensions
 
@@ -128,7 +128,7 @@ Phase 4 adds Coq-inspired features for finer control over proof strategies and r
 Mark predicates with their decidability level:
 
 ```typescript
-import { registerDecidability } from "@ttfx/contracts";
+import { registerDecidability } from "@typesugar/contracts";
 
 registerDecidability({
   brand: "Positive",
@@ -156,7 +156,7 @@ registerDecidability({
 Configure warnings when proofs unexpectedly fall back to runtime:
 
 ```typescript
-// ttfx.config.ts
+// typesugar.config.ts
 export default {
   contracts: {
     decidabilityWarnings: {
@@ -173,7 +173,7 @@ export default {
 Register safe widening relationships for automatic coercion:
 
 ```typescript
-import { registerSubtypingRule, canWiden } from "@ttfx/contracts";
+import { registerSubtypingRule, canWiden } from "@typesugar/contracts";
 
 // Positive → NonNegative is safe
 registerSubtypingRule({
@@ -186,7 +186,7 @@ registerSubtypingRule({
 canWiden("Positive", "NonNegative"); // true
 ```
 
-Built-in rules (registered by `@ttfx/contracts-refined`):
+Built-in rules (registered by `@typesugar/contracts-refined`):
 
 - `Positive → NonNegative` (x > 0 → x >= 0)
 - `NonNegative → NonNegativeOrZero` (x >= 0 is same)
@@ -198,7 +198,7 @@ Built-in rules (registered by `@ttfx/contracts-refined`):
 Proves linear inequalities via Fourier-Motzkin elimination:
 
 ```typescript
-import { trySimpleLinearProof } from "@ttfx/contracts";
+import { trySimpleLinearProof } from "@typesugar/contracts";
 
 // Prove: x + y >= 0 given x > 0 and y >= 0
 const result = trySimpleLinearProof("x + y >= 0", [
@@ -225,7 +225,7 @@ import {
   createCertificate,
   succeedCertificate,
   formatCertificate,
-} from "@ttfx/contracts";
+} from "@typesugar/contracts";
 
 const facts = [{ variable: "x", predicate: "x: Positive" }];
 let cert = createCertificate("x >= 0", facts);
@@ -253,7 +253,7 @@ console.log(formatCertificate(cert));
 Extend the prover with domain-specific patterns:
 
 ```typescript
-import { registerAlgebraicRule } from "@ttfx/contracts";
+import { registerAlgebraicRule } from "@typesugar/contracts";
 
 registerAlgebraicRule({
   name: "percentage_upper_bound",
@@ -304,10 +304,10 @@ packages/contracts-z3/src/
 
 | Package                   | Purpose                                     |
 | ------------------------- | ------------------------------------------- |
-| `@ttfx/contracts`         | Core contracts, prover, decidability        |
-| `@ttfx/contracts-refined` | Bridge to `@ttfx/type-system` refined types |
-| `@ttfx/contracts-z3`      | Z3 SMT solver prover plugin                 |
-| `@ttfx/type-system`       | Refined types (Positive, Byte, Port, etc.)  |
+| `@typesugar/contracts`         | Core contracts, prover, decidability        |
+| `@typesugar/contracts-refined` | Bridge to `@typesugar/type-system` refined types |
+| `@typesugar/contracts-z3`      | Z3 SMT solver prover plugin                 |
+| `@typesugar/type-system`       | Refined types (Positive, Byte, Port, etc.)  |
 
 ## References
 

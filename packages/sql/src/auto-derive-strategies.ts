@@ -1,7 +1,7 @@
 /**
  * Scala 3-Style Derivation Strategies for SQL Typeclasses
  *
- * Registers `derived` strategies with the core ttfx derivation infrastructure.
+ * Registers `derived` strategies with the core typesugar derivation infrastructure.
  * This enables Scala 3-style auto-derivation for SQL typeclasses:
  *
  * ```typescript
@@ -13,7 +13,7 @@
  *
  * The pattern mirrors Scala 3 `derives`:
  * - The compiler synthesizes `Mirror.ProductOf[User]` automatically
- *   (ttfx: the TypeChecker inspects User's fields)
+ *   (typesugar: the TypeChecker inspects User's fields)
  * - `Read.derived` uses Mirror + `Get` instances per element type
  * - `summon[Read[User]]` resolves the derived instance
  *

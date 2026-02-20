@@ -58,12 +58,12 @@ import * as ts from "typescript";
 import {
   defineDeriveMacro,
   globalRegistry,
-} from "@ttfx/core";
+} from "@typesugar/core";
 import type {
   MacroContext,
   DeriveTypeInfo,
   DeriveFieldInfo,
-} from "@ttfx/core";
+} from "@typesugar/core";
 
 // ============================================================================
 // Type-to-Instance Mapping

@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/effect",
+  "name": "@typesugar/effect",
   "version": "0.1.0",
-  "description": "Effect-TS adapter for ttfx - do-notation and comprehension syntax",
+  "description": "Effect-TS adapter for typesugar - do-notation and comprehension syntax",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -32,8 +32,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*",
-    "@ttfx/std": "workspace:*"
+    "@typesugar/core": "workspace:*",
+    "@typesugar/std": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0",

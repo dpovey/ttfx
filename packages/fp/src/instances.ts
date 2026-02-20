@@ -1,8 +1,8 @@
 /**
- * Typeclass Instances for @ttfx/fp Data Types
+ * Typeclass Instances for @typesugar/fp Data Types
  *
  * This module provides concrete typeclass instances (Functor, Monad, Foldable,
- * Traverse, etc.) for all @ttfx/fp data types, using the zero-cost HKT system.
+ * Traverse, etc.) for all @typesugar/fp data types, using the zero-cost HKT system.
  *
  * ## Zero-Cost Option
  *
@@ -28,7 +28,7 @@
  *
  * ```typescript
  * import { optionMonad, arrayMonad } from "./instances.js";
- * import { specialize } from "@ttfx/specialize";
+ * import { specialize } from "@typesugar/specialize";
  *
  * // Generic function
  * function double<F>(F: Monad<F>, fa: $<F, number>): $<F, number> {
@@ -254,9 +254,9 @@ type EitherSemigroupK<E> = {
   readonly combineK: <A>(x: Either<E, A>, y: Either<E, A>) => Either<E, A>;
 };
 
-// Note: registerInstanceMethods is from @ttfx/specialize package
+// Note: registerInstanceMethods is from @typesugar/specialize package
 // For now, registration is done separately in the macro package
-// import { registerInstanceMethods } from "@ttfx/specialize";
+// import { registerInstanceMethods } from "@typesugar/specialize";
 
 // ============================================================================
 // Option Instances (Zero-Cost: Option<A> = A | null)
@@ -528,7 +528,7 @@ export function eitherSemigroupK<E>(): EitherSemigroupK<E> {
 // ============================================================================
 // Specialization templates
 // ============================================================================
-// These templates are used by @ttfx/specialize to inline typeclass
+// These templates are used by @typesugar/specialize to inline typeclass
 // operations at compile time. They should be registered separately in the
 // macro package. See src/macros/specialize.ts for registration.
 //
@@ -549,10 +549,10 @@ export function eitherSemigroupK<E>(): EitherSemigroupK<E> {
 //   eitherMonad.flatMap: '(fa, f) => fa._tag === "Right" ? f(fa.right) : fa'
 
 // ============================================================================
-// @ttfx/std FlatMap Typeclass Bridge
+// @typesugar/std FlatMap Typeclass Bridge
 // ============================================================================
-// FlatMap instances for @ttfx/fp types, compatible with @ttfx/std's FlatMap typeclass.
-// These can be registered with @ttfx/std when needed for let:/yield: macro support.
+// FlatMap instances for @typesugar/fp types, compatible with @typesugar/std's FlatMap typeclass.
+// These can be registered with @typesugar/std when needed for let:/yield: macro support.
 
 import type { List } from "./data/list.js";
 import { map as listMap, flatMap as listFlatMap } from "./data/list.js";
@@ -631,8 +631,8 @@ export function flatMapValidated<E>() {
 }
 
 /**
- * All FlatMap instances for @ttfx/fp types.
- * Can be used directly or registered with @ttfx/std when available.
+ * All FlatMap instances for @typesugar/fp types.
+ * Can be used directly or registered with @typesugar/std when available.
  */
 export const fpFlatMapInstances = {
   Option: flatMapOption,
@@ -643,13 +643,13 @@ export const fpFlatMapInstances = {
 } as const;
 
 /**
- * Register all @ttfx/fp FlatMap instances with @ttfx/std.
- * Call this function after importing @ttfx/std to enable let:/yield: syntax.
+ * Register all @typesugar/fp FlatMap instances with @typesugar/std.
+ * Call this function after importing @typesugar/std to enable let:/yield: syntax.
  *
  * @example
  * ```ts
- * import { registerFlatMap } from "@ttfx/std";
- * import { registerFpFlatMapInstances } from "@ttfx/fp";
+ * import { registerFlatMap } from "@typesugar/std";
+ * import { registerFpFlatMapInstances } from "@typesugar/fp";
  *
  * registerFpFlatMapInstances(registerFlatMap);
  * ```

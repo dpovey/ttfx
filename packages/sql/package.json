@@ -1,7 +1,7 @@
 {
-  "name": "@ttfx/sql",
+  "name": "@typesugar/sql",
   "version": "0.1.0",
-  "description": "Doobie-like type-safe SQL DSL with compile-time query building for ttfx",
+  "description": "Doobie-like type-safe SQL DSL with compile-time query building for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -30,7 +30,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*"
+    "@typesugar/core": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

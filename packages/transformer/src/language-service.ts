@@ -10,7 +10,7 @@
  * Configure in tsconfig.json:
  * {
  *   "compilerOptions": {
- *     "plugins": [{ "name": "@ttfx/transformer/language-service" }]
+ *     "plugins": [{ "name": "@typesugar/transformer/language-service" }]
  *   }
  * }
  */
@@ -114,12 +114,22 @@ const TAGGED_TEMPLATE_MACROS = new Set([
   "units",
 ]);
 
-const SUPPRESSED_DIAGNOSTIC_CODES = new Set([
+/** Semantic diagnostic codes to suppress */
+const SUPPRESSED_SEMANTIC_CODES = new Set([
   1206, // Decorators are not valid here
   1345, // Expression of type void cannot be tested
   6133, // Declared but never read
   2304, // Cannot find name
   2339, // Property does not exist
+]);
+
+/** Syntactic (parse) error codes that may occur from HKT syntax like F<_> */
+const HKT_PARSE_ERROR_CODES = new Set([
+  1005, // ',' expected (from <_>)
+  1003, // Identifier expected (from <_>)
+  1109, // Expression expected
+  1128, // Declaration or statement expected
+  1434, // Unexpected keyword or identifier
 ]);
 
 function init(modules: { typescript: typeof ts }) {
@@ -146,6 +156,53 @@ function init(modules: { typescript: typeof ts }) {
       }
     }
 
+    // -----------------------------------------------------------------------
+    // Override: getSyntacticDiagnostics
+    // Suppress parse errors from HKT syntax like F<_>
+    // -----------------------------------------------------------------------
+    proxy.getSyntacticDiagnostics = (
+      fileName: string,
+    ): ts.DiagnosticWithLocation[] => {
+      const diagnostics = oldLS.getSyntacticDiagnostics(fileName);
+      const program = oldLS.getProgram();
+      if (!program) return diagnostics;
+
+      const sourceFile = program.getSourceFile(fileName);
+      if (!sourceFile) return diagnostics;
+
+      const sourceText = sourceFile.getFullText();
+
+      return diagnostics.filter((diag) => {
+        // Check if this is a potential HKT parse error
+        if (!HKT_PARSE_ERROR_CODES.has(diag.code)) return true;
+        if (diag.start === undefined) return true;
+
+        // Look for HKT pattern near the error position: Identifier<_>
+        // Check a window around the error position for the <_> pattern
+        const windowStart = Math.max(0, diag.start - 30);
+        const windowEnd = Math.min(
+          sourceText.length,
+          diag.start + diag.length + 30,
+        );
+        const window = sourceText.slice(windowStart, windowEnd);
+
+        // Pattern: uppercase identifier followed by <_> or <_, _>
+        const hktPattern = /[A-Z][a-zA-Z0-9]*\s*<\s*_(\s*,\s*_)*\s*>/;
+        if (hktPattern.test(window)) {
+          log(
+            `Suppressed syntactic diagnostic ${diag.code} (HKT syntax): ${window.trim().slice(0, 40)}...`,
+          );
+          return false;
+        }
+
+        return true;
+      });
+    };
+
+    // -----------------------------------------------------------------------
+    // Override: getSemanticDiagnostics
+    // Suppress false positives from macro invocations
+    // -----------------------------------------------------------------------
     proxy.getSemanticDiagnostics = (fileName: string): ts.Diagnostic[] => {
       const diagnostics = oldLS.getSemanticDiagnostics(fileName);
       const program = oldLS.getProgram();
@@ -155,7 +212,7 @@ function init(modules: { typescript: typeof ts }) {
       if (!sourceFile) return diagnostics;
 
       return diagnostics.filter((diag) => {
-        if (!SUPPRESSED_DIAGNOSTIC_CODES.has(diag.code)) return true;
+        if (!SUPPRESSED_SEMANTIC_CODES.has(diag.code)) return true;
         if (diag.start === undefined) return true;
 
         const node = findNodeAtPosition(tsModule, sourceFile, diag.start);

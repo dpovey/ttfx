@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will help you set up ttfx in your TypeScript project.
+This guide will help you set up typesugar in your TypeScript project.
 
 ## Installation
 
@@ -8,10 +8,10 @@ This guide will help you set up ttfx in your TypeScript project.
 
 ```bash
 # Core packages
-npm install @ttfx/ttfx @ttfx/transformer
+npm install @typesugar/typesugar @typesugar/transformer
 
 # Or with pnpm
-pnpm add @ttfx/ttfx @ttfx/transformer
+pnpm add @typesugar/typesugar @typesugar/transformer
 ```
 
 ### 2. Configure your build tool
@@ -21,10 +21,10 @@ pnpm add @ttfx/ttfx @ttfx/transformer
 ```typescript
 // vite.config.ts
 import { defineConfig } from "vite";
-import ttfx from "unplugin-ttfx/vite";
+import typesugar from "unplugin-typesugar/vite";
 
 export default defineConfig({
-  plugins: [ttfx()],
+  plugins: [typesugar()],
 });
 ```
 
@@ -33,13 +33,13 @@ export default defineConfig({
 ```javascript
 // build.js
 import { build } from "esbuild";
-import ttfx from "unplugin-ttfx/esbuild";
+import typesugar from "unplugin-typesugar/esbuild";
 
 build({
   entryPoints: ["src/index.ts"],
   bundle: true,
   outfile: "dist/bundle.js",
-  plugins: [ttfx()],
+  plugins: [typesugar()],
 });
 ```
 
@@ -47,10 +47,10 @@ build({
 
 ```javascript
 // webpack.config.js
-const ttfx = require("unplugin-ttfx/webpack");
+const typesugar = require("unplugin-typesugar/webpack");
 
 module.exports = {
-  plugins: [ttfx.default()],
+  plugins: [typesugar.default()],
 };
 ```
 
@@ -65,7 +65,7 @@ npx ts-patch install
 // tsconfig.json
 {
   "compilerOptions": {
-    "plugins": [{ "transform": "@ttfx/transformer" }]
+    "plugins": [{ "transform": "@typesugar/transformer" }]
   }
 }
 ```
@@ -75,7 +75,7 @@ npx ts-patch install
 ### comptime — Compile-Time Evaluation
 
 ```typescript
-import { comptime } from "@ttfx/comptime";
+import { comptime } from "@typesugar/comptime";
 
 // This runs at compile time, not runtime!
 const buildTime = comptime(new Date().toISOString());
@@ -98,7 +98,7 @@ console.log(`The answer is: ${answer}`);
 ### @derive — Auto-Generate Implementations
 
 ```typescript
-import { derive } from "@ttfx/derive";
+import { derive } from "@typesugar/derive";
 
 @derive(Eq, Clone, Debug, Json)
 class User {
@@ -120,7 +120,7 @@ class User {
 ### sql — Type-Safe SQL
 
 ```typescript
-import { sql } from "@ttfx/sql";
+import { sql } from "@typesugar/sql";
 
 const userId = 42;
 const query = sql`SELECT * FROM users WHERE id = ${userId}`;
@@ -135,16 +135,16 @@ Install only what you need:
 
 ```bash
 # Compile-time evaluation
-npm install @ttfx/comptime
+npm install @typesugar/comptime
 
 # Auto-derive implementations
-npm install @ttfx/derive
+npm install @typesugar/derive
 
 # Type reflection
-npm install @ttfx/reflect
+npm install @typesugar/reflect
 
 # Type-safe SQL
-npm install @ttfx/sql
+npm install @typesugar/sql
 
 # And more...
 ```
@@ -153,11 +153,11 @@ npm install @ttfx/sql
 
 ```typescript
 // vite.config.ts
-import ttfx from "unplugin-ttfx/vite";
+import typesugar from "unplugin-typesugar/vite";
 
 export default defineConfig({
   plugins: [
-    ttfx({
+    typesugar({
       // Log macro expansions (useful for debugging)
       verbose: false,
 

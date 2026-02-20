@@ -1,19 +1,19 @@
-# @ttfx/transformer
+# @typesugar/transformer
 
-> TypeScript transformer for ttfx macro expansion.
+> TypeScript transformer for typesugar macro expansion.
 
 ## Overview
 
-`@ttfx/transformer` is the core transformation engine of ttfx. It integrates with the TypeScript compiler (via ts-patch or bundler plugins) to process macro invocations during compilation, expanding them into optimized JavaScript code.
+`@typesugar/transformer` is the core transformation engine of typesugar. It integrates with the TypeScript compiler (via ts-patch or bundler plugins) to process macro invocations during compilation, expanding them into optimized JavaScript code.
 
-**You need this package if you're configuring the build pipeline directly.** Most users should use `unplugin-ttfx` for bundler-specific plugins or configure via `ttfx`.
+**You need this package if you're configuring the build pipeline directly.** Most users should use `unplugin-typesugar` for bundler-specific plugins or configure via `typesugar`.
 
 ## Installation
 
 ```bash
-npm install @ttfx/transformer
+npm install @typesugar/transformer
 # or
-pnpm add @ttfx/transformer
+pnpm add @typesugar/transformer
 ```
 
 ## Configuration
@@ -31,7 +31,7 @@ pnpm add @ttfx/transformer
    ```json
    {
      "compilerOptions": {
-       "plugins": [{ "transform": "@ttfx/transformer" }]
+       "plugins": [{ "transform": "@typesugar/transformer" }]
      }
    }
    ```
@@ -74,22 +74,22 @@ The transformer includes a CLI for direct usage:
 
 ```bash
 # Build TypeScript files with macro expansion
-npx ttfx build
+npx typesugar build
 
 # Watch mode
-npx ttfx watch
+npx typesugar watch
 
 # Type-check only (no emit)
-npx ttfx check
+npx typesugar check
 
 # Show expanded output (like cargo expand)
-npx ttfx expand src/file.ts
+npx typesugar expand src/file.ts
 ```
 
 ## Programmatic Usage
 
 ```typescript
-import macroTransformerFactory from "@ttfx/transformer";
+import macroTransformerFactory from "@typesugar/transformer";
 import * as ts from "typescript";
 
 const program = ts.createProgram(["src/index.ts"], {
@@ -109,15 +109,15 @@ The transformer uses TypeScript's type checker to resolve macro identifiers:
 
 ```typescript
 // Direct import
-import { comptime } from "ttfx";
+import { comptime } from "typesugar";
 comptime(() => 1 + 1); // ✓ Expanded
 
 // Renamed import
-import { comptime as ct } from "ttfx";
+import { comptime as ct } from "typesugar";
 ct(() => 1 + 1); // ✓ Expanded (follows alias)
 
 // Barrel re-export
-// utils.ts: export { comptime } from "ttfx";
+// utils.ts: export { comptime } from "typesugar";
 import { comptime } from "./utils";
 comptime(() => 1 + 1); // ✓ Expanded (follows re-export chain)
 

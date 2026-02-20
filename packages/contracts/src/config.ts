@@ -1,25 +1,25 @@
 /**
  * Contract Configuration
  *
- * Contracts configuration is managed through the unified ttfx config system.
+ * Contracts configuration is managed through the unified typesugar config system.
  * This module provides contract-specific accessors and helpers.
  *
  * Configuration sources (priority order):
- * 1. Environment variables: TTFX_CONTRACTS_MODE, TTFX_CONTRACTS_PROVE_AT_COMPILE_TIME
- * 2. Config files: ttfx.config.ts, .ttfxrc, etc.
+ * 1. Environment variables: TYPESUGAR_CONTRACTS_MODE, TYPESUGAR_CONTRACTS_PROVE_AT_COMPILE_TIME
+ * 2. Config files: typesugar.config.ts, .typesugarrc, etc.
  * 3. Programmatic: config.set({ contracts: { ... } })
  * 4. Defaults: mode="full", proveAtCompileTime=false
  *
  * @example Environment variables
  * ```bash
- * TTFX_CONTRACTS_MODE=none pnpm build           # Strip all checks
- * TTFX_CONTRACTS_MODE=assertions pnpm build     # Only invariants
- * TTFX_CONTRACTS_PROVE_AT_COMPILE_TIME=1        # Enable proof elision
+ * TYPESUGAR_CONTRACTS_MODE=none pnpm build           # Strip all checks
+ * TYPESUGAR_CONTRACTS_MODE=assertions pnpm build     # Only invariants
+ * TYPESUGAR_CONTRACTS_PROVE_AT_COMPILE_TIME=1        # Enable proof elision
  * ```
  *
- * @example Config file (ttfx.config.ts)
+ * @example Config file (typesugar.config.ts)
  * ```typescript
- * import { defineConfig } from "ttfx";
+ * import { defineConfig } from "typesugar";
  *
  * export default defineConfig({
  *   contracts: {
@@ -99,7 +99,7 @@ export interface ContractConfig {
 // ============================================================================
 
 /**
- * Core config interface for type safety (matches the shape from @ttfx/core).
+ * Core config interface for type safety (matches the shape from @typesugar/core).
  */
 interface CoreConfigApi {
   get(key: string): unknown;
@@ -107,7 +107,7 @@ interface CoreConfigApi {
 }
 
 // We use dynamic import to avoid circular dependency issues
-// since @ttfx/contracts may be imported before the core is fully initialized
+// since @typesugar/contracts may be imported before the core is fully initialized
 let coreConfig: CoreConfigApi | null = null;
 
 // Build a path that TypeScript's static analysis won't follow
@@ -159,7 +159,7 @@ let localConfigCache: Partial<ContractConfig> | null = null;
 
 /**
  * Get the current contract configuration.
- * Reads from the unified ttfx config system.
+ * Reads from the unified typesugar config system.
  */
 export function getContractConfig(): ContractConfig {
   const cfg = getCoreConfigSync();
@@ -210,14 +210,14 @@ export function getContractConfig(): ContractConfig {
   }
 
   // Fallback to local cache (set by setContractConfig) or environment variables
-  const envMode = process.env.TTFX_CONTRACTS_MODE;
+  const envMode = process.env.TYPESUGAR_CONTRACTS_MODE;
   const defaultConfig: ContractConfig = {
     mode:
       envMode === "none" || envMode === "assertions" || envMode === "full"
         ? envMode
         : "full",
     proveAtCompileTime:
-      process.env.TTFX_CONTRACTS_PROVE_AT_COMPILE_TIME === "1",
+      process.env.TYPESUGAR_CONTRACTS_PROVE_AT_COMPILE_TIME === "1",
     strip: {},
     proverPlugins,
     decidabilityWarnings: {
@@ -247,7 +247,7 @@ export function getContractConfig(): ContractConfig {
  * Set contract configuration programmatically.
  * This updates the unified config system.
  *
- * @deprecated Use `config.set({ contracts: { ... } })` from ttfx instead
+ * @deprecated Use `config.set({ contracts: { ... } })` from typesugar instead
  */
 export function setContractConfig(
   contractConfig: Partial<ContractConfig>,
@@ -352,7 +352,7 @@ export function emitDecidabilityWarning(info: DecidabilityFallbackInfo): void {
   // Emit the warning at the appropriate level
   if (level === "off") return;
 
-  const prefix = "[ttfx/contracts decidability]";
+  const prefix = "[typesugar/contracts decidability]";
   switch (level) {
     case "error":
       console.error(`${prefix} ERROR: ${message}`);

@@ -7,7 +7,7 @@
  * - pipe() and compose() for function composition
  */
 
-import { operators, ops, pipe, compose } from "@ttfx/operators";
+import { operators, ops, pipe, compose } from "@typesugar/operators";
 
 console.log("=== Operator Overloading Example ===\n");
 

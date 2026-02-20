@@ -30,7 +30,7 @@ import {
   globalRegistry,
   MacroContext,
   type AttributeTarget,
-} from "@ttfx/core";
+} from "@typesugar/core";
 import { shouldEmitCheck } from "../config.js";
 
 export const invariantAttribute = defineAttributeMacro({

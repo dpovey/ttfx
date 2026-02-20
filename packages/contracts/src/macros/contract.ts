@@ -28,7 +28,7 @@ import {
   globalRegistry,
   MacroContext,
   type AttributeTarget,
-} from "@ttfx/core";
+} from "@typesugar/core";
 import { shouldEmitCheck, getContractConfig } from "../config.js";
 import { parseContractBlocks } from "../parser/contract-block.js";
 import { extractOldCaptures, generateOldCaptureStatements } from "./old.js";

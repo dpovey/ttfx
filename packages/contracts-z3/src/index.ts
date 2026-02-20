@@ -1,5 +1,5 @@
 /**
- * @ttfx/contracts-z3 — Z3 SMT Solver Plugin for @ttfx/contracts
+ * @typesugar/contracts-z3 — Z3 SMT Solver Plugin for @typesugar/contracts
  *
  * Provides a ProverPlugin that uses the Z3 theorem prover to verify
  * contract conditions at compile time. For conditions that the built-in
@@ -9,8 +9,8 @@
  * ## Usage
  *
  * ```typescript
- * import { registerProverPlugin } from "@ttfx/contracts";
- * import { z3ProverPlugin } from "@ttfx/contracts-z3";
+ * import { registerProverPlugin } from "@typesugar/contracts";
+ * import { z3ProverPlugin } from "@typesugar/contracts-z3";
  *
  * // Option 1: Auto-initialize (first proof may be slower)
  * registerProverPlugin(z3ProverPlugin({ timeout: 2000 }));

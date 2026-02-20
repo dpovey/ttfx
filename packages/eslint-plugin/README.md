@@ -1,10 +1,10 @@
-# @ttfx/eslint-plugin
+# @typesugar/eslint-plugin
 
-ESLint plugin for the ttfx macro system. This plugin enables ESLint to properly lint TypeScript files that use ttfx macros by transforming the code before linting.
+ESLint plugin for the typesugar macro system. This plugin enables ESLint to properly lint TypeScript files that use typesugar macros by transforming the code before linting.
 
 ## The Problem
 
-ttfx provides compile-time macros that generate code:
+typesugar provides compile-time macros that generate code:
 
 ```typescript
 @derive(Eq, Show, Clone) // ESLint: "Eq is not defined"
@@ -30,16 +30,16 @@ Without this plugin, ESLint reports false positives because it doesn't understan
 
 ## The Solution
 
-This plugin provides two processors that transform ttfx macro syntax before ESLint lints the code:
+This plugin provides two processors that transform typesugar macro syntax before ESLint lints the code:
 
 1. **Lightweight processor** (`recommended` config) - Fast, pattern-based transformation that comments out macro syntax. Good for quick feedback during development.
 
-2. **Full processor** (`full` config) - Runs the actual `@ttfx/transformer` to fully expand macros. Slower but produces accurate expanded code.
+2. **Full processor** (`full` config) - Runs the actual `@typesugar/transformer` to fully expand macros. Slower but produces accurate expanded code.
 
 ## Installation
 
 ```bash
-pnpm add -D @ttfx/eslint-plugin @typescript-eslint/parser
+pnpm add -D @typesugar/eslint-plugin @typescript-eslint/parser
 ```
 
 ## Usage (ESLint Flat Config)
@@ -47,7 +47,7 @@ pnpm add -D @ttfx/eslint-plugin @typescript-eslint/parser
 Create `eslint.config.mjs`:
 
 ```javascript
-import ttfxPlugin from "@ttfx/eslint-plugin";
+import typesugarPlugin from "@typesugar/eslint-plugin";
 import tseslint from "typescript-eslint";
 
 export default [
@@ -55,10 +55,10 @@ export default [
   ...tseslint.configs.recommended,
 
   // Option 1: Lightweight (fast, pattern-based)
-  ttfxPlugin.configs.recommended,
+  typesugarPlugin.configs.recommended,
 
   // Option 2: Full transformation (slower, more accurate)
-  // ttfxPlugin.configs.full,
+  // typesugarPlugin.configs.full,
 
   // Your custom rules
   {
@@ -84,9 +84,9 @@ This is fast but doesn't expand the actual generated code.
 
 ### Full Processor
 
-The full processor creates a virtual TypeScript program and runs the actual `@ttfx/transformer`:
+The full processor creates a virtual TypeScript program and runs the actual `@typesugar/transformer`:
 
-1. Loads `@ttfx/transformer` dynamically
+1. Loads `@typesugar/transformer` dynamically
 2. Creates an in-memory TypeScript program with the source file
 3. Applies the macro transformation
 4. Returns the expanded code to ESLint
@@ -121,7 +121,7 @@ Both processors handle:
 Clears the full processor's transformation cache. Useful when files change:
 
 ```javascript
-import { clearTransformCache } from "@ttfx/eslint-plugin";
+import { clearTransformCache } from "@typesugar/eslint-plugin";
 
 // In a watch mode callback
 clearTransformCache();

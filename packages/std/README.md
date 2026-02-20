@@ -1,17 +1,17 @@
-# @ttfx/std
+# @typesugar/std
 
 > Standard library extensions for TypeScript.
 
 ## Overview
 
-`@ttfx/std` provides a comprehensive set of typeclasses, extension methods, data types, and macros for enriching basic TypeScript types. Draws from the best of Haskell, Scala, Rust, Kotlin, Swift, and commonly-requested JS/TS utilities.
+`@typesugar/std` provides a comprehensive set of typeclasses, extension methods, data types, and macros for enriching basic TypeScript types. Draws from the best of Haskell, Scala, Rust, Kotlin, Swift, and commonly-requested JS/TS utilities.
 
 ## Installation
 
 ```bash
-npm install @ttfx/std
+npm install @typesugar/std
 # or
-pnpm add @ttfx/std
+pnpm add @typesugar/std
 ```
 
 ## Usage
@@ -19,12 +19,12 @@ pnpm add @ttfx/std
 ### Extension Methods (Scala 3-style)
 
 Extension methods are import-scoped. Import a namespace or function from
-`@ttfx/std` and the transformer automatically resolves undefined method
+`@typesugar/std` and the transformer automatically resolves undefined method
 calls against what's in scope:
 
 ```typescript
-import { extend } from "ttfx";
-import { NumberExt, StringExt, ArrayExt } from "@ttfx/std";
+import { extend } from "typesugar";
+import { NumberExt, StringExt, ArrayExt } from "@typesugar/std";
 
 // extend() with namespace imports
 extend(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
@@ -40,7 +40,7 @@ extend([3, 1, 4, 1, 5]).unique(); // → ArrayExt.unique([3, 1, 4, 1, 5])
 Implicit extension rewriting (no `extend()` needed):
 
 ```typescript
-import { NumberExt } from "@ttfx/std";
+import { NumberExt } from "@typesugar/std";
 
 (42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
 (7).isPrime(); // → NumberExt.isPrime(7)
@@ -49,7 +49,7 @@ import { NumberExt } from "@ttfx/std";
 Bare function imports work too:
 
 ```typescript
-import { clamp, isPrime } from "@ttfx/std";
+import { clamp, isPrime } from "@typesugar/std";
 
 (42).clamp(0, 100); // → clamp(42, 0, 100)
 clamp(42, 0, 100); // also works as a direct call
@@ -58,7 +58,7 @@ clamp(42, 0, 100); // also works as a direct call
 ### Ranges (Scala/Kotlin-style)
 
 ```typescript
-import { range, rangeToArray } from "@ttfx/std";
+import { range, rangeToArray } from "@typesugar/std";
 rangeToArray(range(1, 10)); // [1, 2, ..., 9]
 ```
 
@@ -67,7 +67,7 @@ rangeToArray(range(1, 10)); // [1, 2, ..., 9]
 The `FlatMap` typeclass provides sequencing/chaining operations for type constructors. It's the minimal typeclass required for the `let:/yield:` do-notation macro.
 
 ```typescript
-import { registerFlatMap, getFlatMap } from "@ttfx/std";
+import { registerFlatMap, getFlatMap } from "@typesugar/std";
 
 // Built-in instances for Array, Promise, Iterable, AsyncIterable
 const arrayFlatMap = getFlatMap("Array");
@@ -119,7 +119,7 @@ yield: {
 Any type with a registered `FlatMap` instance works with `let:/yield:`:
 
 ```typescript
-import { registerFlatMap } from "@ttfx/std";
+import { registerFlatMap } from "@typesugar/std";
 
 registerFlatMap("Option", {
   map: (fa, f) => fa.map(f),
@@ -157,7 +157,7 @@ Rich extension methods for every basic type:
 ### Tuples
 
 ```typescript
-import { pair, triple, fst, snd, bimap, swap } from "@ttfx/std";
+import { pair, triple, fst, snd, bimap, swap } from "@typesugar/std";
 
 const p = pair(1, "hello");
 fst(p); // 1
@@ -173,7 +173,7 @@ swap(p); // ["hello", 1]
 ### Range
 
 ```typescript
-import { range, rangeToArray, rangeInclusive } from "@ttfx/std";
+import { range, rangeToArray, rangeInclusive } from "@typesugar/std";
 
 rangeToArray(range(1, 5)); // [1, 2, 3, 4]
 rangeToArray(rangeInclusive(1, 5)); // [1, 2, 3, 4, 5]
