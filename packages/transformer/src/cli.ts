@@ -1,72 +1,135 @@
 #!/usr/bin/env node
 
 /**
- * typemacro CLI -- Compile TypeScript with macro expansion
+ * typesugar CLI -- Compile TypeScript with macro expansion
  *
  * Usage:
- *   typemacro build [--project tsconfig.json] [--verbose]
- *   typemacro watch [--project tsconfig.json] [--verbose]
- *   typemacro check [--project tsconfig.json] [--verbose]
+ *   typesugar build [--project tsconfig.json] [--verbose]
+ *   typesugar watch [--project tsconfig.json] [--verbose]
+ *   typesugar check [--project tsconfig.json] [--verbose]
+ *   typesugar expand <file> [--diff] [--ast]
+ *   typesugar init [--verbose]
+ *   typesugar doctor [--verbose]
+ *   typesugar create <template> [name]
  */
 
 import * as ts from "typescript";
 import * as path from "path";
 import macroTransformerFactory from "./index.js";
 
+type Command =
+  | "build"
+  | "watch"
+  | "check"
+  | "expand"
+  | "init"
+  | "doctor"
+  | "create";
+
 interface CliOptions {
-  command: "build" | "watch" | "check";
+  command: Command;
   project: string;
   verbose: boolean;
+  file?: string;
+  diff?: boolean;
+  ast?: boolean;
+  createArgs?: string[];
 }
 
 function parseArgs(args: string[]): CliOptions {
-  const command = (args[0] ?? "build") as CliOptions["command"];
-  if (!["build", "watch", "check"].includes(command)) {
+  const command = (args[0] ?? "build") as Command;
+  const validCommands: Command[] = [
+    "build",
+    "watch",
+    "check",
+    "expand",
+    "init",
+    "doctor",
+    "create",
+  ];
+
+  if (!validCommands.includes(command)) {
     console.error(
-      `Unknown command: ${command}\nUsage: typemacro <build|watch|check> [--project tsconfig.json] [--verbose]`,
+      `Unknown command: ${command}\nUsage: typesugar <build|watch|check|expand|init|doctor|create> [options]`,
     );
     process.exit(1);
   }
 
+  // For create command, pass remaining args directly
+  if (command === "create") {
+    const createArgs = args.slice(1);
+    return { command, project: "tsconfig.json", verbose: false, createArgs };
+  }
+
   let project = "tsconfig.json";
   let verbose = false;
+  let file: string | undefined;
+  let diff = false;
+  let ast = false;
 
   for (let i = 1; i < args.length; i++) {
-    if (args[i] === "--project" || args[i] === "-p") {
+    const arg = args[i];
+    if (arg === "--project" || arg === "-p") {
       project = args[++i] ?? "tsconfig.json";
-    } else if (args[i] === "--verbose" || args[i] === "-v") {
+    } else if (arg === "--verbose" || arg === "-v") {
       verbose = true;
-    } else if (args[i] === "--help" || args[i] === "-h") {
+    } else if (arg === "--diff") {
+      diff = true;
+    } else if (arg === "--ast") {
+      ast = true;
+    } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
+    } else if (!arg.startsWith("-") && !file) {
+      file = arg;
     }
   }
 
-  return { command, project, verbose };
+  return { command, project, verbose, file, diff, ast };
 }
 
 function printHelp(): void {
   console.log(`
-typemacro - Compile-time macros for TypeScript
+typesugar - Compile-time macros for TypeScript
 
 USAGE:
-  typemacro <command> [options]
+  typesugar <command> [options]
 
 COMMANDS:
-  build    Compile TypeScript with macro expansion (default)
-  watch    Watch mode -- recompile on file changes
-  check    Type-check with macro expansion, but don't emit files
+  build              Compile TypeScript with macro expansion (default)
+  watch              Watch mode -- recompile on file changes
+  check              Type-check with macro expansion, but don't emit files
+  expand <file>      Show macro-expanded output for a file
+  init               Interactive setup wizard for existing projects
+  doctor             Diagnose configuration issues
+  create [template]  Create a new project from a template
 
 OPTIONS:
   -p, --project <path>   Path to tsconfig.json (default: tsconfig.json)
   -v, --verbose          Enable verbose logging
   -h, --help             Show this help message
 
+EXPAND OPTIONS:
+  --diff                 Show unified diff between original and expanded
+  --ast                  Show expanded AST as JSON
+
+CREATE TEMPLATES:
+  app                Vite application with comptime, derive, and sql
+  library            Publishable library with typeclasses
+  macro-plugin       Custom macros package
+
 EXAMPLES:
-  typemacro build
-  typemacro build --project tsconfig.build.json
-  typemacro watch --verbose
-  typemacro check
+  typesugar build
+  typesugar build --project tsconfig.build.json
+  typesugar watch --verbose
+  typesugar check
+  typesugar expand src/main.ts
+  typesugar expand src/main.ts --diff
+  typesugar init
+  typesugar doctor
+  typesugar create app my-app
+  typesugar create library my-lib
+  typesugar create macro-plugin my-macros
 `);
 }
 
@@ -246,7 +309,108 @@ function watch(options: CliOptions): void {
   ts.createWatchProgram(host);
 }
 
-function main(): void {
+function expand(options: CliOptions): void {
+  if (!options.file) {
+    console.error("Error: expand command requires a file argument");
+    console.error("Usage: typesugar expand <file> [--diff] [--ast]");
+    process.exit(1);
+  }
+
+  const config = readTsConfig(options.project);
+  const filePath = path.resolve(options.file);
+
+  if (!ts.sys.fileExists(filePath)) {
+    console.error(`File not found: ${filePath}`);
+    process.exit(1);
+  }
+
+  const originalContent = ts.sys.readFile(filePath) ?? "";
+
+  const compilerOptions: ts.CompilerOptions = {
+    ...config.options,
+    noEmit: true,
+  };
+
+  const program = ts.createProgram([filePath], compilerOptions);
+  const sourceFile = program.getSourceFile(filePath);
+
+  if (!sourceFile) {
+    console.error(`Could not load source file: ${filePath}`);
+    process.exit(1);
+  }
+
+  const transformerFactory = macroTransformerFactory(program, {
+    verbose: options.verbose,
+  });
+
+  const result = ts.transform(sourceFile, [transformerFactory]);
+  const transformedSourceFile = result.transformed[0];
+
+  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+  const expandedContent = printer.printFile(
+    transformedSourceFile as ts.SourceFile,
+  );
+
+  if (options.ast) {
+    const ast = JSON.stringify(
+      transformedSourceFile,
+      (key, value) => {
+        if (
+          key === "parent" ||
+          key === "pos" ||
+          key === "end" ||
+          key === "flags"
+        ) {
+          return undefined;
+        }
+        if (typeof value === "object" && value !== null && "kind" in value) {
+          return {
+            ...value,
+            kindName: ts.SyntaxKind[value.kind],
+          };
+        }
+        return value;
+      },
+      2,
+    );
+    console.log(ast);
+  } else if (options.diff) {
+    const originalLines = originalContent.split("\n");
+    const expandedLines = expandedContent.split("\n");
+
+    console.log(`--- ${options.file} (original)`);
+    console.log(`+++ ${options.file} (expanded)`);
+
+    let inDiff = false;
+    const maxLines = Math.max(originalLines.length, expandedLines.length);
+
+    for (let i = 0; i < maxLines; i++) {
+      const orig = originalLines[i] ?? "";
+      const exp = expandedLines[i] ?? "";
+
+      if (orig !== exp) {
+        if (!inDiff) {
+          console.log(`@@ -${i + 1} +${i + 1} @@`);
+          inDiff = true;
+        }
+        if (originalLines[i] !== undefined) {
+          console.log(`-${orig}`);
+        }
+        if (expandedLines[i] !== undefined) {
+          console.log(`+${exp}`);
+        }
+      } else {
+        inDiff = false;
+      }
+    }
+  } else {
+    console.log(expandedContent);
+  }
+
+  result.dispose();
+}
+
+async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
@@ -264,7 +428,28 @@ function main(): void {
     case "watch":
       watch(options);
       break;
+    case "expand":
+      expand(options);
+      break;
+    case "init": {
+      const { runInit } = await import("./init.js");
+      await runInit(options.verbose);
+      break;
+    }
+    case "doctor": {
+      const { runDoctor } = await import("./doctor.js");
+      await runDoctor(options.verbose);
+      break;
+    }
+    case "create": {
+      const { runCreate } = await import("./create.js");
+      await runCreate(options.createArgs ?? []);
+      break;
+    }
   }
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
