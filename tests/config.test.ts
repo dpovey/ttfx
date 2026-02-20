@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as ts from "typescript";
 import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
-import { config, defineConfig, type TtfxConfig } from "../src/core/config.js";
+import { config, defineConfig, type TypesugarConfig } from "../src/core/config.js";
 
 // ============================================================================
 // Test Helpers
@@ -324,7 +324,7 @@ describe("config.when", () => {
 
 describe("defineConfig", () => {
   it("should return the same config object", () => {
-    const cfg: TtfxConfig = {
+    const cfg: TypesugarConfig = {
       debug: true,
       contracts: { mode: "none" },
     };

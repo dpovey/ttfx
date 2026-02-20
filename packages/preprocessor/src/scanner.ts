@@ -1,5 +1,5 @@
 /**
- * Scanner wrapper for ttfx preprocessor
+ * Scanner wrapper for typesugar preprocessor
  *
  * Wraps TypeScript's scanner and adds multi-character token merging for custom
  * operators like |>, ::, <|. Uses source-position adjacency (t2.start === t1.end)

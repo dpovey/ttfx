@@ -49,7 +49,7 @@ const transformCache = new Map<
 /**
  * Create a TypeScript program and run the typesugar transformer
  */
-function transformWithTtfx(fileName: string, source: string): TransformResult {
+function transformWithTypesugar(fileName: string, source: string): TransformResult {
   // Check cache
   const cached = transformCache.get(fileName);
   if (cached && cached.source === source) {
@@ -202,7 +202,7 @@ export function createFullProcessor(): Linter.Processor {
       }
 
       // Transform using the full typesugar transformer
-      const { transformed, sourceMap } = transformWithTtfx(filename, text);
+      const { transformed, sourceMap } = transformWithTypesugar(filename, text);
 
       fileStates.set(filename, {
         originalSource: text,

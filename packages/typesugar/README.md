@@ -1,19 +1,19 @@
-# ttfx
+# typesugar
 
 > TypeScript that F\*cks! Compile-time macros for TypeScript.
 
 ## Overview
 
-ttfx brings Scala 3-style metaprogramming to TypeScript. Write macros that transform code at compile time, eliminating runtime overhead while maintaining full type safety.
+typesugar brings Scala 3-style metaprogramming to TypeScript. Write macros that transform code at compile time, eliminating runtime overhead while maintaining full type safety.
 
-This is the umbrella package that re-exports all core ttfx functionality. Install this if you want everything.
+This is the umbrella package that re-exports all core typesugar functionality. Install this if you want everything.
 
 ## Installation
 
 ```bash
-npm install ttfx
+npm install typesugar
 # or
-pnpm add ttfx
+pnpm add typesugar
 ```
 
 ## Quick Start
@@ -22,17 +22,17 @@ pnpm add ttfx
 
 ```typescript
 // vite.config.ts
-import ttfx from "ttfx/vite";
+import typesugar from "typesugar/vite";
 
 export default {
-  plugins: [ttfx()],
+  plugins: [typesugar()],
 };
 ```
 
 ### 2. Use macros in your code
 
 ```typescript
-import { comptime, derive, ops, pipe } from "ttfx";
+import { comptime, derive, ops, pipe } from "typesugar";
 
 // Compile-time evaluation
 const factorial5 = comptime(() => {
@@ -68,27 +68,27 @@ const process = pipe(data, parse, validate, transform);
 
 ## Features
 
-### Compile-Time Evaluation (`@ttfx/comptime`)
+### Compile-Time Evaluation (`@typesugar/comptime`)
 
 Evaluate expressions during compilation — constants, computed values, complex logic.
 
-### Derive Macros (`@ttfx/derive`)
+### Derive Macros (`@typesugar/derive`)
 
 Auto-generate implementations: Eq, Ord, Clone, Debug, Hash, Default, Json, Builder, TypeGuard.
 
-### Type Reflection (`@ttfx/reflect`)
+### Type Reflection (`@typesugar/reflect`)
 
 Compile-time type introspection: `typeInfo<T>()`, `fieldNames<T>()`, `validator<T>()`.
 
-### Operator Overloading (`@ttfx/operators`)
+### Operator Overloading (`@typesugar/operators`)
 
 Transform `+`, `-`, `*`, `/` into method calls on your custom types.
 
-### Typeclasses (`@ttfx/typeclass`)
+### Typeclasses (`@typesugar/typeclass`)
 
 Scala 3-style typeclass system with `@typeclass`, `@instance`, `@deriving`, and `summon()`.
 
-### Zero-Cost Abstractions (`@ttfx/specialize`)
+### Zero-Cost Abstractions (`@typesugar/specialize`)
 
 Eliminate typeclass dictionary passing at compile time for true zero-cost abstractions.
 
@@ -96,64 +96,64 @@ Eliminate typeclass dictionary passing at compile time for true zero-cost abstra
 
 | Package             | Description                         |
 | ------------------- | ----------------------------------- |
-| `ttfx`              | Umbrella package (this one)         |
-| `@ttfx/core`        | Foundation types, registry, context |
-| `@ttfx/transformer` | TypeScript transformer              |
-| `@ttfx/comptime`    | Compile-time evaluation             |
-| `@ttfx/derive`      | Derive macros                       |
-| `@ttfx/reflect`     | Type reflection                     |
-| `@ttfx/operators`   | Operator overloading                |
-| `@ttfx/typeclass`   | Typeclass system                    |
-| `@ttfx/specialize`  | Zero-cost specialization            |
-| `unplugin-ttfx`     | Bundler plugins                     |
-| `@ttfx/vscode`      | IDE extension                       |
+| `typesugar`              | Umbrella package (this one)         |
+| `@typesugar/core`        | Foundation types, registry, context |
+| `@typesugar/transformer` | TypeScript transformer              |
+| `@typesugar/comptime`    | Compile-time evaluation             |
+| `@typesugar/derive`      | Derive macros                       |
+| `@typesugar/reflect`     | Type reflection                     |
+| `@typesugar/operators`   | Operator overloading                |
+| `@typesugar/typeclass`   | Typeclass system                    |
+| `@typesugar/specialize`  | Zero-cost specialization            |
+| `unplugin-typesugar`     | Bundler plugins                     |
+| `@typesugar/vscode`      | IDE extension                       |
 
 ## Bundler Integration
 
 ```typescript
 // Vite
-import ttfx from "ttfx/vite";
+import typesugar from "typesugar/vite";
 
 // Webpack
-const ttfx = require("ttfx/webpack").default;
+const typesugar = require("typesugar/webpack").default;
 
 // esbuild
-import ttfx from "ttfx/esbuild";
+import typesugar from "typesugar/esbuild";
 
 // Rollup
-import ttfx from "ttfx/rollup";
+import typesugar from "typesugar/rollup";
 ```
 
 ## CLI
 
 ```bash
 # Build with macro expansion
-npx ttfx build
+npx typesugar build
 
 # Watch mode
-npx ttfx watch
+npx typesugar watch
 
 # Type-check only
-npx ttfx check
+npx typesugar check
 
 # Show expanded output
-npx ttfx expand src/file.ts
+npx typesugar expand src/file.ts
 ```
 
 ## API Reference
 
-### Re-exported from `@ttfx/core`
+### Re-exported from `@typesugar/core`
 
 All core types: `MacroKind`, `MacroContext`, `MacroDefinition`, etc.
 
 ### Re-exported Namespaces
 
-- `comptime` — from `@ttfx/comptime`
-- `reflect` — from `@ttfx/reflect`
-- `derive` — from `@ttfx/derive`
-- `operators` — from `@ttfx/operators`
-- `typeclass` — from `@ttfx/typeclass`
-- `specialize` — from `@ttfx/specialize`
+- `comptime` — from `@typesugar/comptime`
+- `reflect` — from `@typesugar/reflect`
+- `derive` — from `@typesugar/derive`
+- `operators` — from `@typesugar/operators`
+- `typeclass` — from `@typesugar/typeclass`
+- `specialize` — from `@typesugar/specialize`
 
 ### Functions
 

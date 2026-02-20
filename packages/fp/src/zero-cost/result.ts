@@ -3,7 +3,7 @@
  */
 
 import * as ts from "typescript";
-import { defineExpressionMacro, globalRegistry, MacroContext } from "@ttfx/core";
+import { defineExpressionMacro, globalRegistry, MacroContext } from "@typesugar/core";
 
 // ============================================================================
 // Type-Level API
@@ -45,7 +45,7 @@ export const ZeroCostResultOps = {
 
 export const zeroCostResultMacro = defineExpressionMacro({
   name: "ZeroCostResultOps",
-  module: "@ttfx/fp",
+  module: "@typesugar/fp",
   description: "Zero-cost Result — compiles to inlined ok/error checks",
 
   expand(

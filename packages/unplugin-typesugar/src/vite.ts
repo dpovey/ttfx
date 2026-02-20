@@ -1,18 +1,18 @@
 /**
- * ttfx Vite plugin
+ * typesugar Vite plugin
  *
  * @example
  * ```ts
  * // vite.config.ts
- * import ttfx from "unplugin-ttfx/vite";
+ * import typesugar from "unplugin-typesugar/vite";
  *
  * export default {
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * };
  * ```
  */
 
-import { unplugin, type TtfxPluginOptions } from "./unplugin.js";
+import { unplugin, type TypesugarPluginOptions } from "./unplugin.js";
 
 export default unplugin.vite;
-export type { TtfxPluginOptions };
+export type { TypesugarPluginOptions };

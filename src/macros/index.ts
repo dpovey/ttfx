@@ -30,6 +30,9 @@ import "./extension.js"; // Standalone extension methods for concrete types
 // --- Contract macros ---
 import "@typesugar/contracts";
 
+// --- Mapper macros ---
+// import "@typesugar/mapper";
+
 // --- Testing macros ---
 import "@typesugar/testing/macros";
 

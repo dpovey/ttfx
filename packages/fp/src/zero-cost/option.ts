@@ -22,7 +22,7 @@
  */
 
 import * as ts from "typescript";
-import { defineExpressionMacro, globalRegistry, MacroContext } from "@ttfx/core";
+import { defineExpressionMacro, globalRegistry, MacroContext } from "@typesugar/core";
 
 // ============================================================================
 // Type-Level API
@@ -279,7 +279,7 @@ function expandOptionChain(
 
 export const zeroCostOptionMacro = defineExpressionMacro({
   name: "ZeroCostOptionOps",
-  module: "@ttfx/fp",
+  module: "@typesugar/fp",
   description: "Zero-cost Option — compiles to inlined null checks",
 
   expand(

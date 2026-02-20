@@ -1,4 +1,6 @@
 /**
  * Re-export transformer and CLI
  */
-export * from "@ttfx/transformer";
+import transformer from "@typesugar/transformer";
+export * from "@typesugar/transformer";
+export default transformer;

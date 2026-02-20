@@ -1,18 +1,18 @@
 /**
- * ttfx esbuild plugin
+ * typesugar esbuild plugin
  *
  * @example
  * ```ts
  * import esbuild from "esbuild";
- * import ttfx from "unplugin-ttfx/esbuild";
+ * import typesugar from "unplugin-typesugar/esbuild";
  *
  * esbuild.build({
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * });
  * ```
  */
 
-import { unplugin, type TtfxPluginOptions } from "./unplugin.js";
+import { unplugin, type TypesugarPluginOptions } from "./unplugin.js";
 
 export default unplugin.esbuild;
-export type { TtfxPluginOptions };
+export type { TypesugarPluginOptions };

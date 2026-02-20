@@ -3,5 +3,5 @@
  */
 export {
   default,
-  type TtfxPluginOptions,
-} from "unplugin-ttfx/webpack";
+  type TypesugarPluginOptions,
+} from "unplugin-typesugar/webpack";

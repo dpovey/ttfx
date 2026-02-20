@@ -1,5 +1,5 @@
 /**
- * Zero-Cost Abstractions for @ttfx/fp
+ * Zero-Cost Abstractions for @typesugar/fp
  *
  * This module provides compile-time-optimized versions of Option, Result,
  * and pattern matching that compile away to simple null checks and
@@ -10,14 +10,14 @@
  * - You don't need the full typeclass ecosystem
  * - You're working in a hot path or performance-critical code
  *
- * Choose the regular @ttfx/fp data types when:
+ * Choose the regular @typesugar/fp data types when:
  * - You want the full monadic API with typeclass instances
- * - You're composing with other @ttfx/fp abstractions
+ * - You're composing with other @typesugar/fp abstractions
  * - You prefer explicit ADTs (Some/None, Left/Right)
  *
  * @example
  * ```typescript
- * import { Option, Result, match, matchLiteral, matchGuard } from "@ttfx/fp/zero-cost";
+ * import { Option, Result, match, when, otherwise } from "@typesugar/fp/zero-cost";
  *
  * // Zero-cost Option (compiles to null checks)
  * const name = Option.from(user.name)

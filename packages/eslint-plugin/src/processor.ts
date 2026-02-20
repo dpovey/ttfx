@@ -221,7 +221,7 @@ export function createProcessor(): Linter.Processor {
       // Quick check: does this file even use typesugar patterns?
       // For :: we use a regex to avoid false positives with TypeScript's :: in labels
       // (e.g., `foo::bar` vs `foo: { label: ... }`)
-      const usesTtfx =
+      const usesTypesugar =
         text.includes("@derive") ||
         text.includes("@typeclass") ||
         text.includes("@instance") ||
@@ -236,7 +236,7 @@ export function createProcessor(): Linter.Processor {
         text.includes("|>") || // Pipeline operator
         /[)\]}\w]\s*::\s*[(\[{A-Za-z_$]/.test(text); // Cons operator (value :: value context)
 
-      if (!usesTtfx) {
+      if (!usesTypesugar) {
         // No typesugar patterns - pass through unchanged
         fileStates.set(filename, {
           originalSource: text,

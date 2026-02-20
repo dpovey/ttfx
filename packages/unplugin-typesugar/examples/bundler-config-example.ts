@@ -1,7 +1,7 @@
 /**
  * Bundler Integration Examples
  *
- * Shows how to configure ttfx with various bundlers using the unplugin system.
+ * Shows how to configure typesugar with various bundlers using the unplugin system.
  */
 
 console.log("=== Bundler Integration Examples ===\n");
@@ -11,11 +11,11 @@ console.log("=== Bundler Integration Examples ===\n");
 console.log("--- Vite (vite.config.ts) ---");
 console.log(`
 import { defineConfig } from "vite";
-import ttfx from "unplugin-ttfx/vite";
+import typesugar from "unplugin-typesugar/vite";
 
 export default defineConfig({
   plugins: [
-    ttfx({
+    typesugar({
       // Enable verbose logging
       verbose: false,
       // Compile-time evaluation timeout (ms)
@@ -31,11 +31,11 @@ export default defineConfig({
 
 console.log("--- Webpack (webpack.config.js) ---");
 console.log(`
-const ttfx = require("unplugin-ttfx/webpack");
+const typesugar = require("unplugin-typesugar/webpack");
 
 module.exports = {
   plugins: [
-    ttfx.default({
+    typesugar.default({
       verbose: false,
       timeout: 5000,
     }),
@@ -48,14 +48,14 @@ module.exports = {
 console.log("--- esbuild (build.js) ---");
 console.log(`
 import { build } from "esbuild";
-import ttfx from "unplugin-ttfx/esbuild";
+import typesugar from "unplugin-typesugar/esbuild";
 
 build({
   entryPoints: ["src/index.ts"],
   bundle: true,
   outfile: "dist/bundle.js",
   plugins: [
-    ttfx({
+    typesugar({
       verbose: false,
       timeout: 5000,
     }),
@@ -67,7 +67,7 @@ build({
 
 console.log("--- Rollup (rollup.config.js) ---");
 console.log(`
-import ttfx from "unplugin-ttfx/rollup";
+import typesugar from "unplugin-typesugar/rollup";
 
 export default {
   input: "src/index.ts",
@@ -76,7 +76,7 @@ export default {
     format: "esm",
   },
   plugins: [
-    ttfx({
+    typesugar({
       verbose: false,
       timeout: 5000,
     }),
@@ -92,7 +92,7 @@ console.log(`
   "compilerOptions": {
     "plugins": [
       {
-        "transform": "@ttfx/transformer",
+        "transform": "@typesugar/transformer",
         "verbose": false,
         "timeout": 5000
       }
@@ -128,16 +128,16 @@ interface TypeMacroPluginOptions {
 console.log("--- Usage Notes ---");
 console.log(`
 1. Install the integration package:
-   npm install unplugin-ttfx
+   npm install unplugin-typesugar
 
 2. Import the plugin for your bundler:
-   import ttfx from "unplugin-ttfx/vite";
+   import typesugar from "unplugin-typesugar/vite";
 
 3. Add to your bundler config
 
 4. Import and use macros in your code:
-   import { comptime } from "@ttfx/comptime";
-   import { sql } from "@ttfx/sql";
+   import { comptime } from "@typesugar/comptime";
+   import { sql } from "@typesugar/sql";
    
    const buildTime = comptime(new Date().toISOString());
    const query = sql\`SELECT * FROM users\`;

@@ -27,6 +27,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@typesugar/transformer": "workspace:*",
+    "typesugar": "workspace:*",
     "@typesugar/contracts": "workspace:*",
     "@typesugar/contracts-refined": "workspace:*",
     "unplugin-typesugar": "workspace:*",

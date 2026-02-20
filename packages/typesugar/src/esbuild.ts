@@ -3,5 +3,5 @@
  */
 export {
   default,
-  type TtfxPluginOptions,
-} from "unplugin-ttfx/esbuild";
+  type TypesugarPluginOptions,
+} from "unplugin-typesugar/esbuild";

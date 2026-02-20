@@ -1,18 +1,18 @@
 /**
- * ttfx Webpack plugin
+ * typesugar Webpack plugin
  *
  * @example
  * ```ts
  * // webpack.config.js
- * const ttfx = require("unplugin-ttfx/webpack");
+ * const typesugar = require("unplugin-typesugar/webpack");
  *
  * module.exports = {
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * };
  * ```
  */
 
-import { unplugin, type TtfxPluginOptions } from "./unplugin.js";
+import { unplugin, type TypesugarPluginOptions } from "./unplugin.js";
 
 export default unplugin.webpack;
-export type { TtfxPluginOptions };
+export type { TypesugarPluginOptions };

@@ -3,5 +3,5 @@
  */
 export {
   default,
-  type TtfxPluginOptions,
-} from "unplugin-ttfx/rollup";
+  type TypesugarPluginOptions,
+} from "unplugin-typesugar/rollup";

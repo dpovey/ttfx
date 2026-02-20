@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 import typemacro from "unplugin-typesugar/vite";
 
 export default defineConfig({
-  plugins: [typemacro()],
+  plugins: [typemacro({ verbose: true })],
   test: {
     // Run tests sequentially for more predictable output
     pool: "forks",

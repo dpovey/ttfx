@@ -1,3 +1,29 @@
+# Rebrand: ttfx → typesugar
+
+**Syntactic Sugar for TypeScript** - Compile-time macros for TypeScript.
+
+## Phase 1: Claim Namespaces
+
+- [ ] **npm**: Claim `typesugar` package name (publish placeholder)
+- [ ] **npm**: Claim `@typesugar` org scope (create org at npmjs.com)
+- [ ] **GitHub**: Create `typesugar` repo under `dpovey` account
+- [ ] **Domain**: Register `typesugar.dev`
+
+## Phase 2: Rename Directory & Migrate Cursor
+
+- [x] Rename `~/src/ttfx` → `~/src/typesugar`
+- [x] Rename Cursor internal project directory to preserve chats
+- [x] Update Git remote origin
+
+## Phase 3: Bulk Replace
+
+- [x] Renamed `packages/ttfx` to `packages/typesugar`
+- [x] Renamed `unplugin-ttfx` to `unplugin-typesugar`
+- [x] Bulk replaced `ttfx` to `typesugar` across codebase
+- [x] Fixed circular TSConfig plugins dependency issue
+
+---
+
 # Rebrand: typemacro → ttfx
 
 **"TypeScript that F\*cks!"** - Compile-time macros for TypeScript.

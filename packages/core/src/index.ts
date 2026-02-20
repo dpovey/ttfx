@@ -24,7 +24,7 @@ export {
 export {
   config,
   defineConfig,
-  type TtfxConfig,
+  type TypesugarConfig,
   type ContractsConfig,
 } from "./config.js";
 

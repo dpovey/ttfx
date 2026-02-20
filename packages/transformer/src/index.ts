@@ -512,6 +512,7 @@ class MacroTransformer {
     if (normalized.includes("/packages/comptime/")) return "@typesugar/comptime";
     if (normalized.includes("/packages/reflect/")) return "@typesugar/reflect";
     if (normalized.includes("/packages/derive/")) return "@typesugar/derive";
+    if (normalized.includes("/packages/mapper/")) return "@typesugar/mapper";
     if (normalized.includes("/packages/operators/")) return "@typesugar/operators";
     if (normalized.includes("/packages/typeclass/")) return "@typesugar/typeclass";
     if (normalized.includes("/packages/specialize/")) return "@typesugar/specialize";

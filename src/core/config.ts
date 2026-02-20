@@ -110,7 +110,7 @@ export interface CatsConfig {
 /**
  * Full typesugar configuration schema.
  */
-export interface TtfxConfig {
+export interface TypesugarConfig {
   /** Enable debug mode */
   debug?: boolean;
   /** Contract system configuration */
@@ -127,7 +127,7 @@ export interface TtfxConfig {
 // Global State
 // ============================================================================
 
-let configStore: TtfxConfig = {};
+let configStore: TypesugarConfig = {};
 let configLoaded = false;
 let configFilePath: string | undefined;
 
@@ -141,7 +141,7 @@ const MODULE_NAME = "typesugar";
  * Load configuration synchronously from files.
  * Uses cosmiconfig to search for config in standard locations.
  */
-function loadConfigFromFiles(): TtfxConfig {
+function loadConfigFromFiles(): TypesugarConfig {
   try {
     const explorer = cosmiconfigSync(MODULE_NAME, {
       searchPlaces: [
@@ -164,7 +164,7 @@ function loadConfigFromFiles(): TtfxConfig {
     const result = explorer.search();
     if (result && !result.isEmpty) {
       configFilePath = result.filepath;
-      return result.config as TtfxConfig;
+      return result.config as TypesugarConfig;
     }
   } catch (error) {
     // Config file errors shouldn't crash — just use defaults
@@ -189,8 +189,8 @@ function loadConfigFromFiles(): TtfxConfig {
  *   TYPESUGAR_CONTRACTS_MODE=none            → { contracts: { mode: "none" } }
  *   TYPESUGAR_CONTRACTS__STRIP__PRECONDITIONS=1 → { contracts: { strip: { preconditions: true } } }
  */
-function loadConfigFromEnv(): TtfxConfig {
-  const envConfig: TtfxConfig = {};
+function loadConfigFromEnv(): TypesugarConfig {
+  const envConfig: TypesugarConfig = {};
   const PREFIX = "TYPESUGAR_";
 
   for (const [key, value] of Object.entries(process.env)) {
@@ -309,7 +309,7 @@ function deepMerge(
 function initializeConfig(): void {
   if (configLoaded) return;
 
-  const defaults: TtfxConfig = {
+  const defaults: TypesugarConfig = {
     debug: false,
     contracts: {
       mode: "full",
@@ -331,7 +331,7 @@ function initializeConfig(): void {
   configStore = deepMerge(
     deepMerge(defaults, fileConfig),
     envConfig,
-  ) as TtfxConfig;
+  ) as TypesugarConfig;
 
   configLoaded = true;
 }
@@ -366,9 +366,9 @@ function get<T = unknown>(path: string): T | undefined {
  * config.set({ debug: true });
  * config.set({ contracts: { mode: "none" } });
  */
-function set(values: Partial<TtfxConfig>): void {
+function set(values: Partial<TypesugarConfig>): void {
   initializeConfig();
-  configStore = deepMerge(configStore, values) as TtfxConfig;
+  configStore = deepMerge(configStore, values) as TypesugarConfig;
 }
 
 /**
@@ -384,7 +384,7 @@ function has(path: string): boolean {
 /**
  * Get all configuration values.
  */
-function getAll(): Readonly<TtfxConfig> {
+function getAll(): Readonly<TypesugarConfig> {
   initializeConfig();
   return configStore;
 }
@@ -803,6 +803,6 @@ export const config = {
  *   contracts: { mode: "full" },
  * });
  */
-export function defineConfig(config: TtfxConfig): TtfxConfig {
+export function defineConfig(config: TypesugarConfig): TypesugarConfig {
   return config;
 }

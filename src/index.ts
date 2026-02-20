@@ -103,7 +103,7 @@ export { pipeline } from "./core/pipeline.js";
 export {
   config,
   defineConfig,
-  type TtfxConfig,
+  type TypesugarConfig,
   type ContractsConfig,
 } from "./core/config.js";
 

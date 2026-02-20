@@ -585,10 +585,10 @@ class MacroTransformer {
   ): MacroDefinition | undefined {
     const symbol = this.ctx.typeChecker.getSymbolAtLocation(node);
     if (!symbol) {
-      // No symbol info -- fall back to name-based lookup only for
-      // macros that don't require import scoping
+      console.log(`[DEBUG] No symbol for ${macroName}`);
       return this.fallbackNameLookup(macroName, kind);
     }
+    console.log(`[DEBUG] Symbol found for ${macroName}: ${symbol.name}`);
 
     const symbolId = (symbol as unknown as { id?: number }).id;
     if (symbolId !== undefined && this.symbolMacroCache.has(symbolId)) {
@@ -748,6 +748,23 @@ class MacroTransformer {
    * Resolve module specifier from development source tree paths.
    */
   private resolveDevModuleSpecifier(normalized: string): string | undefined {
+    console.log("[DEBUG] resolveDevModuleSpecifier:", normalized);
+    // Check for monorepo packages
+    const packagesMatch = normalized.match(
+      /\/packages\/([^/]+)\/(?:src|dist)\//,
+    );
+    if (packagesMatch) {
+      const pkgName = packagesMatch[1];
+      if (
+        pkgName === "transformer" ||
+        pkgName === "unplugin-typesugar" ||
+        pkgName === "eslint-plugin"
+      ) {
+        return undefined;
+      }
+      return `@typesugar/${pkgName}`;
+    }
+
     if (normalized.includes("/src/use-cases/")) {
       if (normalized.includes("/units/")) return "typemacro/units";
       if (normalized.includes("/comprehensions/"))
@@ -1401,8 +1418,16 @@ class MacroTransformer {
         );
       }
 
-      // Visit the result to handle nested macros
-      return ts.visitNode(result, this.boundVisit) as ts.Expression;
+      try {
+        const visited = ts.visitNode(result, this.boundVisit);
+        return visited as ts.Expression;
+      } catch (visitErr: any) {
+        console.error(
+          `[DEBUG] Error visiting generated AST for ${macroName}:`,
+          visitErr.stack,
+        );
+        throw visitErr;
+      }
     } catch (error) {
       this.ctx.reportError(node, `Macro expansion failed: ${error}`);
       return this.createMacroErrorExpression(
@@ -1454,6 +1479,9 @@ class MacroTransformer {
   private tryAutoSpecialize(
     node: ts.CallExpression,
   ): ts.Expression | undefined {
+    // Synthetic nodes cannot be checked for source text comments
+    if (node.pos === -1 || node.end === -1) return undefined;
+
     // Check if caller has opted out with // @no-specialize comment
     const sourceText = node.getSourceFile().text;
     const nodeStart = node.getStart();
@@ -2888,7 +2916,8 @@ class MacroTransformer {
     methodName: string,
     receiverType: ts.Type,
   ): StandaloneExtensionInfo | undefined {
-    const sourceFile = node.getSourceFile();
+    const sourceFile = node.getSourceFile() || this.ctx.sourceFile;
+    if (!sourceFile) return undefined;
 
     // Cache lookup
     let methodCache = this.importExtensionCache.get(receiverType);
@@ -2915,6 +2944,7 @@ class MacroTransformer {
     methodName: string,
     receiverType: ts.Type,
   ): StandaloneExtensionInfo | undefined {
+    if (!sourceFile || !sourceFile.statements) return undefined;
     for (const stmt of sourceFile.statements) {
       if (!ts.isImportDeclaration(stmt)) continue;
 

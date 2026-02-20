@@ -1,0 +1,53 @@
+{
+  "name": "@typesugar/validate",
+  "version": "0.1.0",
+  "description": "Zero-cost validation and schema macros for typesugar",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "typescript",
+    "macros",
+    "validation",
+    "schema",
+    "zod",
+    "zero-cost"
+  ],
+  "author": "dpovey",
+  "license": "MIT",
+  "dependencies": {
+    "@typesugar/core": "workspace:*",
+    "@typesugar/fp": "workspace:*",
+    "@typesugar/type-system": "workspace:*",
+    "@typesugar/mapper": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsup": "^8.0.0",
+    "vitest": "^1.0.0",
+    "unplugin-typesugar": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "files": [
+    "dist",
+    "src"
+  ]
+}

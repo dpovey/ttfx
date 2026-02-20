@@ -45,7 +45,7 @@ export interface ContractsConfig {
 /**
  * Full typesugar configuration schema.
  */
-export interface TtfxConfig {
+export interface TypesugarConfig {
   /** Enable debug mode */
   debug?: boolean;
   /** Contract system configuration */
@@ -60,7 +60,7 @@ export interface TtfxConfig {
 // Global State
 // ============================================================================
 
-let configStore: TtfxConfig = {};
+let configStore: TypesugarConfig = {};
 let configLoaded = false;
 
 // ============================================================================
@@ -75,8 +75,8 @@ let configLoaded = false;
  *   TYPESUGAR_DEBUG=1                        → { debug: true }
  *   TYPESUGAR_CONTRACTS_MODE=none            → { contracts: { mode: "none" } }
  */
-function loadConfigFromEnv(): TtfxConfig {
-  const envConfig: TtfxConfig = {};
+function loadConfigFromEnv(): TypesugarConfig {
+  const envConfig: TypesugarConfig = {};
   const PREFIX = "TYPESUGAR_";
 
   for (const [key, value] of Object.entries(process.env)) {
@@ -194,7 +194,7 @@ function deepMerge(
 function initializeConfig(): void {
   if (configLoaded) return;
 
-  const defaults: TtfxConfig = {
+  const defaults: TypesugarConfig = {
     debug: false,
     contracts: {
       mode: "full",
@@ -207,7 +207,7 @@ function initializeConfig(): void {
   const envConfig = loadConfigFromEnv();
 
   // Merge: defaults < envConfig
-  configStore = deepMerge(defaults, envConfig) as TtfxConfig;
+  configStore = deepMerge(defaults, envConfig) as TypesugarConfig;
   configLoaded = true;
 }
 
@@ -226,9 +226,9 @@ function get<T = unknown>(path: string): T | undefined {
 /**
  * Set configuration values programmatically.
  */
-function set(values: Partial<TtfxConfig>): void {
+function set(values: Partial<TypesugarConfig>): void {
   initializeConfig();
-  configStore = deepMerge(configStore, values) as TtfxConfig;
+  configStore = deepMerge(configStore, values) as TypesugarConfig;
 }
 
 /**
@@ -241,7 +241,7 @@ function has(path: string): boolean {
 /**
  * Get all configuration values.
  */
-function getAll(): Readonly<TtfxConfig> {
+function getAll(): Readonly<TypesugarConfig> {
   initializeConfig();
   return configStore;
 }
@@ -380,6 +380,6 @@ export const config = {
 /**
  * Helper for creating type-safe configuration files.
  */
-export function defineConfig(cfg: TtfxConfig): TtfxConfig {
+export function defineConfig(cfg: TypesugarConfig): TypesugarConfig {
   return cfg;
 }

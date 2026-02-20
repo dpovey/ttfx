@@ -15,7 +15,7 @@
         "name": "typesugar/language-service"
       },
       {
-        "transform": "typesugar/transformer",
+        "transform": "@typesugar/transformer",
         "type": "program"
       }
     ]

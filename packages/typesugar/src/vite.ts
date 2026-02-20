@@ -3,5 +3,5 @@
  */
 export {
   default,
-  type TtfxPluginOptions,
-} from "unplugin-ttfx/vite";
+  type TypesugarPluginOptions,
+} from "unplugin-typesugar/vite";

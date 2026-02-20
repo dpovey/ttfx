@@ -9,7 +9,7 @@
  *
  * ```ts
  * // Use built-in macros
- * import { derive, ops, pipe, compose } from "ttfx";
+ * import { derive, ops, pipe, compose } from "typesugar";
  *
  * // Derive pattern implementations at compile time
  * @derive(Eq, Debug, Clone)
@@ -52,34 +52,34 @@
 // Core types and utilities
 // ============================================================================
 
-export * from "@ttfx/core";
+export * from "@typesugar/core";
 
 // ============================================================================
 // Built-in macros (namespaces)
 // ============================================================================
 
 // Compile-time evaluation
-import * as comptimeNs from "@ttfx/comptime";
+import * as comptimeNs from "@typesugar/comptime";
 export { comptimeNs as comptime };
 
 // Reflection and introspection
-import * as reflectNs from "@ttfx/reflect";
+import * as reflectNs from "@typesugar/reflect";
 export { reflectNs as reflect };
 
 // Derive macros (@derive(Eq, Ord, Debug, ...))
-import * as deriveNs from "@ttfx/derive";
+import * as deriveNs from "@typesugar/derive";
 export { deriveNs as derive };
 
 // Operator overloading (@operators, ops, pipe, compose)
-import * as operatorsNs from "@ttfx/operators";
+import * as operatorsNs from "@typesugar/operators";
 export { operatorsNs as operators };
 
 // Scala 3-style typeclasses (@typeclass, @instance, @deriving, summon, extend)
-import * as typeclassNs from "@ttfx/typeclass";
+import * as typeclassNs from "@typesugar/typeclass";
 export { typeclassNs as typeclass };
 
 // Zero-cost specialization (specialize, mono, inlineCall)
-import * as specializeNs from "@ttfx/specialize";
+import * as specializeNs from "@typesugar/specialize";
 export { specializeNs as specialize };
 
 // ============================================================================
@@ -87,10 +87,10 @@ export { specializeNs as specialize };
 // ============================================================================
 
 // Re-export the callable comptime function directly
-export { comptime as comptimeEval } from "@ttfx/comptime";
+export { comptime as comptimeEval } from "@typesugar/comptime";
 
 // Re-export operator functions directly
-export { ops, pipe, compose } from "@ttfx/operators";
+export { ops, pipe, compose } from "@typesugar/operators";
 
 // ============================================================================
 // Register all macros function

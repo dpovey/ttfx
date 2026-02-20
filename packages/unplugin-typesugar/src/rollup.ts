@@ -1,18 +1,18 @@
 /**
- * ttfx Rollup plugin
+ * typesugar Rollup plugin
  *
  * @example
  * ```ts
  * // rollup.config.js
- * import ttfx from "unplugin-ttfx/rollup";
+ * import typesugar from "unplugin-typesugar/rollup";
  *
  * export default {
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * };
  * ```
  */
 
-import { unplugin, type TtfxPluginOptions } from "./unplugin.js";
+import { unplugin, type TypesugarPluginOptions } from "./unplugin.js";
 
 export default unplugin.rollup;
-export type { TtfxPluginOptions };
+export type { TypesugarPluginOptions };

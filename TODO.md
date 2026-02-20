@@ -10,9 +10,9 @@
    - **What:** A concise syntax for defining ADTs that auto-generates constructors, type guards, and matchers.
    - **Why:** Reduces boilerplate for sum types and pairs perfectly with the existing `match` macro in `@typesugar/fp`.
 
-3. **Structural Pattern Matching (`match!`)**
-   - **What:** A `match!` macro that supports deep structural matching, array patterns, and guards.
-   - **Why:** The current `match` handles discriminated unions and literals, but lacks deep destructuring. This can compile into an optimized decision tree of `if/else` statements.
+3. ~~**Structural Pattern Matching (`match!`)**~~ ✅ **Done**
+   - Unified `match()` macro in `@typesugar/fp` with compile-time exhaustiveness checking, auto-detected discriminants, `when()`/`otherwise()` guard syntax, binary search for sparse integers (O(log n)), switch IIFE for large case counts (V8-optimized), and backwards-compatible `matchLiteral`/`matchGuard` aliases.
+   - **Future enhancements:** Nested pattern merging (decision tree fusion), OR patterns, type patterns (`instanceof`), array/tuple destructuring patterns.
 
 4. **Zero-Cost Array Comprehensions**
    - **What:** A macro that compiles declarative list comprehensions (e.g., `[for (x of items) if (x > 0) x * 2]`) into highly optimized, single-pass `for` loops.

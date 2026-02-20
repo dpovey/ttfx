@@ -12,5 +12,5 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ["typescript", "@ttfx/transformer", "unplugin"],
+  external: ["typescript", "@typesugar/transformer", "unplugin"],
 });

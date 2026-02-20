@@ -1,5 +1,5 @@
 /**
- * ttfx unplugin integration
+ * typesugar unplugin integration
  *
  * Universal plugin that works with Vite, Rollup, Webpack, esbuild, and Rspack.
  * Uses the TypeScript compiler API to create a Program, then runs the macro
@@ -31,10 +31,10 @@ import * as path from "path";
 import { createUnplugin, type UnpluginFactory } from "unplugin";
 import macroTransformerFactory, {
   type MacroTransformerConfig,
-} from "@ttfx/transformer";
-import { preprocess } from "@ttfx/preprocessor";
+} from "@typesugar/transformer";
+import { preprocess } from "@typesugar/preprocessor";
 
-export interface TtfxPluginOptions {
+export interface TypesugarPluginOptions {
   /** Path to tsconfig.json (default: auto-detected) */
   tsconfig?: string;
 
@@ -62,7 +62,7 @@ function findTsConfig(cwd: string, explicit?: string): string {
   const found = ts.findConfigFile(cwd, ts.sys.fileExists, "tsconfig.json");
   if (!found) {
     throw new Error(
-      `[ttfx] Could not find tsconfig.json from ${cwd}. ` +
+      `[typesugar] Could not find tsconfig.json from ${cwd}. ` +
         `Pass the tsconfig option to specify the path explicitly.`,
     );
   }
@@ -73,7 +73,7 @@ function createProgram(configPath: string): ProgramCache {
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
   if (configFile.error) {
     throw new Error(
-      `[ttfx] Error reading ${configPath}: ${ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n")}`,
+      `[typesugar] Error reading ${configPath}: ${ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n")}`,
     );
   }
 
@@ -119,9 +119,9 @@ function shouldTransform(
   return /\.[jt]sx?$/.test(normalizedId);
 }
 
-export const unpluginFactory: UnpluginFactory<TtfxPluginOptions | undefined> = (
-  options = {},
-) => {
+export const unpluginFactory: UnpluginFactory<
+  TypesugarPluginOptions | undefined
+> = (options = {}) => {
   let cache: ProgramCache | undefined;
   const verbose = options?.verbose ?? false;
 
@@ -129,7 +129,7 @@ export const unpluginFactory: UnpluginFactory<TtfxPluginOptions | undefined> = (
   const preprocessedFiles = new Map<string, ReturnType<typeof preprocess>>();
 
   return {
-    name: "ttfx",
+    name: "typesugar",
     enforce: "pre",
 
     buildStart() {
@@ -137,9 +137,9 @@ export const unpluginFactory: UnpluginFactory<TtfxPluginOptions | undefined> = (
         const configPath = findTsConfig(process.cwd(), options?.tsconfig);
         cache = createProgram(configPath);
         if (verbose) {
-          console.log(`[ttfx] Loaded config from ${configPath}`);
+          console.log(`[typesugar] Loaded config from ${configPath}`);
           console.log(
-            `[ttfx] Program has ${cache.config.fileNames.length} files`,
+            `[typesugar] Program has ${cache.config.fileNames.length} files`,
           );
         }
       } catch (error) {
@@ -159,7 +159,7 @@ export const unpluginFactory: UnpluginFactory<TtfxPluginOptions | undefined> = (
 
         if (result.changed) {
           if (verbose) {
-            console.log(`[ttfx] Preprocessed custom syntax in ${id}`);
+            console.log(`[typesugar] Preprocessed custom syntax in ${id}`);
           }
           // Cache for later use in transform
           preprocessedFiles.set(id, result);
@@ -197,7 +197,7 @@ export const unpluginFactory: UnpluginFactory<TtfxPluginOptions | undefined> = (
         // File not in the TS program - can't run type-aware transformations
         // Just return the preprocessed code (already valid TS from load hook)
         if (verbose) {
-          console.log(`[ttfx] Skipping ${id} (not in program)`);
+          console.log(`[typesugar] Skipping ${id} (not in program)`);
         }
         return null;
       }
@@ -227,6 +227,9 @@ export const unpluginFactory: UnpluginFactory<TtfxPluginOptions | undefined> = (
         const transformed = printer.printFile(result.transformed[0]);
         result.dispose();
 
+        // LOG TRANSFORMED CODE FOR DEBUGGING
+        fs.writeFileSync(id + ".transformed.js", transformed);
+
         // Only return if the code actually changed
         if (transformed === code) return null;
 
@@ -242,9 +245,9 @@ export const unpluginFactory: UnpluginFactory<TtfxPluginOptions | undefined> = (
         // If transformation fails (e.g., type checker issues with preprocessed files),
         // return the preprocessed code as-is - it's already valid TypeScript
         if (verbose) {
-          console.error(`[ttfx] Transform error for ${id}:`);
+          console.error(`[typesugar] Transform error for ${id}:`);
           console.error(error);
-          console.log(`[ttfx] Using preprocessed code as fallback`);
+          console.log(`[typesugar] Using preprocessed code as fallback`);
         }
         return null;
       }

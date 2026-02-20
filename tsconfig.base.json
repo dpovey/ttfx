@@ -17,7 +17,7 @@
     "noEmit": true,
     "plugins": [
       {
-        "transform": "typesugar/transformer",
+        "transform": "@typesugar/transformer",
         "type": "program"
       }
     ]

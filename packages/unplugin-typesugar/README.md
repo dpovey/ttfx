@@ -1,27 +1,27 @@
-# unplugin-ttfx
+# unplugin-typesugar
 
-> Bundler integrations for ttfx macro expansion.
+> Bundler integrations for typesugar macro expansion.
 
 ## Overview
 
-`unplugin-ttfx` provides plugins for popular bundlers to process ttfx macros during your build. Powered by [unplugin](https://github.com/unjs/unplugin) for maximum compatibility.
+`unplugin-typesugar` provides plugins for popular bundlers to process typesugar macros during your build. Powered by [unplugin](https://github.com/unjs/unplugin) for maximum compatibility.
 
 ## Installation
 
 ```bash
-npm install unplugin-ttfx
+npm install unplugin-typesugar
 # or
-pnpm add unplugin-ttfx
+pnpm add unplugin-typesugar
 ```
 
 ## Vite
 
 ```typescript
 // vite.config.ts
-import ttfx from "unplugin-ttfx/vite";
+import typesugar from "unplugin-typesugar/vite";
 
 export default {
-  plugins: [ttfx()],
+  plugins: [typesugar()],
 };
 ```
 
@@ -29,10 +29,10 @@ export default {
 
 ```typescript
 // webpack.config.js
-const ttfx = require("unplugin-ttfx/webpack").default;
+const typesugar = require("unplugin-typesugar/webpack").default;
 
 module.exports = {
-  plugins: [ttfx()],
+  plugins: [typesugar()],
 };
 ```
 
@@ -41,11 +41,11 @@ module.exports = {
 ```typescript
 // build.js
 import esbuild from "esbuild";
-import ttfx from "unplugin-ttfx/esbuild";
+import typesugar from "unplugin-typesugar/esbuild";
 
 await esbuild.build({
   entryPoints: ["src/index.ts"],
-  plugins: [ttfx()],
+  plugins: [typesugar()],
   bundle: true,
   outfile: "dist/index.js",
 });
@@ -55,11 +55,11 @@ await esbuild.build({
 
 ```typescript
 // rollup.config.js
-import ttfx from "unplugin-ttfx/rollup";
+import typesugar from "unplugin-typesugar/rollup";
 
 export default {
   input: "src/index.ts",
-  plugins: [ttfx()],
+  plugins: [typesugar()],
   output: {
     file: "dist/index.js",
     format: "esm",
@@ -89,11 +89,11 @@ interface TypeMacroPluginOptions {
 
 ```typescript
 // vite.config.ts
-import ttfx from "unplugin-ttfx/vite";
+import typesugar from "unplugin-typesugar/vite";
 
 export default {
   plugins: [
-    ttfx({
+    typesugar({
       verbose: true,
       include: ["src/**/*.ts"],
       exclude: ["**/*.test.ts"],
@@ -107,7 +107,7 @@ export default {
 The integration plugins:
 
 1. **Intercept** TypeScript files during the build
-2. **Create a TypeScript program** with the ttfx transformer
+2. **Create a TypeScript program** with the typesugar transformer
 3. **Expand macros** at compile time
 4. **Emit transformed code** to the bundler
 
@@ -117,11 +117,11 @@ This means macros are fully expanded before your code reaches the bundler's opti
 
 ### Exports
 
-- `unplugin-ttfx/vite` — Vite plugin
-- `unplugin-ttfx/webpack` — Webpack plugin
-- `unplugin-ttfx/esbuild` — esbuild plugin
-- `unplugin-ttfx/rollup` — Rollup plugin
-- `unplugin-ttfx` — Core unplugin factory
+- `unplugin-typesugar/vite` — Vite plugin
+- `unplugin-typesugar/webpack` — Webpack plugin
+- `unplugin-typesugar/esbuild` — esbuild plugin
+- `unplugin-typesugar/rollup` — Rollup plugin
+- `unplugin-typesugar` — Core unplugin factory
 
 ### Types
 
