@@ -4,4 +4,4 @@
 export {
   default,
   type TtfxPluginOptions,
-} from "unplugin-ttfx/webpack";
+} from "unplugin-typesugar/webpack";

@@ -1,4 +1,4 @@
 /**
  * Re-export transformer and CLI
  */
-export * from "@ttfx/transformer";
+export * from "@typesugar/transformer";

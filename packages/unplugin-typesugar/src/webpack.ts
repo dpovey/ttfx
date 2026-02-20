@@ -1,13 +1,13 @@
 /**
- * ttfx Webpack plugin
+ * typesugar Webpack plugin
  *
  * @example
  * ```ts
  * // webpack.config.js
- * const ttfx = require("unplugin-ttfx/webpack");
+ * const typesugar = require("unplugin-typesugar/webpack");
  *
  * module.exports = {
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * };
  * ```
  */

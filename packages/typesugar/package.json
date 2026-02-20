@@ -1,5 +1,5 @@
 {
-  "name": "ttfx",
+  "name": "typesugar",
   "version": "0.1.0",
   "description": "TypeScript compile-time macros - Scala 3-style metaprogramming for TypeScript",
   "type": "module",
@@ -7,7 +7,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "ttfx": "./dist/cli.js"
+    "typesugar": "./dist/cli.js"
   },
   "exports": {
     ".": {
@@ -63,15 +63,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/core": "workspace:*",
-    "@ttfx/transformer": "workspace:*",
-    "@ttfx/comptime": "workspace:*",
-    "@ttfx/reflect": "workspace:*",
-    "@ttfx/derive": "workspace:*",
-    "@ttfx/operators": "workspace:*",
-    "@ttfx/typeclass": "workspace:*",
-    "@ttfx/specialize": "workspace:*",
-    "unplugin-ttfx": "workspace:*"
+    "@typesugar/core": "workspace:*",
+    "@typesugar/transformer": "workspace:*",
+    "@typesugar/comptime": "workspace:*",
+    "@typesugar/reflect": "workspace:*",
+    "@typesugar/derive": "workspace:*",
+    "@typesugar/operators": "workspace:*",
+    "@typesugar/typeclass": "workspace:*",
+    "@typesugar/specialize": "workspace:*",
+    "unplugin-typesugar": "workspace:*"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"

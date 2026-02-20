@@ -1,13 +1,13 @@
 /**
- * ttfx Vite plugin
+ * typesugar Vite plugin
  *
  * @example
  * ```ts
  * // vite.config.ts
- * import ttfx from "unplugin-ttfx/vite";
+ * import typesugar from "unplugin-typesugar/vite";
  *
  * export default {
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * };
  * ```
  */

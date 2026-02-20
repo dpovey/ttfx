@@ -1,5 +1,5 @@
 /**
- * @ttfx/preprocessor - Lexical preprocessor for ttfx syntax extensions
+ * @typesugar/preprocessor - Lexical preprocessor for typesugar syntax extensions
  *
  * This package provides a lexical preprocessing layer that transforms custom
  * syntax (HKT F<_>, pipeline |>, cons ::) into valid TypeScript before the
@@ -7,7 +7,7 @@
  *
  * @example
  * ```typescript
- * import { preprocess } from "@ttfx/preprocessor";
+ * import { preprocess } from "@typesugar/preprocessor";
  *
  * const source = `
  *   interface Functor<F<_>> {

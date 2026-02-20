@@ -1,7 +1,7 @@
 {
-  "name": "unplugin-ttfx",
+  "name": "unplugin-typesugar",
   "version": "0.1.0",
-  "description": "Bundler integrations for ttfx (Vite, Webpack, esbuild, Rollup)",
+  "description": "Bundler integrations for typesugar (Vite, Webpack, esbuild, Rollup)",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -52,8 +52,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ttfx/preprocessor": "workspace:*",
-    "@ttfx/transformer": "workspace:*",
+    "@typesugar/preprocessor": "workspace:*",
+    "@typesugar/transformer": "workspace:*",
     "unplugin": "^2.0.0"
   },
   "peerDependencies": {

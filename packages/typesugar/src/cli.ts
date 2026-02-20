@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 /**
- * typemacro CLI - re-exports from @ttfx/transformer/cli
+ * typemacro CLI - re-exports from @typesugar/transformer/cli
  */
-import "@ttfx/transformer/cli";
+import "@typesugar/transformer/cli";

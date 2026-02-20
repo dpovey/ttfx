@@ -1,22 +1,22 @@
 /**
- * unplugin-ttfx — Bundler integrations for ttfx
+ * unplugin-typesugar — Bundler integrations for typesugar
  *
  * This package provides plugins for various bundlers:
- * - Vite: `unplugin-ttfx/vite`
- * - Webpack: `unplugin-ttfx/webpack`
- * - esbuild: `unplugin-ttfx/esbuild`
- * - Rollup: `unplugin-ttfx/rollup`
+ * - Vite: `unplugin-typesugar/vite`
+ * - Webpack: `unplugin-typesugar/webpack`
+ * - esbuild: `unplugin-typesugar/esbuild`
+ * - Rollup: `unplugin-typesugar/rollup`
  *
- * Each plugin uses the ttfx transformer to process TypeScript files
+ * Each plugin uses the typesugar transformer to process TypeScript files
  * during the build, expanding macros at compile time.
  *
  * @example
  * ```ts
  * // vite.config.ts
- * import ttfx from "unplugin-ttfx/vite";
+ * import typesugar from "unplugin-typesugar/vite";
  *
  * export default {
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * };
  * ```
  */

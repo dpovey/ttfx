@@ -1,13 +1,13 @@
 /**
- * ttfx esbuild plugin
+ * typesugar esbuild plugin
  *
  * @example
  * ```ts
  * import esbuild from "esbuild";
- * import ttfx from "unplugin-ttfx/esbuild";
+ * import typesugar from "unplugin-typesugar/esbuild";
  *
  * esbuild.build({
- *   plugins: [ttfx()],
+ *   plugins: [typesugar()],
  * });
  * ```
  */

@@ -5,7 +5,7 @@
  */
 
 import * as ts from "typescript";
-import { defineExpressionMacro, globalRegistry, MacroContext } from "@ttfx/core";
+import { defineExpressionMacro, globalRegistry, MacroContext } from "@typesugar/core";
 
 // ============================================================================
 // Type-Level API
@@ -60,7 +60,7 @@ export function matchGuard<T, R>(value: T, arms: GuardArm<T, R>[]): R {
 
 export const matchMacro = defineExpressionMacro({
   name: "match",
-  module: "@ttfx/fp",
+  module: "@typesugar/fp",
   description: "Zero-cost pattern matching — compiles to if/else chains",
 
   expand(
@@ -137,7 +137,7 @@ export const matchMacro = defineExpressionMacro({
 
 export const matchLiteralMacro = defineExpressionMacro({
   name: "matchLiteral",
-  module: "@ttfx/fp",
+  module: "@typesugar/fp",
   description: "Zero-cost literal matching — compiles to equality checks",
 
   expand(
@@ -223,7 +223,7 @@ export const matchLiteralMacro = defineExpressionMacro({
 
 export const matchGuardMacro = defineExpressionMacro({
   name: "matchGuard",
-  module: "@ttfx/fp",
+  module: "@typesugar/fp",
   description: "Zero-cost guard matching — compiles to predicate checks",
 
   expand(
