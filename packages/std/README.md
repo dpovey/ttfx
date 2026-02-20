@@ -16,25 +16,49 @@ pnpm add @ttfx/std
 
 ## Usage
 
+### Extension Methods (Scala 3-style)
+
+Extension methods are import-scoped. Import a namespace or function from
+`@ttfx/std` and the transformer automatically resolves undefined method
+calls against what's in scope:
+
 ```typescript
-import { extend } from '@ttfx/core';
-import '@ttfx/std';
+import { extend } from "ttfx";
+import { NumberExt, StringExt, ArrayExt } from "@ttfx/std";
 
-// Extension methods on numbers
-extend(42).clamp(0, 100);
-extend(255).toHex();
-extend(7).isPrime();
+// extend() with namespace imports
+extend(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
+extend(255).toHex(); // → NumberExt.toHex(255)
+extend(7).isPrime(); // → NumberExt.isPrime(7)
 
-// Extension methods on strings
-extend("hello world").capitalize();
-extend("camelCase").toSnakeCase();
+extend("hello world").capitalize(); // → StringExt.capitalize("hello world")
 
-// Extension methods on arrays
-extend([1, 2, 3, 4, 5]).chunk(2);
-extend([3, 1, 4, 1, 5]).unique();
+extend([1, 2, 3, 4, 5]).chunk(2); // → ArrayExt.chunk([1, 2, 3, 4, 5], 2)
+extend([3, 1, 4, 1, 5]).unique(); // → ArrayExt.unique([3, 1, 4, 1, 5])
+```
 
-// Ranges (Scala/Kotlin-style)
-import { range, rangeToArray } from '@ttfx/std';
+Implicit extension rewriting (no `extend()` needed):
+
+```typescript
+import { NumberExt } from "@ttfx/std";
+
+(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
+(7).isPrime(); // → NumberExt.isPrime(7)
+```
+
+Bare function imports work too:
+
+```typescript
+import { clamp, isPrime } from "@ttfx/std";
+
+(42).clamp(0, 100); // → clamp(42, 0, 100)
+clamp(42, 0, 100); // also works as a direct call
+```
+
+### Ranges (Scala/Kotlin-style)
+
+```typescript
+import { range, rangeToArray } from "@ttfx/std";
 rangeToArray(range(1, 10)); // [1, 2, ..., 9]
 ```
 
@@ -43,7 +67,7 @@ rangeToArray(range(1, 10)); // [1, 2, ..., 9]
 The `FlatMap` typeclass provides sequencing/chaining operations for type constructors. It's the minimal typeclass required for the `let:/yield:` do-notation macro.
 
 ```typescript
-import { registerFlatMap, getFlatMap } from '@ttfx/std';
+import { registerFlatMap, getFlatMap } from "@ttfx/std";
 
 // Built-in instances for Array, Promise, Iterable, AsyncIterable
 const arrayFlatMap = getFlatMap("Array");
@@ -63,10 +87,12 @@ Generic do-notation syntax that works with any type that has a `FlatMap` instanc
 
 ```typescript
 let: {
-  x << [1, 2, 3]
-  y << [x * 10, x * 20]
+  x << [1, 2, 3];
+  y << [x * 10, x * 20];
 }
-yield: { x, y }
+yield: {
+  (x, y);
+}
 
 // Compiles to:
 // [1, 2, 3].flatMap(x => [x * 10, x * 20].map(y => ({ x, y })))
@@ -77,10 +103,12 @@ yield: { x, y }
 
 ```typescript
 let: {
-  user << fetchUser(id)
-  posts << fetchPosts(user.id)
+  user << fetchUser(id);
+  posts << fetchPosts(user.id);
 }
-yield: { user, posts }
+yield: {
+  (user, posts);
+}
 
 // Compiles to:
 // fetchUser(id).then(user => fetchPosts(user.id).then(posts => ({ user, posts })))
@@ -91,7 +119,7 @@ yield: { user, posts }
 Any type with a registered `FlatMap` instance works with `let:/yield:`:
 
 ```typescript
-import { registerFlatMap } from '@ttfx/std';
+import { registerFlatMap } from "@ttfx/std";
 
 registerFlatMap("Option", {
   map: (fa, f) => fa.map(f),
@@ -100,50 +128,56 @@ registerFlatMap("Option", {
 
 // Now Option works with let:/yield:
 let: {
-  x << some(5)
-  y << some(x * 2)
+  x << some(5);
+  y << some(x * 2);
 }
-yield: { x, y }
+yield: {
+  (x, y);
+}
 ```
 
 ## Extension Methods
 
 Rich extension methods for every basic type:
 
-| Type | Methods |
-|------|---------|
-| **NumberExt** | 45+ methods: `clamp`, `toHex`, `isPrime`, `times`, `abs`, ... |
-| **StringExt** | 50+ methods: `capitalize`, `toSnakeCase`, `truncate`, `words`, ... |
-| **ArrayExt** | 50+ methods: `chunk`, `unique`, `groupBy`, `partition`, `zip`, ... |
-| **ObjectExt** | 30+ methods: `pick`, `omit`, `mapValues`, `deepMerge`, ... |
-| **BooleanExt** | 20+ methods: `toInt`, `and`, `or`, `implies`, ... |
-| **DateExt** | 40+ methods: `addDays`, `startOfMonth`, `format`, `isWeekend`, ... |
-| **MapExt** | 15+ methods: `mapValues`, `filterKeys`, `merge`, ... |
-| **PromiseExt** | 20+ methods: `tap`, `timeout`, `retry`, `mapError`, ... |
-| **FunctionExt** | 25+ methods: `memoize`, `debounce`, `throttle`, `compose`, ... |
+| Type            | Methods                                                            |
+| --------------- | ------------------------------------------------------------------ |
+| **NumberExt**   | 45+ methods: `clamp`, `toHex`, `isPrime`, `times`, `abs`, ...      |
+| **StringExt**   | 50+ methods: `capitalize`, `toSnakeCase`, `truncate`, `words`, ... |
+| **ArrayExt**    | 50+ methods: `chunk`, `unique`, `groupBy`, `partition`, `zip`, ... |
+| **ObjectExt**   | 30+ methods: `pick`, `omit`, `mapValues`, `deepMerge`, ...         |
+| **BooleanExt**  | 20+ methods: `toInt`, `and`, `or`, `implies`, ...                  |
+| **DateExt**     | 40+ methods: `addDays`, `startOfMonth`, `format`, `isWeekend`, ... |
+| **MapExt**      | 15+ methods: `mapValues`, `filterKeys`, `merge`, ...               |
+| **PromiseExt**  | 20+ methods: `tap`, `timeout`, `retry`, `mapError`, ...            |
+| **FunctionExt** | 25+ methods: `memoize`, `debounce`, `throttle`, `compose`, ...     |
 
 ## Data Types
 
 ### Tuples
 
 ```typescript
-import { pair, triple, fst, snd, bimap, swap } from '@ttfx/std';
+import { pair, triple, fst, snd, bimap, swap } from "@ttfx/std";
 
 const p = pair(1, "hello");
-fst(p);           // 1
-snd(p);           // "hello"
-bimap(p, x => x + 1, s => s.toUpperCase()); // [2, "HELLO"]
-swap(p);          // ["hello", 1]
+fst(p); // 1
+snd(p); // "hello"
+bimap(
+  p,
+  (x) => x + 1,
+  (s) => s.toUpperCase(),
+); // [2, "HELLO"]
+swap(p); // ["hello", 1]
 ```
 
 ### Range
 
 ```typescript
-import { range, rangeToArray, rangeInclusive } from '@ttfx/std';
+import { range, rangeToArray, rangeInclusive } from "@ttfx/std";
 
-rangeToArray(range(1, 5));           // [1, 2, 3, 4]
-rangeToArray(rangeInclusive(1, 5));  // [1, 2, 3, 4, 5]
-rangeToArray(range(0, 10, 2));       // [0, 2, 4, 6, 8]
+rangeToArray(range(1, 5)); // [1, 2, 3, 4]
+rangeToArray(rangeInclusive(1, 5)); // [1, 2, 3, 4, 5]
+rangeToArray(range(0, 10, 2)); // [0, 2, 4, 6, 8]
 ```
 
 ## API Reference

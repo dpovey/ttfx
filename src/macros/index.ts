@@ -25,6 +25,7 @@ import "./module-graph.js";
 import "./tailrec.js";
 import "./hkt.js"; // Higher-Kinded Type F<_> syntax support
 import "./verify-laws.js"; // Typeclass law verification
+import "./extension.js"; // Standalone extension methods for concrete types
 
 // --- Contract macros ---
 import "@ttfx/contracts";
@@ -280,6 +281,19 @@ export { tailrecAttribute } from "./tailrec.js";
 
 // --- Typeclass law verification ---
 export { verifyLawsAttribute, getVerifyLawsConfig } from "./verify-laws.js";
+
+// --- Standalone extension methods for concrete types ---
+export {
+  registerExtensionsMacro,
+  registerExtensionMacro,
+  registerStandaloneExtensionEntry,
+  findStandaloneExtension,
+  getStandaloneExtensionsForType,
+  getAllStandaloneExtensions,
+  buildStandaloneExtensionCall,
+  standaloneExtensionRegistry,
+  type StandaloneExtensionInfo,
+} from "./extension.js";
 
 // --- Higher-Kinded Types (part of typeclass system) ---
 // HKT enables typeclasses parameterized by type constructors (F[_]).

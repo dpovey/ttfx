@@ -44,7 +44,19 @@ import {
   registerExtensionMethods,
   instanceVarName,
   tryExtractSumType,
+  getSyntaxForOperator,
+  findInstance,
 } from "../macros/typeclass.js";
+
+// Import operator string mapping
+import { getOperatorString } from "../macros/operators.js";
+
+// Standalone extensions for concrete types
+import {
+  findStandaloneExtension,
+  buildStandaloneExtensionCall,
+  type StandaloneExtensionInfo,
+} from "../macros/extension.js";
 
 // Import @implicits implicit resolution with propagation
 import {
@@ -288,6 +300,15 @@ class MacroTransformer {
    * File paths are stable within a compilation, so we can cache aggressively.
    */
   private moduleSpecifierCache = new Map<string, string | undefined>();
+
+  /**
+   * Cache for import-scoped extension resolution.
+   * Key: ts.Type object identity, Value: Map<methodName, result>
+   */
+  private importExtensionCache = new Map<
+    ts.Type,
+    Map<string, StandaloneExtensionInfo | undefined>
+  >();
 
   /**
    * Stack of implicit scopes for propagation through nested function calls.
@@ -1278,6 +1299,11 @@ class MacroTransformer {
         );
 
       default:
+        // Check for binary expression operator overloading via typeclasses
+        if (ts.isBinaryExpression(node)) {
+          const opResult = this.tryRewriteTypeclassOperator(node);
+          if (opResult !== undefined) return opResult;
+        }
         return undefined;
     }
   }
@@ -2680,7 +2706,27 @@ class MacroTransformer {
     const receiverType = this.ctx.typeChecker.getTypeAtLocation(receiver);
     const existingProp = receiverType.getProperty(methodName);
 
+    // If the property exists natively, we usually skip rewriting.
+    // However, if the user has augmented the interface (e.g. `interface Number { clamp: ... }`)
+    // to satisfy the type checker, `existingProp` will be defined but point to a declaration
+    // that has no implementation.
+    //
+    // We check if an explicit extension is available in scope (via import scanning).
+    // If so, we prioritize the extension over the (likely empty) interface augmentation.
+    let forceRewrite = false;
     if (existingProp) {
+      // Check if we have an import-scoped extension that matches
+      const potentialExt = this.resolveExtensionFromImports(
+        node,
+        methodName,
+        receiverType,
+      );
+      if (potentialExt) {
+        forceRewrite = true;
+      }
+    }
+
+    if (existingProp && !forceRewrite) {
       // Property exists natively on the type -- not our business
       return undefined;
     }
@@ -2722,6 +2768,56 @@ class MacroTransformer {
     }
 
     if (!extension) {
+      // Check standalone extensions — first the pre-registered registry,
+      // then scan imports in the current file (Scala 3-style: extensions
+      // are scoped to what's imported).
+      let standaloneExt = findStandaloneExtension(methodName, typeName);
+      if (!standaloneExt) {
+        const baseTypeName = typeName.replace(/<.*>$/, "");
+        if (baseTypeName !== typeName) {
+          standaloneExt = findStandaloneExtension(methodName, baseTypeName);
+        }
+      }
+
+      // Import-scoped resolution: scan the current file's imports for a
+      // matching function or namespace property. This is the "error recovery"
+      // path — any undefined method triggers a search of what's in scope.
+      if (!standaloneExt) {
+        standaloneExt = this.resolveExtensionFromImports(
+          node,
+          methodName,
+          receiverType,
+        );
+      }
+
+      if (standaloneExt) {
+        if (this.verbose) {
+          const qual = standaloneExt.qualifier
+            ? `${standaloneExt.qualifier}.${standaloneExt.methodName}`
+            : standaloneExt.methodName;
+          console.log(
+            `[typemacro] Rewriting standalone extension: ${typeName}.${methodName}() → ${qual}(...)`,
+          );
+        }
+
+        const rewritten = buildStandaloneExtensionCall(
+          this.ctx.factory,
+          standaloneExt,
+          receiver,
+          Array.from(node.arguments),
+        );
+
+        try {
+          return ts.visitNode(rewritten, this.boundVisit) as ts.Expression;
+        } catch (error) {
+          this.ctx.reportError(
+            node,
+            `Standalone extension method rewrite failed: ${error}`,
+          );
+          return undefined;
+        }
+      }
+
       return undefined; // Not an extension method -- let TS report the error
     }
 
@@ -2732,7 +2828,6 @@ class MacroTransformer {
     }
 
     // Rewrite: x.method(args...) → TC.summon<Type>("Type").method(x, args...)
-    // Build the AST directly instead of string concatenation + parsing.
     const factory = this.ctx.factory;
 
     // TC.summon
@@ -2766,6 +2861,274 @@ class MacroTransformer {
       return ts.visitNode(rewritten, this.boundVisit) as ts.Expression;
     } catch (error) {
       this.ctx.reportError(node, `Extension method rewrite failed: ${error}`);
+      return undefined;
+    }
+  }
+
+  /**
+   * Import-scoped extension resolution.
+   *
+   * When a method call like `x.clamp(0, 100)` fails to resolve through the
+   * typeclass and standalone registries, scan the current file's imports for
+   * a matching function or namespace property. This implements Scala 3-style
+   * "extensions are scoped to what's imported".
+   *
+   * Two patterns are recognized:
+   *   1. Namespace: `import { NumberExt } from "@ttfx/std"`
+   *      → if NumberExt has a callable `clamp` whose first param matches
+   *        the receiver type, rewrite to `NumberExt.clamp(receiver, args)`
+   *   2. Bare function: `import { clamp } from "@ttfx/std"`
+   *      → if `clamp`'s first param matches the receiver type, rewrite to
+   *        `clamp(receiver, args)`
+   *
+   * Results are cached per (sourceFile, methodName, typeName) triple.
+   */
+  private resolveExtensionFromImports(
+    node: ts.CallExpression,
+    methodName: string,
+    receiverType: ts.Type,
+  ): StandaloneExtensionInfo | undefined {
+    const sourceFile = node.getSourceFile();
+
+    // Cache lookup
+    let methodCache = this.importExtensionCache.get(receiverType);
+    if (!methodCache) {
+      methodCache = new Map();
+      this.importExtensionCache.set(receiverType, methodCache);
+    }
+
+    if (methodCache.has(methodName)) {
+      return methodCache.get(methodName);
+    }
+
+    const result = this.scanImportsForExtension(
+      sourceFile,
+      methodName,
+      receiverType,
+    );
+    methodCache.set(methodName, result);
+    return result;
+  }
+
+  private scanImportsForExtension(
+    sourceFile: ts.SourceFile,
+    methodName: string,
+    receiverType: ts.Type,
+  ): StandaloneExtensionInfo | undefined {
+    for (const stmt of sourceFile.statements) {
+      if (!ts.isImportDeclaration(stmt)) continue;
+
+      const clause = stmt.importClause;
+      if (!clause) continue;
+
+      // Check named imports: import { NumberExt, clamp } from "..."
+      if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+        for (const spec of clause.namedBindings.elements) {
+          const result = this.checkImportedSymbolForExtension(
+            spec.name,
+            methodName,
+            receiverType,
+          );
+          if (result) return result;
+        }
+      }
+
+      // Check namespace import: import * as std from "..."
+      if (clause.namedBindings && ts.isNamespaceImport(clause.namedBindings)) {
+        const result = this.checkImportedSymbolForExtension(
+          clause.namedBindings.name,
+          methodName,
+          receiverType,
+        );
+        if (result) return result;
+      }
+
+      // Check default import: import Foo from "..."
+      if (clause.name) {
+        const result = this.checkImportedSymbolForExtension(
+          clause.name,
+          methodName,
+          receiverType,
+        );
+        if (result) return result;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Check if an imported identifier provides an extension method.
+   *
+   * Handles two cases:
+   *   - The identifier IS a function named `methodName` whose first param
+   *     matches the receiver type → bare function extension
+   *   - The identifier is an object with a callable property named `methodName`
+   *     whose first param matches → namespace extension
+   */
+  private checkImportedSymbolForExtension(
+    ident: ts.Identifier,
+    methodName: string,
+    receiverType: ts.Type,
+  ): StandaloneExtensionInfo | undefined {
+    const symbol = this.ctx.typeChecker.getSymbolAtLocation(ident);
+    if (!symbol) return undefined;
+
+    const identType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+      symbol,
+      ident,
+    );
+
+    // Case 1: bare function import — name matches methodName and first
+    // param is assignable from the receiver type
+    if (ident.text === methodName) {
+      const callSigs = identType.getCallSignatures();
+      for (const sig of callSigs) {
+        const params = sig.getParameters();
+        if (params.length === 0) continue;
+        const firstParamType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+          params[0],
+          ident,
+        );
+        if (this.isTypeCompatible(receiverType, firstParamType)) {
+          return { methodName, forType: "", qualifier: undefined };
+        }
+      }
+    }
+
+    // Case 2: namespace object — has a property named methodName that is
+    // callable with first param assignable from the receiver type
+    const prop = identType.getProperty(methodName);
+    if (!prop) return undefined;
+
+    const propType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+      prop,
+      ident,
+    );
+    const callSigs = propType.getCallSignatures();
+    for (const sig of callSigs) {
+      const params = sig.getParameters();
+      if (params.length === 0) continue;
+      const firstParamType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+        params[0],
+        ident,
+      );
+      if (this.isTypeCompatible(receiverType, firstParamType)) {
+        return { methodName, forType: "", qualifier: ident.text };
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Check if `source` is assignable to `target` (for extension method
+   * first-parameter matching). Handles primitives, classes, and interfaces.
+   */
+  private isTypeCompatible(source: ts.Type, target: ts.Type): boolean {
+    // Use the type checker's assignability check
+    return this.ctx.typeChecker.isTypeAssignableTo(source, target);
+  }
+
+  /**
+   * Rewrite a binary expression using typeclass operator overloading.
+   *
+   * When a typeclass method is annotated with `& Op<"+">`, any usage of `+`
+   * on types that have an instance of that typeclass gets rewritten to a
+   * direct method call (or inlined for zero-cost).
+   *
+   * Example: `a + b` where `a: Point` and `Semigroup<Point>` exists with
+   * `concat(a, b): A & Op<"+">` becomes `semigroupPoint.concat(a, b)`.
+   */
+  private tryRewriteTypeclassOperator(
+    node: ts.BinaryExpression,
+  ): ts.Expression | undefined {
+    const opString = getOperatorString(node.operatorToken.kind);
+    if (!opString) return undefined;
+
+    const entries = getSyntaxForOperator(opString);
+    if (!entries || entries.length === 0) return undefined;
+
+    // Determine the type of the left operand
+    const leftType = this.ctx.typeChecker.getTypeAtLocation(node.left);
+    const typeName = this.ctx.typeChecker.typeToString(leftType);
+    const baseTypeName = typeName.replace(/<.*>$/, "");
+
+    // Find a matching typeclass instance among the entries for this operator
+    let matchedEntry: { typeclass: string; method: string } | undefined;
+    let matchedInstance:
+      | { typeclassName: string; forType: string; instanceName: string }
+      | undefined;
+
+    for (const entry of entries) {
+      const inst =
+        findInstance(entry.typeclass, typeName) ??
+        findInstance(entry.typeclass, baseTypeName);
+      if (inst) {
+        if (matchedEntry) {
+          // Ambiguity: multiple typeclasses provide this operator for this type
+          this.ctx.reportError(
+            node,
+            `Ambiguous operator '${opString}' for type '${typeName}': ` +
+              `both ${matchedEntry.typeclass}.${matchedEntry.method} and ` +
+              `${entry.typeclass}.${entry.method} apply. ` +
+              `Use explicit method calls to disambiguate.`,
+          );
+          return undefined;
+        }
+        matchedEntry = entry;
+        matchedInstance = inst;
+      }
+    }
+
+    if (!matchedEntry || !matchedInstance) return undefined;
+
+    if (this.verbose) {
+      console.log(
+        `[typemacro] Rewriting operator: ${typeName} ${opString} → ` +
+          `${matchedEntry.typeclass}.${matchedEntry.method}()`,
+      );
+    }
+
+    const factory = this.ctx.factory;
+    const left = ts.visitNode(node.left, this.boundVisit) as ts.Expression;
+    const right = ts.visitNode(node.right, this.boundVisit) as ts.Expression;
+
+    // Try zero-cost inlining first: if we have the instance method's AST,
+    // inline it directly instead of emitting a method call.
+    const dictMethodMap = getInstanceMethods(matchedInstance.instanceName);
+    if (dictMethodMap) {
+      const dictMethod = dictMethodMap.methods.get(matchedEntry.method);
+      if (dictMethod) {
+        const inlined = this.inlineMethodForAutoSpec(dictMethod, [left, right]);
+        if (inlined) {
+          if (this.verbose) {
+            console.log(
+              `[typemacro] Inlined operator ${opString} via ${matchedEntry.typeclass}.${matchedEntry.method}`,
+            );
+          }
+          return inlined;
+        }
+      }
+    }
+
+    // Fallback: emit instanceVar.method(left, right)
+    const methodAccess = factory.createPropertyAccessExpression(
+      factory.createIdentifier(matchedInstance.instanceName),
+      matchedEntry.method,
+    );
+    const rewritten = factory.createCallExpression(methodAccess, undefined, [
+      left,
+      right,
+    ]);
+
+    try {
+      return ts.visitNode(rewritten, this.boundVisit) as ts.Expression;
+    } catch (error) {
+      this.ctx.reportError(
+        node,
+        `Operator rewrite failed for '${opString}': ${error}`,
+      );
       return undefined;
     }
   }

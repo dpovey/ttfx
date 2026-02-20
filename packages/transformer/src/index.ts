@@ -10,6 +10,10 @@ import {
   createMacroContext,
   globalRegistry,
   globalExtensionRegistry,
+  standaloneExtensionRegistry,
+  findStandaloneExtension,
+  buildStandaloneExtensionCall,
+  type StandaloneExtensionInfo,
   ExpressionMacro,
   AttributeMacro,
   MacroDefinition,
@@ -135,6 +139,15 @@ class MacroTransformer {
     Set<ts.ImportSpecifier | "namespace" | "default">
   >();
 
+  /**
+   * Cache for import-scoped extension resolution.
+   * Key: ts.Type object identity, Value: Map<methodName, result>
+   */
+  private importExtensionCache = new Map<
+    ts.Type,
+    Map<string, StandaloneExtensionInfo | undefined>
+  >();
+
   constructor(
     private ctx: MacroContextImpl,
     private verbose: boolean,
@@ -207,6 +220,171 @@ class MacroTransformer {
   // ---------------------------------------------------------------------------
   // Import-scoped macro resolution
   // ---------------------------------------------------------------------------
+
+  /**
+   * Import-scoped extension resolution.
+   *
+   * When a method call like `x.clamp(0, 100)` fails to resolve through the
+   * typeclass and standalone registries, scan the current file's imports for
+   * a matching function or namespace property. This implements Scala 3-style
+   * "extensions are scoped to what's imported".
+   *
+   * Two patterns are recognized:
+   *   1. Namespace: `import { NumberExt } from "@ttfx/std"`
+   *      → if NumberExt has a callable `clamp` whose first param matches
+   *        the receiver type, rewrite to `NumberExt.clamp(receiver, args)`
+   *   2. Bare function: `import { clamp } from "@ttfx/std"`
+   *      → if `clamp`'s first param matches the receiver type, rewrite to
+   *        `clamp(receiver, args)`
+   *
+   * Results are cached per (receiverType, methodName) pair.
+   */
+  private resolveExtensionFromImports(
+    node: ts.CallExpression,
+    methodName: string,
+    receiverType: ts.Type,
+  ): StandaloneExtensionInfo | undefined {
+    const sourceFile = node.getSourceFile();
+
+    // Cache lookup
+    let methodCache = this.importExtensionCache.get(receiverType);
+    if (!methodCache) {
+      methodCache = new Map();
+      this.importExtensionCache.set(receiverType, methodCache);
+    }
+
+    if (methodCache.has(methodName)) {
+      return methodCache.get(methodName);
+    }
+
+    const result = this.scanImportsForExtension(
+      sourceFile,
+      methodName,
+      receiverType,
+    );
+    methodCache.set(methodName, result);
+    return result;
+  }
+
+  private scanImportsForExtension(
+    sourceFile: ts.SourceFile,
+    methodName: string,
+    receiverType: ts.Type,
+  ): StandaloneExtensionInfo | undefined {
+    for (const stmt of sourceFile.statements) {
+      if (!ts.isImportDeclaration(stmt)) continue;
+
+      const clause = stmt.importClause;
+      if (!clause) continue;
+
+      // Check named imports: import { NumberExt, clamp } from "..."
+      if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+        for (const spec of clause.namedBindings.elements) {
+          const result = this.checkImportedSymbolForExtension(
+            spec.name,
+            methodName,
+            receiverType,
+          );
+          if (result) return result;
+        }
+      }
+
+      // Check namespace import: import * as std from "..."
+      if (clause.namedBindings && ts.isNamespaceImport(clause.namedBindings)) {
+        const result = this.checkImportedSymbolForExtension(
+          clause.namedBindings.name,
+          methodName,
+          receiverType,
+        );
+        if (result) return result;
+      }
+
+      // Check default import: import Foo from "..."
+      if (clause.name) {
+        const result = this.checkImportedSymbolForExtension(
+          clause.name,
+          methodName,
+          receiverType,
+        );
+        if (result) return result;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Check if an imported identifier provides an extension method.
+   *
+   * Handles two cases:
+   *   - The identifier IS a function named `methodName` whose first param
+   *     matches the receiver type → bare function extension
+   *   - The identifier is an object with a callable property named `methodName`
+   *     whose first param matches → namespace extension
+   */
+  private checkImportedSymbolForExtension(
+    ident: ts.Identifier,
+    methodName: string,
+    receiverType: ts.Type,
+  ): StandaloneExtensionInfo | undefined {
+    const symbol = this.ctx.typeChecker.getSymbolAtLocation(ident);
+    if (!symbol) return undefined;
+
+    const identType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+      symbol,
+      ident,
+    );
+
+    // Case 1: bare function import — name matches methodName and first
+    // param is assignable from the receiver type
+    if (ident.text === methodName) {
+      const callSigs = identType.getCallSignatures();
+      for (const sig of callSigs) {
+        const params = sig.getParameters();
+        if (params.length === 0) continue;
+        const firstParamType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+          params[0],
+          ident,
+        );
+        if (this.isTypeCompatible(receiverType, firstParamType)) {
+          return { methodName, forType: "", qualifier: undefined };
+        }
+      }
+    }
+
+    // Case 2: namespace object — has a property named methodName that is
+    // callable with first param assignable from the receiver type
+    const prop = identType.getProperty(methodName);
+    if (!prop) return undefined;
+
+    const propType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+      prop,
+      ident,
+    );
+    const callSigs = propType.getCallSignatures();
+    for (const sig of callSigs) {
+      const params = sig.getParameters();
+      if (params.length === 0) continue;
+      const firstParamType = this.ctx.typeChecker.getTypeOfSymbolAtLocation(
+        params[0],
+        ident,
+      );
+      if (this.isTypeCompatible(receiverType, firstParamType)) {
+        return { methodName, forType: "", qualifier: ident.text };
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Check if `source` is assignable to `target` (for extension method
+   * first-parameter matching). Handles primitives, classes, and interfaces.
+   */
+  private isTypeCompatible(source: ts.Type, target: ts.Type): boolean {
+    // Use the type checker's assignability check
+    return this.ctx.typeChecker.isTypeAssignableTo(source, target);
+  }
 
   /**
    * Resolve an identifier to a macro definition via import tracking.
@@ -1067,7 +1245,27 @@ class MacroTransformer {
     const receiverType = this.ctx.typeChecker.getTypeAtLocation(receiver);
     const existingProp = receiverType.getProperty(methodName);
 
+    // If the property exists natively, we usually skip rewriting.
+    // However, if the user has augmented the interface (e.g. `interface Number { clamp: ... }`)
+    // to satisfy the type checker, `existingProp` will be defined but point to a declaration
+    // that has no implementation.
+    //
+    // We check if an explicit extension is available in scope (via import scanning).
+    // If so, we prioritize the extension over the (likely empty) interface augmentation.
+    let forceRewrite = false;
     if (existingProp) {
+      // Check if we have an import-scoped extension that matches
+      const potentialExt = this.resolveExtensionFromImports(
+        node,
+        methodName,
+        receiverType,
+      );
+      if (potentialExt) {
+        forceRewrite = true;
+      }
+    }
+
+    if (existingProp && !forceRewrite) {
       return undefined;
     }
 
@@ -1081,6 +1279,56 @@ class MacroTransformer {
       const baseTypeName = typeName.replace(/<.*>$/, "");
       if (baseTypeName !== typeName) {
         extension = globalExtensionRegistry.find(methodName, baseTypeName);
+      }
+    }
+
+    // Check standalone extensions — first the pre-registered registry,
+    // then scan imports in the current file (Scala 3-style: extensions
+    // are scoped to what's imported).
+    let standaloneExt = findStandaloneExtension(methodName, typeName);
+    if (!standaloneExt) {
+      const baseTypeName = typeName.replace(/<.*>$/, "");
+      if (baseTypeName !== typeName) {
+        standaloneExt = findStandaloneExtension(methodName, baseTypeName);
+      }
+    }
+
+    // Import-scoped resolution: scan the current file's imports for a
+    // matching function or namespace property. This is the "error recovery"
+    // path — any undefined method triggers a search of what's in scope.
+    if (!standaloneExt) {
+      standaloneExt = this.resolveExtensionFromImports(
+        node,
+        methodName,
+        receiverType,
+      );
+    }
+
+    if (standaloneExt) {
+      if (this.verbose) {
+        const qual = standaloneExt.qualifier
+          ? `${standaloneExt.qualifier}.${standaloneExt.methodName}`
+          : standaloneExt.methodName;
+        console.log(
+          `[typemacro] Rewriting standalone extension: ${typeName}.${methodName}() → ${qual}(...)`,
+        );
+      }
+
+      const rewritten = buildStandaloneExtensionCall(
+        this.ctx.factory,
+        standaloneExt,
+        receiver,
+        Array.from(node.arguments),
+      );
+
+      try {
+        return ts.visitNode(rewritten, this.visit.bind(this)) as ts.Expression;
+      } catch (error) {
+        this.ctx.reportError(
+          node,
+          `Standalone extension method rewrite failed: ${error}`,
+        );
+        return undefined;
       }
     }
 

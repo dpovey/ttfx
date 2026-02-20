@@ -60,6 +60,7 @@ src/
 │   ├── reflect.ts      # @reflect, typeInfo<T>(), fieldNames<T>(), validator<T>()
 │   ├── tailrec.ts      # @tailrec — tail-call optimization
 │   ├── operators.ts    # @operators, ops(), pipe(), compose()
+│   ├── extension.ts    # registerExtensions(), registerExtension() — standalone extensions
 │   ├── cfg.ts          # cfg(), @cfgAttr — conditional compilation
 │   ├── generic.ts      # Generic<T,R> — structural type representations
 │   ├── syntax-macro.ts # defineSyntaxMacro() — pattern-based macros (macro_rules! equivalent)
@@ -311,7 +312,8 @@ The typeclass system is the flagship feature. It provides Scala 3-style typeclas
 
 - `typeclassRegistry` — typeclass metadata (methods, type params)
 - `instanceRegistry` — registered instances (typeclass × type → instance)
-- `extensionMethodRegistry` — extension methods for types
+- `extensionMethodRegistry` — typeclass extension methods for types
+- `standaloneExtensionRegistry` — standalone extension methods for concrete types (Scala 3-style)
 - `instanceMethodRegistry` — method implementations for specialization (in `specialize.ts`)
 
 **Key functions for reuse:**
@@ -320,6 +322,128 @@ The typeclass system is the flagship feature. It provides Scala 3-style typeclas
 - `registerInstanceMethods(typeName, methods)` — registers methods for later inlining
 - `findInstance(typeclassName, typeName)` — looks up a registered instance
 - `getTypeclass(name)` — retrieves typeclass metadata
+
+### Standalone Extension Methods (`extension.ts`, `macro-transformer.ts`)
+
+Scala 3 has two extension mechanisms: typeclass-derived (above) and standalone
+extensions on concrete types. The standalone extension system handles the latter.
+
+Unlike typeclass extensions (which go through `TC.summon<T>().method()`), standalone
+extensions compile to direct function calls — inherently zero-cost.
+
+**Usage — extensions are import-scoped (like Scala 3):**
+
+```typescript
+import { extend } from "ttfx";
+import { NumberExt, StringExt } from "@ttfx/std";
+
+// No registration needed — the transformer scans imports when it encounters
+// an undefined method call. If NumberExt has a callable `clamp` whose first
+// param matches the receiver type, it rewrites automatically.
+
+extend(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
+extend("hello").capitalize(); // → StringExt.capitalize("hello")
+(42).isPrime(); // implicit rewrite → NumberExt.isPrime(42)
+```
+
+Bare function imports work too:
+
+```typescript
+import { clamp } from "@ttfx/std";
+(42).clamp(0, 100); // → clamp(42, 0, 100)
+```
+
+**How it works (3-tier resolution for undefined method calls):**
+
+1. Check `extensionMethodRegistry` (typeclass extensions from `@instance`/`@deriving`)
+2. Check `standaloneExtensionRegistry` (explicit `registerExtensions()` calls)
+3. **Import-scoped scan**: enumerate all imports in the current file, check if any
+   imported identifier (namespace or bare function) has a callable property or
+   signature matching the method name and receiver type. Uses the type checker's
+   `isTypeAssignableTo` for parameter matching. Results are cached per file.
+
+The `extend()` macro also goes through this chain — if registries don't match, it
+strips itself and emits `value.method(args)` for the implicit rewriter to handle.
+
+**Explicit registration (optional, for programmatic use):**
+
+| Macro                                 | Kind       | Purpose                                        |
+| ------------------------------------- | ---------- | ---------------------------------------------- |
+| `registerExtensions(type, namespace)` | Expression | Pre-register namespace methods as extensions   |
+| `registerExtension(type, fn)`         | Expression | Pre-register a single function as an extension |
+
+**Key difference from typeclass extensions:**
+
+| Aspect       | Typeclass                    | Standalone                   |
+| ------------ | ---------------------------- | ---------------------------- |
+| Resolution   | Instance lookup via `summon` | Direct function call         |
+| Output       | `ShowNumber.show(x)`         | `NumberExt.clamp(x, 0, 100)` |
+| Polymorphism | Yes (any `T` with instance)  | No (concrete type only)      |
+| Scoping      | Global (once registered)     | Import-scoped (like Scala 3) |
+| Zero-cost    | Via `specialize()` inlining  | Inherently (direct call)     |
+
+### HKT Conventions
+
+**IMPORTANT: TypeScript HKT uses `F<_>`, NOT Scala's `F[_]`.** Never use square bracket syntax in code or types.
+
+The HKT encoding in ttfx is based on indexed-access types (`packages/type-system/src/hkt.ts`):
+
+```typescript
+type $<F, A> = (F & { readonly _: A })["_"];
+```
+
+**Defining type-level functions:**
+
+```typescript
+// Good: parameterized via this["_"]
+interface ArrayF {
+  _: Array<this["_"]>;
+}
+interface MapF<K> {
+  _: Map<K, this["_"]>;
+}
+
+// BAD: not parameterized — $<StringF, B> always resolves to string
+interface StringF {
+  _: string;
+} // ← phantom type, unsound for Functor/map
+```
+
+**Rules for type-level functions:**
+
+1. The `_` property MUST reference `this["_"]` to be sound. If `$<F, B>` always equals the same type regardless of `B`, the HKT encoding is phantom/unsound
+2. Types that cannot be parameterized (e.g., `string`, `Int8Array`) should NOT implement typeclasses that change the element type (`map`, `flatMap`). Limit them to read-only typeclasses (`IterableOnce`, `Foldable`)
+3. Never use `as unknown as` to paper over HKT type mismatches — it means the type-level function is wrong
+
+**Writing HKT typeclasses:**
+
+The project convention is to write `$<F, A>` explicitly in typeclass definitions. The `F<_>` sugar exists (auto-detected by the transformer) but is NOT used in `@ttfx/fp` or `@ttfx/collections`:
+
+```typescript
+// Current convention: explicit $<F, A>
+interface Functor<F> {
+  readonly map: <A, B>(fa: $<F, A>, f: (a: A) => B) => $<F, B>;
+}
+
+// Also valid but not used yet: F<_> sugar (transformer rewrites F<A> to $<F, A>)
+interface Functor<F<_>> {
+  readonly map: <A, B>(fa: F<A>, f: (a: A) => B) => F<B>;
+}
+```
+
+**Dictionary-passing style:**
+
+All derived operations take the typeclass instance as the first argument for zero-cost specialization:
+
+```typescript
+// Good: dictionary-passing, works with specialize()
+function map<F>(F: Functor<F>): <A, B>(fa: $<F, A>, f: (a: A) => B) => $<F, B> {
+  return (fa, f) => F.map(fa, f);
+}
+
+// Bad: no dictionary parameter, can't be specialized
+function map<F, A, B>(fa: $<F, A>, f: (a: A) => B): $<F, B> { ... }
+```
 
 ### Derive Macros (`derive.ts`, `custom-derive.ts`)
 
@@ -503,19 +627,21 @@ import { Option, Some, None } from "@ttfx/fp";
 
 // let: binds the result, yield: returns the final value
 let: {
-  x << Some(1)
-  y << Some(2)
+  x << Some(1);
+  y << Some(2);
 }
-yield: { x + y }
+yield: {
+  x + y;
+}
 // Compiles to: Some(1).flatMap(x => Some(2).map(y => x + y))
 ```
 
-| Macro/Function       | Kind            | Purpose                                                        |
-| -------------------- | --------------- | -------------------------------------------------------------- |
-| `let: { ... }`       | Labeled Block   | Binds monadic values using `<<` operator                       |
-| `yield: { ... }`     | Labeled Block   | Returns the final expression (uses `map` for last binding)     |
-| `registerFlatMap()`  | Function        | Registers a custom `FlatMap` instance for a type               |
-| `FlatMap<F>`         | Typeclass       | Provides `map` and `flatMap` for monadic sequencing            |
+| Macro/Function      | Kind          | Purpose                                                    |
+| ------------------- | ------------- | ---------------------------------------------------------- |
+| `let: { ... }`      | Labeled Block | Binds monadic values using `<<` operator                   |
+| `yield: { ... }`    | Labeled Block | Returns the final expression (uses `map` for last binding) |
+| `registerFlatMap()` | Function      | Registers a custom `FlatMap` instance for a type           |
+| `FlatMap<F>`        | Typeclass     | Provides `map` and `flatMap` for monadic sequencing        |
 
 **Key functions:**
 
@@ -555,6 +681,8 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 | Generate unique names           | `ctx.generateUniqueName(prefix)`                                    | `core/context.ts`         |
 | Avoid name collisions           | `globalHygiene.withScope(() => { ... })`                            | `core/hygiene.ts`         |
 | Track typeclass instances       | `instanceRegistry`, `findInstance()`                                | `macros/typeclass.ts`     |
+| Register standalone extensions  | `registerStandaloneExtensionEntry(info)`                            | `macros/extension.ts`     |
+| Find standalone extension       | `findStandaloneExtension(method, type)`                             | `macros/extension.ts`     |
 | Register instance methods       | `registerInstanceMethods(name, methods)`                            | `macros/specialize.ts`    |
 | Check primitive coverage        | `registerPrimitive()`, `validateCoverageOrError()`                  | `macros/coverage.ts`      |
 | Extract type metadata           | `extractTypeInfo(ctx, node)`                                        | `macros/reflect.ts`       |
@@ -579,6 +707,120 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 4. **Use `quote()`** for AST construction instead of raw `factory` calls
 5. **Add tests** in `tests/` directory
 6. **Update docs** if user-facing
+
+## When Adding Packages
+
+1. **Always declare `devDependencies`** — don't rely on hoisting (`vitest`, `typescript`, etc.)
+2. **Create `vitest.config.ts`** with a project name matching the package name
+3. **Add JSDoc comments** on every exported type, interface, and function — follow `@ttfx/fp` as the standard
+4. **All imports must be at the top of the file** — no mid-file imports
+5. **Re-export everything from `index.ts`** — including derived operations, not just core types
+6. **Don't export dead code** — if a type-level function or type has no instances, don't export it
+
+## Code Quality Checklist
+
+Before considering any code complete, verify:
+
+### `undefined` handling in collections/maps
+
+- **Never use `!== undefined` to check if a key exists** — the value might legitimately be `undefined`
+- Use `has()` / `contains()` for existence checks, then `get()` for retrieval
+- This applies to: `getOrElse`, `mapValues`, `filterKeys`, `filterValues`, `foldEntries`, and any operation that iterates over entries
+
+### HKT soundness
+
+- Every `interface FooF { _: ... }` type-level function MUST use `this["_"]` in its `_` property
+- If `$<FooF, string>` and `$<FooF, number>` resolve to the same type, the encoding is phantom/unsound
+- Unsound HKT types must NOT implement typeclasses that change the element type (Functor, Monad, etc.)
+
+### Performance
+
+- `partition` must be single-pass — never filter twice
+- Lazy views should track operation counts in tests to verify laziness
+- Builder types must have correct generic types — no `as unknown as` casts to fix type mismatches
+
+### Consistency
+
+- Name operations consistently across typeclasses — if both `Seq` and `MapLike` have `updated`, disambiguate in standalone ops (e.g., `mapUpdated`)
+- Bridge modules should cover ALL relevant typeclasses from the target package, not just a subset
+- Every derived operation should be re-exported from the package's `index.ts`
+
+---
+
+## Preprocessor Guidelines (`@ttfx/preprocessor`)
+
+The preprocessor handles custom syntax (`F<_>` HKT, `|>` pipeline, `::` cons) that TypeScript cannot parse. It runs **before** the AST exists, doing text-level rewriting so tools like esbuild/vitest can parse the output.
+
+### No Dead Code in Exports
+
+Every symbol exported from `index.ts` must have at least one consumer in the codebase. If designing for future extensibility, mark internal types with `@internal` JSDoc and do not export from `index.ts`. Dead exports accumulate maintenance burden and confuse users.
+
+### No Duplicate Utility Functions
+
+Shared helpers (like `isBoundaryToken`) must live in **one file** and be imported. Duplicating logic across files means divergence bugs — one copy gets fixed, others don't. Hoist hot-path allocations (like `new Set(...)`) to module scope.
+
+### Operator System Boundary
+
+There are two operator systems that must **never overlap**:
+
+| System           | Operators                           | Mechanism                               | Registration                       |
+| ---------------- | ----------------------------------- | --------------------------------------- | ---------------------------------- |
+| Preprocessor     | `\|>`, `::`, `<\|` (custom, non-JS) | Text → `__binop__()` → macro resolution | `@operator(symbol)` on method      |
+| Op\<\> Typeclass | `+`, `-`, `===`, etc. (standard JS) | AST `tryRewriteTypeclassOperator()`     | `Op<"+">` on typeclass return type |
+
+**Rules:**
+
+- The `@operator` decorator must **reject** symbols in `OPERATOR_SYMBOLS` (from `core/types.ts`). Use `Op<>` for standard operators.
+- The `Op<>` system must **warn** on non-standard symbols. Use `@operator` for custom operators.
+- The `__binop__` macro should check both `methodOperatorMappings` and `syntaxRegistry` and emit an ambiguity error if both match.
+
+### Scanner Must Respect File Type
+
+The scanner wraps `ts.createScanner`, which needs the correct `LanguageVariant`:
+
+- `.tsx` / `.jsx` → `LanguageVariant.JSX`
+- `.ts` / `.js` → `LanguageVariant.Standard`
+
+The `preprocess()` function must accept a `fileName` parameter and thread it through to `tokenize()`. Integrations (unplugin, ESLint processor) must pass the filename.
+
+Without this, JSX elements like `<Component>` are tokenized as comparison operators, causing false `|>` merges and incorrect bracket matching.
+
+### Text-Level Rewriting Rules
+
+The preprocessor operates on text before AST construction. This imposes constraints:
+
+1. **Never change line count** — keep source maps simple (line N in output = line N in input, plus column offsets)
+2. **Expression contexts only** — custom operators must not be rewritten in type annotations (e.g., `type P = A |> B` is invalid)
+3. **Preserve structure** — the output must be valid TypeScript that parses to the intended AST
+
+Before rewriting a custom operator, check context: scan left for `:`, `extends`, `type ... =`, `<` (generic args). If found, skip rewriting.
+
+### Source Maps Are Mandatory
+
+Any text transformation must produce a usable source map. Use `magic-string` for replacements — it generates standard VLQ source maps automatically.
+
+**Never return `map: null`** from a build plugin. Error locations, stack traces, and debugger breakpoints depend on accurate source maps.
+
+### Language Service Plugin
+
+There must be exactly **one canonical implementation** at `packages/transformer/src/language-service.ts`.
+
+The legacy file `src/language-service/index.ts` must be a thin re-export:
+
+```typescript
+export { default } from "@ttfx/transformer/language-service";
+```
+
+Do not duplicate the 700+ lines of language service code.
+
+### Unplugin Type-Checker Limitation
+
+When unplugin preprocesses a file, it creates a fresh `ts.SourceFile` disconnected from the `ts.Program`. The type checker cannot resolve types for this file, which means:
+
+- `@operator` dispatch on custom types **falls back to default semantics** (e.g., `|>` becomes `f(a)`)
+- Type-aware `__binop__` resolution requires **ts-patch**, not unplugin
+
+Document this limitation in code comments and the preprocessor README.
 
 ## GitHub Account
 

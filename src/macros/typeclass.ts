@@ -71,6 +71,12 @@ import {
   DeriveFieldInfo,
   DeriveVariantInfo,
 } from "../core/types.js";
+import { OPERATOR_SYMBOLS } from "../core/types.js";
+import {
+  findStandaloneExtension as findStandaloneExtensionForExtend,
+  buildStandaloneExtensionCall,
+} from "./extension.js";
+import type { OperatorSymbol } from "../core/types.js";
 import {
   registerInstanceMethodsFromAST,
   extractMethodsFromObjectLiteral,
@@ -456,10 +462,8 @@ interface TypeclassInfo {
    */
   fullSignatureText?: string;
   /**
-   * Operator syntax mappings: operator string → method name.
-   * Declares which operators can be used as sugar for typeclass methods.
-   * E.g., { "+": "concat" } means `a + b` rewrites to `Semigroup.concat(a, b)`
-   * when a Semigroup instance exists for the operand type.
+   * Operator syntax mappings: operator string -> method name.
+   * Built automatically from methods annotated with `& Op<"+">` return types.
    */
   syntax?: Map<string, string>;
 }
@@ -472,6 +476,8 @@ interface TypeclassMethod {
   returnType: string;
   /** Whether the first parameter is the "self" type (for extension methods) */
   isSelfMethod: boolean;
+  /** Operator symbol declared via `& Op<"+">` on the return type, if any. */
+  operatorSymbol?: string;
 }
 
 interface InstanceInfo {
@@ -525,7 +531,7 @@ const syntaxRegistry = new Map<string, SyntaxEntry[]>();
 
 /**
  * Register operator syntax for a typeclass.
- * Called when a typeclass with `static syntax = { ... }` is registered.
+ * Called when a typeclass with Op<> annotated methods is registered.
  */
 function registerTypeclassSyntax(
   tcName: string,
@@ -553,6 +559,121 @@ function getSyntaxForOperator(op: string): SyntaxEntry[] | undefined {
  */
 function clearSyntaxRegistry(): void {
   syntaxRegistry.clear();
+}
+
+const operatorSymbolSet: ReadonlySet<string> = new Set(
+  OPERATOR_SYMBOLS as readonly string[],
+);
+
+/**
+ * Extract an operator symbol from a return type node of the form `T & Op<"+">`.
+ *
+ * Walks intersection types looking for `Op<S>` where S is a string literal
+ * that is a valid OperatorSymbol. Returns the operator string and the cleaned
+ * return type with `Op<>` stripped out.
+ */
+function extractOpFromReturnType(typeNode: ts.TypeNode | undefined): {
+  operatorSymbol: string | undefined;
+  cleanReturnType: string;
+} {
+  if (!typeNode) {
+    return { operatorSymbol: undefined, cleanReturnType: "void" };
+  }
+
+  if (!ts.isIntersectionTypeNode(typeNode)) {
+    return { operatorSymbol: undefined, cleanReturnType: typeNode.getText() };
+  }
+
+  let operatorSymbol: string | undefined;
+  const nonOpTypes: ts.TypeNode[] = [];
+
+  for (const member of typeNode.types) {
+    if (
+      ts.isTypeReferenceNode(member) &&
+      ts.isIdentifier(member.typeName) &&
+      member.typeName.text === "Op" &&
+      member.typeArguments &&
+      member.typeArguments.length === 1
+    ) {
+      const arg = member.typeArguments[0];
+      if (ts.isLiteralTypeNode(arg) && ts.isStringLiteral(arg.literal)) {
+        const sym = arg.literal.text;
+        if (operatorSymbolSet.has(sym)) {
+          operatorSymbol = sym;
+          continue; // skip — don't include Op<> in clean return type
+        }
+      }
+    }
+    nonOpTypes.push(member);
+  }
+
+  // Rebuild the return type text without Op<>
+  let cleanReturnType: string;
+  if (nonOpTypes.length === 0) {
+    cleanReturnType = "void";
+  } else if (nonOpTypes.length === 1) {
+    cleanReturnType = nonOpTypes[0].getText();
+  } else {
+    cleanReturnType = nonOpTypes.map((t) => t.getText()).join(" & ");
+  }
+
+  return { operatorSymbol, cleanReturnType };
+}
+
+/**
+ * Strip `Op<>` from all method return types in an interface declaration.
+ * Returns a new interface with clean signatures for the emitted code.
+ */
+function stripOpFromInterface(
+  ctx: MacroContext,
+  iface: ts.InterfaceDeclaration,
+): ts.InterfaceDeclaration {
+  const factory = ctx.factory;
+  let needsUpdate = false;
+
+  const newMembers = iface.members.map((member) => {
+    if (!ts.isMethodSignature(member) || !member.type) return member;
+    if (!ts.isIntersectionTypeNode(member.type)) return member;
+
+    const hasOp = member.type.types.some(
+      (t) =>
+        ts.isTypeReferenceNode(t) &&
+        ts.isIdentifier(t.typeName) &&
+        t.typeName.text === "Op",
+    );
+    if (!hasOp) return member;
+
+    needsUpdate = true;
+    const { cleanReturnType } = extractOpFromReturnType(member.type);
+    const newReturnType = ctx.parseExpression(`null! as ${cleanReturnType}`);
+    let newTypeNode: ts.TypeNode;
+    if (ts.isAsExpression(newReturnType)) {
+      newTypeNode = newReturnType.type;
+    } else {
+      newTypeNode = factory.createKeywordTypeNode(ts.SyntaxKind.VoidKeyword);
+    }
+
+    return factory.updateMethodSignature(
+      member,
+      member.modifiers,
+      member.name,
+      member.questionToken,
+      member.typeParameters,
+      member.parameters,
+      newTypeNode,
+    );
+  });
+
+  if (!needsUpdate) return iface;
+
+  return factory.updateInterfaceDeclaration(
+    iface,
+    iface.modifiers,
+    iface.name,
+    iface.typeParameters,
+    iface.heritageClauses,
+    newMembers,
+  );
 }
 
 /**
@@ -850,45 +971,11 @@ export const typeclassAttribute = defineAttributeMacro({
 
     const typeParam = typeParams[0].name.text;
 
-    // Extract operator syntax from decorator arguments:
-    //   @typeclass({ syntax: { "+": "concat" } })
-    const syntax = parseSyntaxFromDecoratorArgs(_args);
-
     // Extract methods from the interface (handles both MethodSignature and PropertySignature)
     const methods: TypeclassMethod[] = [];
     const memberTexts: string[] = [];
 
     for (const member of target.members) {
-      // Skip the `syntax` property — it's metadata, not part of the contract
-      if (
-        ts.isPropertySignature(member) &&
-        member.name &&
-        ts.isIdentifier(member.name) &&
-        member.name.text === "syntax"
-      ) {
-        // Also try to extract syntax from the interface body as a fallback:
-        //   syntax: { "+": "concat" }
-        // The type literal's property names are the operators, values are methods.
-        if (!syntax && member.type && ts.isTypeLiteralNode(member.type)) {
-          const bodySyntax = parseSyntaxFromTypeLiteral(member.type);
-          if (bodySyntax.size > 0) {
-            syntax?.clear();
-            for (const [k, v] of bodySyntax) {
-              (syntax || bodySyntax).set(k, v);
-            }
-            if (!syntax) {
-              // Use bodySyntax directly below
-              Object.defineProperty(
-                parseSyntaxFromDecoratorArgs,
-                "_bodySyntax",
-                { value: bodySyntax },
-              );
-            }
-          }
-        }
-        continue;
-      }
-
       // Capture raw source text of each member for HKT expansion
       const sourceFile = member.getSourceFile();
       if (sourceFile) {
@@ -911,6 +998,7 @@ export const typeclassAttribute = defineAttributeMacro({
             : param.name.getText();
           const paramType = param.type ? param.type.getText() : "unknown";
 
+          // Check if this parameter uses the typeclass's type param
           if (i === 0 && paramType === typeParam) {
             isSelfMethod = true;
           }
@@ -918,13 +1006,16 @@ export const typeclassAttribute = defineAttributeMacro({
           params.push({ name: paramName, typeString: paramType });
         }
 
-        const returnType = member.type ? member.type.getText() : "void";
+        const { operatorSymbol, cleanReturnType } = extractOpFromReturnType(
+          member.type,
+        );
 
         methods.push({
           name: methodName,
           params,
-          returnType,
+          returnType: cleanReturnType,
           isSelfMethod,
+          operatorSymbol,
         });
       } else if (ts.isPropertySignature(member) && member.name) {
         const methodName = ts.isIdentifier(member.name)
@@ -944,8 +1035,13 @@ export const typeclassAttribute = defineAttributeMacro({
     const fullSignatureText =
       memberTexts.length > 0 ? `{ ${memberTexts.join("; ")} }` : undefined;
 
-    // Resolve final syntax map (decorator args take precedence)
-    const finalSyntax = syntax || undefined;
+    // Build syntax map from Op<> annotations on methods
+    const syntax = new Map<string, string>();
+    for (const method of methods) {
+      if (method.operatorSymbol) {
+        syntax.set(method.operatorSymbol, method.name);
+      }
+    }
 
     // Register the typeclass
     const tcInfo: TypeclassInfo = {
@@ -955,13 +1051,13 @@ export const typeclassAttribute = defineAttributeMacro({
       canDeriveProduct: true,
       canDeriveSum: true,
       fullSignatureText,
-      syntax: finalSyntax,
+      syntax: syntax.size > 0 ? syntax : undefined,
     };
     typeclassRegistry.set(tcName, tcInfo);
 
     // Register operator syntax in the global registry
-    if (finalSyntax && finalSyntax.size > 0) {
-      registerTypeclassSyntax(tcName, finalSyntax);
+    if (syntax.size > 0) {
+      registerTypeclassSyntax(tcName, syntax);
     }
 
     // Generate the companion namespace with utility functions
@@ -975,10 +1071,10 @@ export const typeclassAttribute = defineAttributeMacro({
       ...ctx.parseStatements(extensionCode),
     ];
 
-    // Strip the `syntax` member from the output interface if present
-    const outputTarget = stripSyntaxMember(ctx, target);
+    // Strip Op<> from the emitted interface
+    const cleanTarget = stripOpFromInterface(ctx, target);
 
-    return [outputTarget, ...statements];
+    return [cleanTarget, ...statements];
   },
 });
 
@@ -2380,11 +2476,42 @@ export const extendMacro = defineExpressionMacro({
       }
     }
 
-    ctx.reportError(
-      parent,
-      `No typeclass instance found providing method '${methodName}' for type '${typeName}'`,
+    // Check standalone extensions (Scala 3-style concrete type extensions)
+    const standaloneExt = findStandaloneExtensionForExtend(
+      methodName,
+      typeName,
     );
-    return callExpr;
+    if (standaloneExt) {
+      const grandParent = parent.parent;
+      const extraArgs =
+        grandParent && ts.isCallExpression(grandParent)
+          ? Array.from(grandParent.arguments)
+          : [];
+      return buildStandaloneExtensionCall(
+        ctx.factory,
+        standaloneExt,
+        value,
+        extraArgs,
+      );
+    }
+
+    // No match in registries — strip the extend() wrapper and emit
+    // value.method(args) so the transformer's implicit extension rewriting
+    // (which includes import-scoped resolution) can handle it.
+    const grandParent = parent.parent;
+    if (grandParent && ts.isCallExpression(grandParent)) {
+      const methodCall = ctx.factory.createCallExpression(
+        ctx.factory.createPropertyAccessExpression(value, methodName),
+        undefined,
+        Array.from(grandParent.arguments),
+      );
+      return methodCall;
+    }
+    const propAccess = ctx.factory.createPropertyAccessExpression(
+      value,
+      methodName,
+    );
+    return propAccess;
   },
 });
 
@@ -2408,14 +2535,14 @@ export function generateStandardTypeclasses(): string {
 /** Equality typeclass - Scala 3: trait Eq[A] */
 @typeclass
 interface Eq<A> {
-  eq(a: A, b: A): boolean;
-  neq(a: A, b: A): boolean;
+  eq(a: A, b: A): boolean & Op<"===">;
+  neq(a: A, b: A): boolean & Op<"!==">;
 }
 
 /** Ordering typeclass - Scala 3: trait Ord[A] extends Eq[A] */
 @typeclass
 interface Ord<A> {
-  compare(a: A, b: A): -1 | 0 | 1;
+  compare(a: A, b: A): (-1 | 0 | 1) & Op<"<">;
 }
 
 /** Show typeclass - Scala 3: trait Show[A] */
@@ -2433,14 +2560,14 @@ interface Hash<A> {
 /** Semigroup typeclass - Scala 3: trait Semigroup[A] */
 @typeclass
 interface Semigroup<A> {
-  combine(a: A, b: A): A;
+  combine(a: A, b: A): A & Op<"+">;
 }
 
 /** Monoid typeclass - Scala 3: trait Monoid[A] extends Semigroup[A] */
 @typeclass
 interface Monoid<A> {
   empty(): A;
-  combine(a: A, b: A): A;
+  combine(a: A, b: A): A & Op<"+">;
 }
 
 /** Functor typeclass - Scala 3: trait Functor[F[_]] */
@@ -2661,4 +2788,5 @@ export {
   getSyntaxForOperator,
   registerTypeclassSyntax,
   clearSyntaxRegistry,
+  extractOpFromReturnType,
 };

@@ -1,4 +1,14 @@
-// Extension classes for fluent API
+// Extension namespace objects
+//
+// These are used with registerExtensions() to enable Scala 3-style
+// extension methods on concrete types:
+//
+//   import { registerExtensions, extend } from "ttfx";
+//   import { NumberExt } from "@ttfx/std";
+//
+//   registerExtensions("number", NumberExt);
+//   extend(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
+//
 export { NumberExt } from "./number";
 export { StringExt } from "./string";
 export { ArrayExt } from "./array";
