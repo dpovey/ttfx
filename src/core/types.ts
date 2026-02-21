@@ -108,6 +108,18 @@ export interface MacroContext {
   generateUniqueName(prefix: string): ts.Identifier;
 
   // -------------------------------------------------------------------------
+  // Tree-Shaking Annotations
+  // -------------------------------------------------------------------------
+
+  /**
+   * Mark a node with `/*#__PURE__* /` for tree-shaking.
+   * Bundlers (esbuild, webpack, Rollup) recognize this annotation on call
+   * expressions and `new` expressions to indicate they have no side effects
+   * and can be dropped if unused.
+   */
+  markPure<T extends ts.Node>(node: T): T;
+
+  // -------------------------------------------------------------------------
   // Expansion Cache
   // -------------------------------------------------------------------------
 

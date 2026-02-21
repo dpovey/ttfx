@@ -5,7 +5,7 @@
  */
 
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../core/context.js";
+import { MacroContextImpl, createMacroContext, markPure } from "../core/context.js";
 import { globalRegistry } from "../core/registry.js";
 import {
   ExpressionMacro,
@@ -21,6 +21,7 @@ import { HygieneContext } from "../core/hygiene.js";
 import {
   ExpansionTracker,
   globalExpansionTracker,
+  preserveSourceMap,
 } from "../core/source-map.js";
 import {
   MacroCapabilities,
@@ -71,6 +72,8 @@ import {
 import {
   isRegisteredInstance,
   getInstanceMethods,
+  classifyInlineFailure,
+  getInlineFailureHelp,
   type DictMethodMap,
   type DictMethod,
 } from "../macros/specialize.js";
@@ -1033,11 +1036,14 @@ class MacroTransformer {
                 const visited = ts.visitNode(s, this.boundVisit);
                 if (visited) {
                   if (Array.isArray(visited)) {
-                    newStatements.push(
-                      ...(visited as ts.Node[]).filter(ts.isStatement),
-                    );
+                    const mapped = (visited as ts.Node[])
+                      .filter(ts.isStatement)
+                      .map((v) => preserveSourceMap(v, stmt));
+                    newStatements.push(...mapped);
                   } else {
-                    newStatements.push(visited as ts.Statement);
+                    newStatements.push(
+                      preserveSourceMap(visited as ts.Statement, stmt),
+                    );
                   }
                 }
               }
@@ -1061,11 +1067,14 @@ class MacroTransformer {
               const visited = ts.visitNode(s, this.boundVisit);
               if (visited) {
                 if (Array.isArray(visited)) {
-                  newStatements.push(
-                    ...(visited as ts.Node[]).filter(ts.isStatement),
-                  );
+                  const mapped = (visited as ts.Node[])
+                    .filter(ts.isStatement)
+                    .map((v) => preserveSourceMap(v, stmt));
+                  newStatements.push(...mapped);
                 } else {
-                  newStatements.push(visited as ts.Statement);
+                  newStatements.push(
+                    preserveSourceMap(visited as ts.Statement, stmt),
+                  );
                 }
               }
             }
@@ -1415,8 +1424,8 @@ class MacroTransformer {
         );
       }
 
-      const visited = ts.visitNode(result, this.boundVisit);
-      return visited as ts.Expression;
+      const visited = ts.visitNode(result, this.boundVisit) as ts.Expression;
+      return preserveSourceMap(visited, node);
     } catch (error) {
       this.ctx.reportError(node, `Macro expansion failed: ${error}`);
       return this.createMacroErrorExpression(
@@ -1448,7 +1457,8 @@ class MacroTransformer {
           `[typemacro] Filling implicit parameters for call: ${funcName}()${fromScope}`,
         );
       }
-      return ts.visitNode(result, this.boundVisit) as ts.Expression;
+      const visited = ts.visitNode(result, this.boundVisit) as ts.Expression;
+      return preserveSourceMap(visited, node);
     }
     return undefined;
   }
@@ -1480,6 +1490,9 @@ class MacroTransformer {
       return undefined;
     }
 
+    // Check if warnings are suppressed with // @no-specialize-warn
+    const suppressWarnings = lineText.includes("@no-specialize-warn");
+
     // Find which arguments (if any) are registered instance dictionaries
     const instanceArgs: {
       index: number;
@@ -1503,34 +1516,46 @@ class MacroTransformer {
       return undefined;
     }
 
+    // Get function name for diagnostic messages
+    const fnName = ts.isIdentifier(node.expression)
+      ? node.expression.text
+      : ts.isPropertyAccessExpression(node.expression)
+        ? node.expression.name.text
+        : "<anonymous>";
+
     // Try to resolve the called function to its body
     const fnBody = this.resolveAutoSpecFunctionBody(node.expression);
     if (!fnBody) {
-      // Can't resolve function body - fall back to partial application
-      // Create: (...args) => fn(instanceArg, ...args)
-      // This eliminates the dictionary at call sites even when we can't inline
-      if (instanceArgs.length === 1 && instanceArgs[0].index === 0) {
-        const instanceArg = node.arguments[0];
-        const remainingArgs = node.arguments.slice(1);
-
-        // Create visited args (continue transformation on remaining args)
-        const visitedArgs = remainingArgs.map(
-          (arg) => ts.visitNode(arg, this.boundVisit) as ts.Expression,
+      // Can't resolve function body - emit TS9602 info diagnostic
+      if (!suppressWarnings) {
+        this.ctx.reportWarning(
+          node,
+          `[TS9602] Auto-specialization of ${fnName} skipped — ` +
+            `function body not resolvable. ` +
+            `Use explicit specialize() if you need guaranteed inlining.`,
         );
-
-        // Rebuild call with remaining args only - partial application at call site
-        // This creates: fn(instanceArg, arg1, arg2) -> specialized_fn(arg1, arg2)
-        // when we can't resolve the body, but we know the instance
-        // For now, just return undefined and let normal transformation proceed
-        // A more sophisticated implementation would create a specialized thunk
       }
       return undefined;
     }
 
+    // Check if the function body has patterns that prevent inlining
+    const body = ts.isFunctionDeclaration(fnBody) ? fnBody.body : fnBody.body;
+    if (body && ts.isBlock(body)) {
+      const failureReason = classifyInlineFailure(body);
+      if (failureReason) {
+        if (!suppressWarnings) {
+          const help = getInlineFailureHelp(failureReason);
+          this.ctx.reportWarning(
+            node,
+            `[TS9602] Auto-specialization of ${fnName} skipped — ` +
+              `${failureReason}. ${help}`,
+          );
+        }
+        return undefined;
+      }
+    }
+
     if (this.verbose) {
-      const fnName = ts.isIdentifier(node.expression)
-        ? node.expression.text
-        : "<anonymous>";
       console.log(
         `[typemacro] Auto-specializing call to ${fnName} with instance: ${instanceArgs.map((a) => a.name).join(", ")}`,
       );
@@ -1547,8 +1572,25 @@ class MacroTransformer {
       if (specialized) {
         // Visit the result to handle any nested macros/specializations
         return ts.visitNode(specialized, this.boundVisit) as ts.Expression;
+      } else {
+        // inlineAutoSpecialize returned undefined without throwing
+        if (!suppressWarnings) {
+          this.ctx.reportWarning(
+            node,
+            `[TS9602] Auto-specialization of ${fnName} skipped — ` +
+              `inlining returned no result. ` +
+              `Use explicit specialize() if you need guaranteed inlining.`,
+          );
+        }
       }
     } catch (error) {
+      if (!suppressWarnings) {
+        this.ctx.reportWarning(
+          node,
+          `[TS9602] Auto-specialization of ${fnName} skipped — ` +
+            `${error}. Use explicit specialize() if you need guaranteed inlining.`,
+        );
+      }
       if (this.verbose) {
         console.log(`[typemacro] Auto-specialization failed: ${error}`);
       }
@@ -1760,8 +1802,9 @@ class MacroTransformer {
               Array.from(n.arguments),
             );
             if (inlined) {
+              const mapped = preserveSourceMap(inlined, n);
               return ts.visitEachChild(
-                inlined,
+                mapped,
                 visit,
                 self.ctx.transformContext,
               );
@@ -2012,14 +2055,15 @@ class MacroTransformer {
       currentNode = this.updateDecorators(currentNode, remainingDecorators);
     }
 
-    // Visit the transformed node
-    const visited = ts.visitNode(currentNode, this.boundVisit);
+    // Visit the transformed node and preserve source map from original decorated node
+    const visited = ts.visitNode(currentNode, this.boundVisit) as ts.Node;
+    const mappedNode = preserveSourceMap(visited, node);
 
     if (extraStatements.length > 0) {
-      return [visited as ts.Node, ...extraStatements];
+      return [mappedNode, ...extraStatements];
     }
 
-    return visited as ts.Node;
+    return mappedNode;
   }
 
   /**
@@ -2138,7 +2182,9 @@ class MacroTransformer {
                 `[typemacro] Cache hit for derive macro: ${deriveName}`,
               );
             }
-            statements.push(...cachedStmts);
+            statements.push(
+              ...cachedStmts.map((s) => preserveSourceMap(s, decorator)),
+            );
             continue;
           }
         }
@@ -2147,7 +2193,9 @@ class MacroTransformer {
           const result = this.ctx.hygiene.withScope(() =>
             deriveMacro.expand(this.ctx, node, typeInfo),
           );
-          statements.push(...result);
+          statements.push(
+            ...result.map((s) => preserveSourceMap(s, decorator)),
+          );
 
           if (deriveCacheKey) {
             this.cacheStatements(deriveCacheKey, result);
@@ -2188,7 +2236,10 @@ class MacroTransformer {
             code = typeclassDerivation.deriveProduct(typeName, typeInfo.fields);
           }
 
-          statements.push(...this.ctx.parseStatements(code));
+          const parsedStmts = this.ctx.parseStatements(code);
+          statements.push(
+            ...parsedStmts.map((s) => preserveSourceMap(s, decorator)),
+          );
 
           // Register in compile-time instance registry
           const uncap =
@@ -2223,7 +2274,9 @@ class MacroTransformer {
           const result = this.ctx.hygiene.withScope(() =>
             tcDeriveMacro.expand(this.ctx, node, typeInfo),
           );
-          statements.push(...result);
+          statements.push(
+            ...result.map((s) => preserveSourceMap(s, decorator)),
+          );
         } catch (error) {
           this.ctx.reportError(
             arg,
@@ -2510,7 +2563,11 @@ class MacroTransformer {
               `[typemacro] Cache hit for tagged template: ${tagName}`,
             );
           }
-          return ts.visitNode(cached, this.boundVisit) as ts.Expression;
+          const cachedVisited = ts.visitNode(
+            cached,
+            this.boundVisit,
+          ) as ts.Expression;
+          return preserveSourceMap(cachedVisited, node);
         }
       }
 
@@ -2534,7 +2591,8 @@ class MacroTransformer {
           this.cacheExpression(cacheKey, result);
         }
 
-        return ts.visitNode(result, this.boundVisit) as ts.Expression;
+        const visited = ts.visitNode(result, this.boundVisit) as ts.Expression;
+        return preserveSourceMap(visited, node);
       } catch (error) {
         this.ctx.reportError(
           node,
@@ -2566,7 +2624,8 @@ class MacroTransformer {
           node.template as unknown as ts.Expression,
         ]),
       );
-      return ts.visitNode(result, this.boundVisit) as ts.Expression;
+      const visited = ts.visitNode(result, this.boundVisit) as ts.Expression;
+      return preserveSourceMap(visited, node);
     } catch (error) {
       this.ctx.reportError(
         node,
@@ -2626,7 +2685,11 @@ class MacroTransformer {
         if (this.verbose) {
           console.log(`[typemacro] Cache hit for type macro: ${macroName}`);
         }
-        return ts.visitNode(cached, this.boundVisit) as ts.TypeNode;
+        const cachedVisited = ts.visitNode(
+          cached,
+          this.boundVisit,
+        ) as ts.TypeNode;
+        return preserveSourceMap(cachedVisited, node);
       }
     }
 
@@ -2639,7 +2702,8 @@ class MacroTransformer {
         this.cacheExpression(cacheKey, result);
       }
 
-      return ts.visitNode(result, this.boundVisit) as ts.TypeNode;
+      const visited = ts.visitNode(result, this.boundVisit) as ts.TypeNode;
+      return preserveSourceMap(visited, node);
     } catch (error) {
       this.ctx.reportError(node, `Type macro expansion failed: ${error}`);
       return node;
@@ -2825,7 +2889,11 @@ class MacroTransformer {
         );
 
         try {
-          return ts.visitNode(rewritten, this.boundVisit) as ts.Expression;
+          const visited = ts.visitNode(
+            rewritten,
+            this.boundVisit,
+          ) as ts.Expression;
+          return preserveSourceMap(visited, node);
         } catch (error) {
           this.ctx.reportError(
             node,
@@ -2873,9 +2941,15 @@ class MacroTransformer {
       undefined,
       allArgs,
     );
+    // Mark as pure for tree-shaking — summon() lookups are side-effect-free
+    markPure(rewritten);
 
     try {
-      return ts.visitNode(rewritten, this.boundVisit) as ts.Expression;
+      const visited = ts.visitNode(
+        rewritten,
+        this.boundVisit,
+      ) as ts.Expression;
+      return preserveSourceMap(visited, node);
     } catch (error) {
       this.ctx.reportError(node, `Extension method rewrite failed: ${error}`);
       return undefined;
@@ -3126,7 +3200,7 @@ class MacroTransformer {
               `[typemacro] Inlined operator ${opString} via ${matchedEntry.typeclass}.${matchedEntry.method}`,
             );
           }
-          return inlined;
+          return preserveSourceMap(inlined, node);
         }
       }
     }
@@ -3142,7 +3216,11 @@ class MacroTransformer {
     ]);
 
     try {
-      return ts.visitNode(rewritten, this.boundVisit) as ts.Expression;
+      const visited = ts.visitNode(
+        rewritten,
+        this.boundVisit,
+      ) as ts.Expression;
+      return preserveSourceMap(visited, node);
     } catch (error) {
       this.ctx.reportError(
         node,

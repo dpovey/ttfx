@@ -52,5 +52,6 @@
   "files": [
     "dist",
     "src"
-  ]
+  ],
+  "sideEffects": false
 }

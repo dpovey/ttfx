@@ -167,4 +167,4 @@ export const unpluginFactory: UnpluginFactory<
   };
 };
 
-export const unplugin = /* #__PURE__ */ createUnplugin(unpluginFactory);
+export const unplugin = /*#__PURE__*/ createUnplugin(unpluginFactory);

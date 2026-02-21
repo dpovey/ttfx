@@ -47,7 +47,7 @@
 import * as ts from "typescript";
 import { defineExpressionMacro, globalRegistry } from "../core/registry.js";
 import { MacroContext } from "../core/types.js";
-import { MacroContextImpl } from "../core/context.js";
+import { MacroContextImpl, markPure } from "../core/context.js";
 import { HygieneContext } from "../core/hygiene.js";
 
 // ============================================================================
@@ -544,6 +544,37 @@ interface ResolvedDict {
  * If a dictionary is not known at compile time, falls back to partial
  * application: `(...args) => fn(dict, ...args)`.
  */
+/**
+ * Check if a call expression has an opt-out comment for specialization warnings.
+ */
+function hasSpecializeWarnOptOut(
+  callExpr: ts.CallExpression,
+  sourceFile: ts.SourceFile,
+): boolean {
+  // Synthetic nodes can't be checked
+  if (callExpr.pos === -1 || callExpr.end === -1) return false;
+
+  const sourceText = sourceFile.text;
+  const nodeStart = callExpr.getStart(sourceFile);
+  const lineStart = sourceText.lastIndexOf("\n", nodeStart) + 1;
+  const lineText = sourceText.slice(lineStart, nodeStart);
+
+  return lineText.includes("@no-specialize-warn");
+}
+
+/**
+ * Get a display name for a function expression (for diagnostic messages).
+ */
+function getFunctionDisplayName(fnArg: ts.Expression): string {
+  if (ts.isIdentifier(fnArg)) {
+    return fnArg.text;
+  }
+  if (ts.isPropertyAccessExpression(fnArg)) {
+    return fnArg.name.text;
+  }
+  return "<anonymous>";
+}
+
 export const specializeMacro = defineExpressionMacro({
   name: "specialize",
   module: "typemacro",
@@ -565,9 +596,15 @@ export const specializeMacro = defineExpressionMacro({
 
     const fnArg = args[0];
     const dictArgs = args.slice(1);
+    const fnName = getFunctionDisplayName(fnArg);
+
+    // Check for opt-out comment
+    const suppressWarnings = hasSpecializeWarnOptOut(callExpr, ctx.sourceFile);
 
     // Resolve all dictionaries
     const resolvedDicts: ResolvedDict[] = [];
+    const unresolvedDicts: string[] = [];
+
     for (const dictArg of dictArgs) {
       const dictName = getDictName(dictArg);
       const dictMethods = dictName
@@ -580,17 +617,47 @@ export const specializeMacro = defineExpressionMacro({
           methods: dictMethods,
           argExpr: dictArg,
         });
+      } else if (dictName) {
+        unresolvedDicts.push(dictName);
+      } else {
+        unresolvedDicts.push("<unknown>");
       }
     }
 
     // If no dictionaries were resolved, fall back to partial application with the first dict
     if (resolvedDicts.length === 0) {
+      if (!suppressWarnings) {
+        const dictNames = unresolvedDicts.join(", ");
+        ctx.reportWarning(
+          callExpr,
+          `[TS9601] specialize(${fnName}): falling back to dictionary passing — ` +
+            `dictionary '${dictNames}' not registered. ` +
+            `Help: Register with @instance or registerInstanceMethods()`,
+        );
+      }
       return createPartialApplication(ctx, fnArg, dictArgs[0], callExpr);
     }
 
     // Try to resolve the function body for full inlining
     const fnBody = resolveFunctionBody(ctx, fnArg);
     if (fnBody) {
+      // Check if the function body can be inlined
+      const body = ts.isFunctionDeclaration(fnBody)
+        ? fnBody.body
+        : fnBody.body;
+
+      if (body && ts.isBlock(body)) {
+        const failureReason = classifyInlineFailure(body);
+        if (failureReason && !suppressWarnings) {
+          const help = getInlineFailureHelp(failureReason);
+          ctx.reportWarning(
+            callExpr,
+            `[TS9601] specialize(${fnName}): falling back to dictionary passing — ` +
+              `${failureReason}. Help: ${help}`,
+          );
+        }
+      }
+
       if (resolvedDicts.length === 1) {
         // Single dictionary - use the simpler path
         return specializeFunction(
@@ -606,6 +673,14 @@ export const specializeMacro = defineExpressionMacro({
     }
 
     // Fallback: partial application with all known dicts
+    if (!suppressWarnings) {
+      ctx.reportWarning(
+        callExpr,
+        `[TS9601] specialize(${fnName}): falling back to dictionary passing — ` +
+          `function body not resolvable. ` +
+          `Help: Declare as 'const fn = (...) => ...' or named 'function'`,
+      );
+    }
     return createPartialApplicationMulti(ctx, fnArg, dictArgs, callExpr);
   },
 });
@@ -918,13 +993,15 @@ function specializeFunction(
     );
   }
 
-  return ctx.factory.createArrowFunction(
-    undefined,
-    undefined,
-    cleanParams,
-    narrowedReturnType,
-    ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    specializedBody as ts.ConciseBody,
+  return markPure(
+    ctx.factory.createArrowFunction(
+      undefined,
+      undefined,
+      cleanParams,
+      narrowedReturnType,
+      ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      specializedBody as ts.ConciseBody,
+    ),
   );
 }
 
@@ -1209,13 +1286,15 @@ function specializeFunctionTransitive(
     );
   }
 
-  return ctx.factory.createArrowFunction(
-    undefined,
-    undefined,
-    cleanParams,
-    narrowedReturnType,
-    ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    specializedBody as ts.ConciseBody,
+  return markPure(
+    ctx.factory.createArrowFunction(
+      undefined,
+      undefined,
+      cleanParams,
+      narrowedReturnType,
+      ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      specializedBody as ts.ConciseBody,
+    ),
   );
 }
 
@@ -1383,13 +1462,15 @@ function specializeFunctionMulti(
     }
   }
 
-  return ctx.factory.createArrowFunction(
-    undefined,
-    undefined,
-    cleanParams,
-    narrowedReturnType,
-    ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    specializedBody as ts.ConciseBody,
+  return markPure(
+    ctx.factory.createArrowFunction(
+      undefined,
+      undefined,
+      cleanParams,
+      narrowedReturnType,
+      ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      specializedBody as ts.ConciseBody,
+    ),
   );
 }
 
@@ -1453,18 +1534,20 @@ function createPartialApplicationMulti(
     undefined,
   );
 
-  return ctx.factory.createArrowFunction(
-    undefined,
-    undefined,
-    [argsParam],
-    undefined,
-    ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    ctx.factory.createCallExpression(fnExpr, undefined, [
-      ...dictExprs,
-      ctx.factory.createSpreadElement(
-        ctx.factory.createIdentifier(argsIdent.text),
-      ),
-    ]),
+  return markPure(
+    ctx.factory.createArrowFunction(
+      undefined,
+      undefined,
+      [argsParam],
+      undefined,
+      ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      ctx.factory.createCallExpression(fnExpr, undefined, [
+        ...dictExprs,
+        ctx.factory.createSpreadElement(
+          ctx.factory.createIdentifier(argsIdent.text),
+        ),
+      ]),
+    ),
   );
 }
 
@@ -1588,6 +1671,224 @@ function substituteParams(
   return result as ts.Expression;
 }
 
+// ============================================================================
+// Inline Failure Classification
+// ============================================================================
+
+/**
+ * Reasons why a function body cannot be inlined.
+ * Used for diagnostic messages.
+ */
+export type InlineFailureReason =
+  | "early return"
+  | "try/catch"
+  | "loop"
+  | "mutable variable"
+  | "throw statement"
+  | "no return statement"
+  | null;
+
+/**
+ * Classify why a block body cannot be inlined.
+ *
+ * Returns a human-readable reason string if the body contains patterns
+ * that prevent inlining, or `null` if the body is simple enough to inline
+ * (single return statement at the end).
+ *
+ * Checks for:
+ * - Multiple return statements or early returns (return not as last statement)
+ * - try/catch/finally blocks
+ * - Loop statements (for, while, do..while, for..of, for..in)
+ * - Mutable variable declarations (let without const)
+ * - Throw statements
+ */
+export function classifyInlineFailure(body: ts.Block): InlineFailureReason {
+  const statements = body.statements;
+
+  if (statements.length === 0) {
+    return "no return statement";
+  }
+
+  // Count return statements (including nested ones)
+  let returnCount = 0;
+  let lastReturnIndex = -1;
+
+  // Helper to count returns in nested blocks
+  const countReturnsInStatement = (stmt: ts.Statement): number => {
+    let count = 0;
+    if (ts.isReturnStatement(stmt)) {
+      count++;
+    } else if (ts.isIfStatement(stmt)) {
+      count += countReturnsInBlock(stmt.thenStatement);
+      if (stmt.elseStatement) {
+        count += countReturnsInBlock(stmt.elseStatement);
+      }
+    } else if (ts.isBlock(stmt)) {
+      for (const s of stmt.statements) {
+        count += countReturnsInStatement(s);
+      }
+    }
+    return count;
+  };
+
+  const countReturnsInBlock = (block: ts.Statement): number => {
+    if (ts.isBlock(block)) {
+      let count = 0;
+      for (const stmt of block.statements) {
+        count += countReturnsInStatement(stmt);
+      }
+      return count;
+    } else {
+      return countReturnsInStatement(block);
+    }
+  };
+
+  for (let i = 0; i < statements.length; i++) {
+    const stmt = statements[i];
+
+    // Check for try/catch/finally
+    if (ts.isTryStatement(stmt)) {
+      return "try/catch";
+    }
+
+    // Check for loops
+    if (
+      ts.isForStatement(stmt) ||
+      ts.isWhileStatement(stmt) ||
+      ts.isDoStatement(stmt) ||
+      ts.isForOfStatement(stmt) ||
+      ts.isForInStatement(stmt)
+    ) {
+      return "loop";
+    }
+
+    // Check for throw statements
+    if (ts.isThrowStatement(stmt)) {
+      return "throw statement";
+    }
+
+    // Check for mutable variable declarations (let)
+    if (ts.isVariableStatement(stmt)) {
+      const declList = stmt.declarationList;
+      if (!(declList.flags & ts.NodeFlags.Const)) {
+        return "mutable variable";
+      }
+    }
+
+    // Track return statements (including nested)
+    const returnsInStmt = countReturnsInStatement(stmt);
+    if (returnsInStmt > 0) {
+      returnCount += returnsInStmt;
+      lastReturnIndex = i;
+    }
+
+    // Check for try-catch/loops nested in if statements
+    if (ts.isIfStatement(stmt)) {
+      const nestedReason = checkNestedStatements(stmt);
+      if (nestedReason) {
+        return nestedReason;
+      }
+    }
+  }
+
+  // No return statement found
+  if (returnCount === 0) {
+    return "no return statement";
+  }
+
+  // Multiple returns or return not at the end = early return
+  if (returnCount > 1 || lastReturnIndex !== statements.length - 1) {
+    return "early return";
+  }
+
+  // Single return at the end — inlineable
+  return null;
+}
+
+/**
+ * Recursively check nested statements (in if/else) for non-inlineable patterns.
+ * Note: This does NOT check for returns - that's handled by the main function.
+ */
+function checkNestedStatements(
+  node: ts.IfStatement,
+): InlineFailureReason {
+  const checkBlock = (block: ts.Statement): InlineFailureReason => {
+    if (ts.isBlock(block)) {
+      for (const stmt of block.statements) {
+        if (ts.isTryStatement(stmt)) return "try/catch";
+        if (
+          ts.isForStatement(stmt) ||
+          ts.isWhileStatement(stmt) ||
+          ts.isDoStatement(stmt) ||
+          ts.isForOfStatement(stmt) ||
+          ts.isForInStatement(stmt)
+        ) {
+          return "loop";
+        }
+        if (ts.isThrowStatement(stmt)) return "throw statement";
+        if (ts.isVariableStatement(stmt)) {
+          const declList = stmt.declarationList;
+          if (!(declList.flags & ts.NodeFlags.Const)) {
+            return "mutable variable";
+          }
+        }
+        if (ts.isIfStatement(stmt)) {
+          const nested = checkNestedStatements(stmt);
+          if (nested) return nested;
+        }
+      }
+    } else {
+      // Single statement (not a block)
+      if (ts.isTryStatement(block)) return "try/catch";
+      if (
+        ts.isForStatement(block) ||
+        ts.isWhileStatement(block) ||
+        ts.isDoStatement(block) ||
+        ts.isForOfStatement(block) ||
+        ts.isForInStatement(block)
+      ) {
+        return "loop";
+      }
+      if (ts.isThrowStatement(block)) return "throw statement";
+      if (ts.isIfStatement(block)) {
+        return checkNestedStatements(block);
+      }
+    }
+    return null;
+  };
+
+  const thenResult = checkBlock(node.thenStatement);
+  if (thenResult) return thenResult;
+
+  if (node.elseStatement) {
+    return checkBlock(node.elseStatement);
+  }
+
+  return null;
+}
+
+/**
+ * Get help text for a given inline failure reason.
+ */
+export function getInlineFailureHelp(reason: InlineFailureReason): string {
+  switch (reason) {
+    case "early return":
+      return "Extract early-return logic into a helper; use single-expression body";
+    case "try/catch":
+      return "Move error handling outside the specialized function";
+    case "loop":
+      return "Use Array methods or a recursive helper instead of loops";
+    case "mutable variable":
+      return "Use const bindings or fold/reduce pattern";
+    case "throw statement":
+      return "Use Result type instead of throwing, or move throws outside";
+    case "no return statement":
+      return "Add a return statement or use an expression body";
+    default:
+      return "";
+  }
+}
+
 /**
  * Create a partial application as fallback when full specialization isn't possible.
  * `specialize(fn, dict)` → `(...args) => fn(dict, ...args)`
@@ -1608,18 +1909,20 @@ function createPartialApplication(
     undefined,
   );
 
-  return ctx.factory.createArrowFunction(
-    undefined,
-    undefined,
-    [argsParam],
-    undefined,
-    ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    ctx.factory.createCallExpression(fnExpr, undefined, [
-      dictExpr,
-      ctx.factory.createSpreadElement(
-        ctx.factory.createIdentifier(argsIdent.text),
-      ),
-    ]),
+  return markPure(
+    ctx.factory.createArrowFunction(
+      undefined,
+      undefined,
+      [argsParam],
+      undefined,
+      ctx.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      ctx.factory.createCallExpression(fnExpr, undefined, [
+        dictExpr,
+        ctx.factory.createSpreadElement(
+          ctx.factory.createIdentifier(argsIdent.text),
+        ),
+      ]),
+    ),
   );
 }
 

@@ -210,5 +210,6 @@
   },
   "dependencies": {
     "@typesugar/core": "workspace:*"
-  }
+  },
+  "sideEffects": false
 }

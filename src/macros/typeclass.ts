@@ -1097,7 +1097,7 @@ function generateCompanionNamespace(
 
   return `
 // Typeclass instance registry for ${name}
-const ${registryVar}: Map<string, ${name}<any>> = new Map();
+const ${registryVar}: Map<string, ${name}<any>> = /*#__PURE__*/ new Map();
 
 namespace ${name} {
   /** Register an instance of ${name} for type T */
@@ -1381,7 +1381,7 @@ export const instanceAttribute = defineAttributeMacro({
     }
 
     // Generate registration call using quoteStatements
-    const registrationStatements = quoteStatements(ctx)`${tcName}.registerInstance<${typeName}>("${typeName}", ${varName});`;
+    const registrationStatements = quoteStatements(ctx)`/*#__PURE__*/ ${tcName}.registerInstance<${typeName}>("${typeName}", ${varName});`;
 
     return [updatedTarget, ...registrationStatements];
   },
@@ -1776,7 +1776,7 @@ const builtinDerivations: Record<string, BuiltinTypeclassDerivation> = {
 const ${varName}: Show<${typeName}> = {
   show: (a: ${typeName}): string => \`${typeName}(${fieldShows})\`,
 };
-Show.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Show.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -1802,7 +1802,7 @@ ${cases}
     }
   },
 };
-Show.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Show.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -1874,7 +1874,7 @@ const ${varName}: Eq<${typeName}> = {
   eq: (a: ${typeName}, b: ${typeName}): boolean => ${body},
   neq: (a: ${typeName}, b: ${typeName}): boolean => !(${body}),
 };
-Eq.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Eq.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -1902,7 +1902,7 @@ ${cases}
   },
   neq: (a: ${typeName}, b: ${typeName}): boolean => !${varName}.eq(a, b),
 };
-Eq.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Eq.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -1970,7 +1970,7 @@ ${fieldComparisons}
     return 0;
   },
 };
-Ord.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Ord.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -2001,7 +2001,7 @@ ${cases}
     }
   },
 };
-Ord.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Ord.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -2083,7 +2083,7 @@ ${fieldHashes}
     return hash >>> 0;
   },
 };
-Hash.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Hash.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -2109,7 +2109,7 @@ ${cases}
     }
   },
 };
-Hash.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Hash.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
   },
@@ -2126,7 +2126,7 @@ const ${varName}: Functor<${typeName}> = {
     return { ...fa } as any;
   },
 };
-Functor.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Functor.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
 
@@ -2152,7 +2152,7 @@ ${cases}
     }
   },
 };
-Functor.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Functor.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
     },
   },
@@ -2871,52 +2871,52 @@ const eqNumber: Eq<number> = {
   eq: (a, b) => a === b,
   neq: (a, b) => a !== b,
 };
-Eq.registerInstance<number>("number", eqNumber);
+/*#__PURE__*/ Eq.registerInstance<number>("number", eqNumber);
 
 const eqString: Eq<string> = {
   eq: (a, b) => a === b,
   neq: (a, b) => a !== b,
 };
-Eq.registerInstance<string>("string", eqString);
+/*#__PURE__*/ Eq.registerInstance<string>("string", eqString);
 
 const eqBoolean: Eq<boolean> = {
   eq: (a, b) => a === b,
   neq: (a, b) => a !== b,
 };
-Eq.registerInstance<boolean>("boolean", eqBoolean);
+/*#__PURE__*/ Eq.registerInstance<boolean>("boolean", eqBoolean);
 
 // Show instances for primitives
 const showNumber: Show<number> = {
   show: (a) => String(a),
 };
-Show.registerInstance<number>("number", showNumber);
+/*#__PURE__*/ Show.registerInstance<number>("number", showNumber);
 
 const showString: Show<string> = {
   show: (a) => JSON.stringify(a),
 };
-Show.registerInstance<string>("string", showString);
+/*#__PURE__*/ Show.registerInstance<string>("string", showString);
 
 const showBoolean: Show<boolean> = {
   show: (a) => String(a),
 };
-Show.registerInstance<boolean>("boolean", showBoolean);
+/*#__PURE__*/ Show.registerInstance<boolean>("boolean", showBoolean);
 
 // Ord instances for primitives
 const ordNumber: Ord<number> = {
   compare: (a, b) => a < b ? -1 : a > b ? 1 : 0,
 };
-Ord.registerInstance<number>("number", ordNumber);
+/*#__PURE__*/ Ord.registerInstance<number>("number", ordNumber);
 
 const ordString: Ord<string> = {
   compare: (a, b) => a < b ? -1 : a > b ? 1 : 0,
 };
-Ord.registerInstance<string>("string", ordString);
+/*#__PURE__*/ Ord.registerInstance<string>("string", ordString);
 
 // Hash instances for primitives
 const hashNumber: Hash<number> = {
   hash: (a) => a | 0,
 };
-Hash.registerInstance<number>("number", hashNumber);
+/*#__PURE__*/ Hash.registerInstance<number>("number", hashNumber);
 
 const hashString: Hash<string> = {
   hash: (a) => {
@@ -2927,36 +2927,36 @@ const hashString: Hash<string> = {
     return h >>> 0;
   },
 };
-Hash.registerInstance<string>("string", hashString);
+/*#__PURE__*/ Hash.registerInstance<string>("string", hashString);
 
 const hashBoolean: Hash<boolean> = {
   hash: (a) => a ? 1 : 0,
 };
-Hash.registerInstance<boolean>("boolean", hashBoolean);
+/*#__PURE__*/ Hash.registerInstance<boolean>("boolean", hashBoolean);
 
 // Semigroup instances for primitives
 const semigroupNumber: Semigroup<number> = {
   combine: (a, b) => a + b,
 };
-Semigroup.registerInstance<number>("number", semigroupNumber);
+/*#__PURE__*/ Semigroup.registerInstance<number>("number", semigroupNumber);
 
 const semigroupString: Semigroup<string> = {
   combine: (a, b) => a + b,
 };
-Semigroup.registerInstance<string>("string", semigroupString);
+/*#__PURE__*/ Semigroup.registerInstance<string>("string", semigroupString);
 
 // Monoid instances for primitives
 const monoidNumber: Monoid<number> = {
   empty: () => 0,
   combine: (a, b) => a + b,
 };
-Monoid.registerInstance<number>("number", monoidNumber);
+/*#__PURE__*/ Monoid.registerInstance<number>("number", monoidNumber);
 
 const monoidString: Monoid<string> = {
   empty: () => "",
   combine: (a, b) => a + b,
 };
-Monoid.registerInstance<string>("string", monoidString);
+/*#__PURE__*/ Monoid.registerInstance<string>("string", monoidString);
 `;
 }
 
@@ -2980,7 +2980,7 @@ const ${varName}: Semigroup<${typeName}> = {
 ${fieldCombines}
   }),
 };
-Semigroup.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Semigroup.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
   },
 
@@ -3019,7 +3019,7 @@ ${fieldEmpties}
 ${fieldCombines}
   }),
 };
-Monoid.registerInstance<${typeName}>("${typeName}", ${varName});
+/*#__PURE__*/ Monoid.registerInstance<${typeName}>("${typeName}", ${varName});
 `;
   },
 

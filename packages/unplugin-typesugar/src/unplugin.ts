@@ -29,10 +29,12 @@ import * as ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
 import { createUnplugin, type UnpluginFactory } from "unplugin";
+import remapping from "@ampproject/remapping";
 import macroTransformerFactory, {
   type MacroTransformerConfig,
 } from "@typesugar/transformer";
-import { preprocess } from "@typesugar/preprocessor";
+import { preprocess, type RawSourceMap } from "@typesugar/preprocessor";
+import { globalExpansionTracker } from "typesugar";
 
 export interface TypesugarPluginOptions {
   /** Path to tsconfig.json (default: auto-detected) */
@@ -214,6 +216,9 @@ export const unpluginFactory: UnpluginFactory<
       // Note: When using a fresh source file (preprocessed), some type-aware
       // features may not work. The transformer should handle this gracefully.
       try {
+        // Clear expansion tracker before transformation to isolate this file's expansions
+        globalExpansionTracker.clear();
+
         const result = ts.transform(sourceFile, [
           macroTransformerFactory(cache.program, transformerConfig),
         ]);
@@ -233,13 +238,34 @@ export const unpluginFactory: UnpluginFactory<
         // Only return if the code actually changed
         if (transformed === code) return null;
 
-        // Return transformed code. The source map from the load hook (preprocessor)
-        // is already set on the module by the build tool. The macro transformer
-        // currently doesn't generate its own source maps, so we return null here.
-        // If the transformer adds source map support, they should be composed.
+        // Generate source map from expansion records
+        const transformerMap = globalExpansionTracker.generateSourceMap(code, id);
+
+        // Clear tracker after generating the map
+        globalExpansionTracker.clear();
+
+        // Compose source maps if the file was preprocessed
+        let finalMap: RawSourceMap | null = transformerMap;
+        if (wasPreprocessed && preprocessResult?.map && transformerMap) {
+          // Compose: originalSource -> preprocessedCode -> transformedCode
+          // The remapping function takes the innermost map and a loader for upstream maps
+          const composed = remapping(
+            transformerMap as Parameters<typeof remapping>[0],
+            (file) => {
+              // Return the preprocessor's map as the upstream source
+              if (file === id || file === preprocessResult.map?.sources?.[0]) {
+                return preprocessResult.map as ReturnType<typeof remapping>;
+              }
+              return null;
+            },
+          );
+          finalMap = composed as unknown as RawSourceMap;
+        }
+
+        // Return transformed code with source map
         return {
           code: transformed,
-          map: null,
+          map: finalMap,
         };
       } catch (error) {
         // If transformation fails (e.g., type checker issues with preprocessed files),
@@ -255,4 +281,4 @@ export const unpluginFactory: UnpluginFactory<
   };
 };
 
-export const unplugin = /* #__PURE__ */ createUnplugin(unpluginFactory);
+export const unplugin = /*#__PURE__*/ createUnplugin(unpluginFactory);

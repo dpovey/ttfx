@@ -636,6 +636,20 @@ export class MacroContextImpl implements MacroContext {
   }
 
   // -------------------------------------------------------------------------
+  // Tree-Shaking Annotations
+  // -------------------------------------------------------------------------
+
+  markPure<T extends ts.Node>(node: T): T {
+    ts.addSyntheticLeadingComment(
+      node,
+      ts.SyntaxKind.MultiLineCommentTrivia,
+      "#__PURE__",
+      false,
+    );
+    return node;
+  }
+
+  // -------------------------------------------------------------------------
   // Unique Name Generation
   // -------------------------------------------------------------------------
 
@@ -704,4 +718,22 @@ export function createMacroContext(
     hygiene,
     expansionCache,
   );
+}
+
+/**
+ * Standalone helper to mark a node with `/*#__PURE__* /` for tree-shaking.
+ * Use this in places without a MacroContext (e.g., the transformer itself).
+ *
+ * Bundlers (esbuild, webpack, Rollup) recognize this annotation on call
+ * expressions and `new` expressions to indicate they have no side effects
+ * and can be dropped if unused.
+ */
+export function markPure<T extends ts.Node>(node: T): T {
+  ts.addSyntheticLeadingComment(
+    node,
+    ts.SyntaxKind.MultiLineCommentTrivia,
+    "#__PURE__",
+    false,
+  );
+  return node;
 }
