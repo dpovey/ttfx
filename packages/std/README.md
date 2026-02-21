@@ -90,9 +90,7 @@ let: {
   x << [1, 2, 3];
   y << [x * 10, x * 20];
 }
-yield: {
-  (x, y);
-}
+yield: ({ x, y });
 
 // Compiles to:
 // [1, 2, 3].flatMap(x => [x * 10, x * 20].map(y => ({ x, y })))
@@ -106,9 +104,7 @@ let: {
   user << fetchUser(id);
   posts << fetchPosts(user.id);
 }
-yield: {
-  (user, posts);
-}
+yield: ({ user, posts });
 
 // Compiles to:
 // fetchUser(id).then(user => fetchPosts(user.id).then(posts => ({ user, posts })))
@@ -131,9 +127,7 @@ let: {
   x << some(5);
   y << some(x * 2);
 }
-yield: {
-  (x, y);
-}
+yield: ({ x, y });
 ```
 
 ## Extension Methods

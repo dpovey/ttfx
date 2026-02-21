@@ -12,7 +12,7 @@
  *   x << [1, 2, 3]
  *   y << [x * 10, x * 20]
  * }
- * yield: { x, y }
+ * yield: ({ x, y })
  * // Compiles to: [1,2,3].flatMap(x => [x*10, x*20].map(y => ({ x, y })))
  *
  * // With Promise
@@ -20,7 +20,7 @@
  *   user << fetchUser(id)
  *   posts << fetchPosts(user.id)
  * }
- * yield: { user, posts }
+ * yield: ({ user, posts })
  * // Compiles to: fetchUser(id).then(user => fetchPosts(user.id).then(posts => ({ user, posts })))
  *
  * // With Option, Effect, IO, etc. — any type with a registered FlatMap instance
@@ -239,6 +239,45 @@ function parseBindingFromExpression(
 }
 
 /**
+ * Check if an expression is a comma expression (e.g., `a, b, c`).
+ * Comma expressions evaluate all operands but return only the last value.
+ */
+function isCommaExpression(expr: ts.Expression): boolean {
+  return (
+    ts.isBinaryExpression(expr) &&
+    expr.operatorToken.kind === ts.SyntaxKind.CommaToken
+  );
+}
+
+/**
+ * Check if an expression looks like it was intended to be an object literal
+ * but was parsed as a comma expression due to missing parentheses.
+ *
+ * Common mistake: `yield: { user, posts }` parses as `{ user, posts }` where
+ * `user, posts` is a comma expression returning just `posts`, NOT an object literal.
+ */
+function looksLikeIntendedObjectLiteral(expr: ts.Expression): boolean {
+  if (!isCommaExpression(expr)) return false;
+
+  // Check if all parts of the comma expression are simple identifiers
+  // This pattern strongly suggests the user meant to write an object literal shorthand
+  const parts: ts.Expression[] = [];
+  let current: ts.Expression = expr;
+
+  while (
+    ts.isBinaryExpression(current) &&
+    current.operatorToken.kind === ts.SyntaxKind.CommaToken
+  ) {
+    parts.push(current.right);
+    current = current.left;
+  }
+  parts.push(current);
+
+  // If all parts are identifiers, this is almost certainly meant to be { a, b, c }
+  return parts.every((p) => ts.isIdentifier(p));
+}
+
+/**
  * Extract the yield expression from a block.
  */
 function extractYieldExpression(
@@ -255,11 +294,36 @@ function extractYieldExpression(
       );
     }
     if (lastStmt && ts.isExpressionStatement(lastStmt)) {
-      return lastStmt.expression;
+      const expr = lastStmt.expression;
+
+      // Detect common mistake: `yield: { user, posts }` where user meant object literal
+      if (looksLikeIntendedObjectLiteral(expr)) {
+        ctx.reportError(
+          lastStmt,
+          "yield: block contains a comma expression, not an object literal. " +
+            "Did you mean `yield: ({ user, posts })`? Use parentheses to create an object literal.",
+        );
+        // Still return the expression so compilation can continue with a warning
+        return expr;
+      }
+
+      return expr;
     }
     if (lastStmt && ts.isReturnStatement(lastStmt) && lastStmt.expression) {
       return lastStmt.expression;
     }
+
+    // Detect nested block - user might have tried `yield: { { user, posts } }`
+    // thinking double braces would create an object literal
+    if (lastStmt && ts.isBlock(lastStmt)) {
+      ctx.reportError(
+        lastStmt,
+        "yield: contains a nested block, not an object literal. " +
+          "To return an object, use `yield: ({ user, posts })` with parentheses.",
+      );
+      return undefined;
+    }
+
     ctx.reportError(
       stmt,
       "yield: block should contain a single expression or object literal",
@@ -296,6 +360,16 @@ function inferTypeConstructor(
   // Handle Promise<T>
   if (type.symbol?.name === "Promise" || typeString.startsWith("Promise<")) {
     return "Promise";
+  }
+
+  // Handle Effect.Effect<A, E, R>
+  // Effect types are branded and may appear as "Effect<A, E, R>" in the type string
+  if (
+    type.symbol?.name === "Effect" ||
+    typeString.startsWith("Effect<") ||
+    typeString.includes("Effect.Effect<")
+  ) {
+    return "Effect";
   }
 
   // Handle Iterable<T>
@@ -348,6 +422,27 @@ function inferTypeConstructor(
  * let: { x << fa; result << monadicExpr(x) }
  * yield: result
  * ```
+ *
+ * ## Effect-TS Integration
+ *
+ * For Effect.Effect types, we use Effect's native flatMap/map methods which have
+ * proper type inference for E (error) and R (requirements) accumulation:
+ *
+ * ```typescript
+ * Effect.flatMap<A, B, E2, R2>(self: Effect<A, E, R>, f: (a: A) => Effect<B, E2, R2>): Effect<B, E | E2, R | R2>
+ * ```
+ *
+ * This means the resulting type correctly shows the union of all errors and
+ * requirements from all bound effects:
+ *
+ * ```typescript
+ * let: {
+ *   user << fetchUser(id);     // Effect<User, HttpError, HttpClient>
+ *   posts << fetchPosts(user); // Effect<Post[], DbError, Database>
+ * }
+ * yield: ({ user, posts })
+ * // Resulting type: Effect<{user: User, posts: Post[]}, HttpError | DbError, HttpClient | Database>
+ * ```
  */
 function generateFlatMapChain(
   ctx: MacroContext,
@@ -388,6 +483,7 @@ function generateFlatMapChain(
  * Generate a method call: expr.method(param => body)
  *
  * For built-in types (Array, Promise), uses native method calls.
+ * For Effect, uses Effect.flatMap/Effect.map for proper E/R type inference.
  * For custom types, generates instance.method(expr, param => body).
  */
 function generateMethodCall(
@@ -428,6 +524,36 @@ function generateMethodCall(
     );
   }
 
+  // For Effect, use Effect.flatMap/Effect.map static methods
+  // This preserves proper E (error) and R (requirements) type inference:
+  //   Effect.flatMap(fa, f) infers Effect<B, E1 | E2, R1 | R2>
+  if (typeConstructor === "Effect") {
+    return factory.createCallExpression(
+      factory.createPropertyAccessExpression(
+        factory.createIdentifier("Effect"),
+        factory.createIdentifier(methodName),
+      ),
+      undefined,
+      [
+        expr,
+        factory.createArrowFunction(
+          undefined,
+          undefined,
+          [
+            factory.createParameterDeclaration(
+              undefined,
+              undefined,
+              factory.createIdentifier(paramName),
+            ),
+          ],
+          undefined,
+          factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+          body,
+        ),
+      ],
+    );
+  }
+
   // For custom types, generate: require("@typesugar/std/typeclasses/flatmap").getFlatMap("Type")!.method(expr, param => body)
   // Uses inline require() to avoid needing to inject import statements in macro output.
   return factory.createCallExpression(
@@ -438,7 +564,11 @@ function generateMethodCall(
             factory.createCallExpression(
               factory.createIdentifier("require"),
               undefined,
-              [factory.createStringLiteral("@typesugar/std/typeclasses/flatmap")],
+              [
+                factory.createStringLiteral(
+                  "@typesugar/std/typeclasses/flatmap",
+                ),
+              ],
             ),
             factory.createIdentifier("getFlatMap"),
           ),

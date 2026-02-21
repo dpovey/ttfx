@@ -2,55 +2,53 @@
 
 **TypeScript that F\*cks! Compile-time macros. Zero runtime. Full type safety.**
 
-> _What if TypeScript had `comptime`? What if `@derive` just worked? What if your tagged templates ran at build time?_
+> _What if `===` just knew how to compare your types? What if `.show()` worked on any struct? What if it all compiled to exactly what you'd write by hand?_
 
 typesugar brings compile-time metaprogramming to TypeScript, drawing from the best ideas in Rust, Scala 3, and Zig — and making them feel native to the TypeScript ecosystem.
 
 ```typescript
-import { comptime } from "@typesugar/comptime";
-import { derive } from "@typesugar/derive";
-import { sql } from "@typesugar/sql";
-
-// Evaluate at compile time — gone before your code ships
-const LOOKUP = comptime(() => {
-  const table: Record<string, number> = {};
-  for (let i = 0; i < 256; i++) table[String.fromCharCode(i)] = i;
-  return table;
-});
-
-// Auto-derive common implementations
-@derive(Eq, Ord, Clone, Debug, Json)
-class Point {
-  constructor(
-    public x: number,
-    public y: number,
-  ) {}
+// Define your types — no decorators needed
+interface User {
+  id: number;
+  name: string;
+  email: string;
 }
 
-// Type-safe SQL with compile-time validation
-const query = sql`SELECT * FROM users WHERE id = ${userId}`;
+const alice: User = { id: 1, name: "Alice", email: "alice@example.com" };
+const bob: User = { id: 2, name: "Bob", email: "bob@example.com" };
+
+// Operators just work — auto-derived, auto-specialized to zero-cost
+alice === bob; // false (compiles to: alice.id === bob.id && ...)
+alice < bob; // true  (lexicographic field comparison)
+
+// Methods just work too
+alice.show(); // "User(id = 1, name = Alice, email = alice@example.com)"
+alice.clone(); // deep copy
+alice.toJson(); // JSON serialization
+
+// All compile to direct code — no runtime dictionary, no overhead
 ```
 
 ## Why typesugar?
 
 | Feature                  | typesugar                              | ts-macros               | Babel macros |
-| ------------------------ | --------------------------------- | ----------------------- | ------------ |
-| **Type-aware**           | Yes — reads the type checker      | No                      | No           |
-| **Compile-time eval**    | Full JS via `vm` sandbox          | `$comptime` (similar)   | No           |
-| **Derive macros**        | `@derive(Eq, Ord, Debug, ...)`    | Manual                  | No           |
-| **Tagged templates**     | First-class macro category        | Via expression macros   | No           |
-| **Reflection**           | `typeInfo<T>()`, `validator<T>()` | No                      | No           |
-| **Typeclasses**          | Scala 3-style `@typeclass`        | No                      | No           |
-| **Operator overloading** | `@operators` + `ops()`            | No                      | No           |
-| **Safety**               | Sandboxed, timeout, loud failures | `$raw` runs unsandboxed | N/A          |
+| ------------------------ | -------------------------------------- | ----------------------- | ------------ |
+| **Implicit typeclasses** | `===`, `.show()` just work             | No                      | No           |
+| **Zero-cost**            | Auto-specialized to direct code        | No                      | No           |
+| **Type-aware**           | Yes — reads the type checker           | No                      | No           |
+| **Compile-time eval**    | Full JS via `vm` sandbox               | `$comptime` (similar)   | No           |
+| **Tagged templates**     | First-class macro category             | Via expression macros   | No           |
+| **Reflection**           | `typeInfo<T>()`, `validator<T>()`      | No                      | No           |
+| **Operator overloading** | `+`, `*`, etc. via typeclass instances | No                      | No           |
+| **Safety**               | Sandboxed, timeout, loud failures      | `$raw` runs unsandboxed | N/A          |
 
 ## Packages
 
 ### Core
 
-| Package                                   | Description                  |
-| ----------------------------------------- | ---------------------------- |
-| [typesugar](packages/typesugar)                     | Umbrella package             |
+| Package                                        | Description                  |
+| ---------------------------------------------- | ---------------------------- |
+| [typesugar](packages/typesugar)                | Umbrella package             |
 | [@typesugar/transformer](packages/transformer) | Core TypeScript transformer  |
 | [@typesugar/core](packages/core)               | Macro registration and types |
 | [@typesugar/comptime](packages/comptime)       | Compile-time evaluation      |
@@ -60,8 +58,8 @@ const query = sql`SELECT * FROM users WHERE id = ${userId}`;
 
 ### Typeclasses & FP
 
-| Package                                 | Description                         |
-| --------------------------------------- | ----------------------------------- |
+| Package                                      | Description                         |
+| -------------------------------------------- | ----------------------------------- |
 | [@typesugar/typeclass](packages/typeclass)   | Scala 3-style typeclasses           |
 | [@typesugar/specialize](packages/specialize) | Zero-cost specialization            |
 | [@typesugar/fp](packages/fp)                 | Functional programming library      |
@@ -69,16 +67,16 @@ const query = sql`SELECT * FROM users WHERE id = ${userId}`;
 
 ### Contracts
 
-| Package                                               | Description               |
-| ----------------------------------------------------- | ------------------------- |
+| Package                                                    | Description               |
+| ---------------------------------------------------------- | ------------------------- |
 | [@typesugar/contracts](packages/contracts)                 | Design by contract        |
 | [@typesugar/contracts-refined](packages/contracts-refined) | Refinement types          |
 | [@typesugar/contracts-z3](packages/contracts-z3)           | Z3 SMT solver integration |
 
 ### Domain-Specific
 
-| Package                                   | Description                         |
-| ----------------------------------------- | ----------------------------------- |
+| Package                                        | Description                         |
+| ---------------------------------------------- | ----------------------------------- |
 | [@typesugar/sql](packages/sql)                 | Type-safe SQL                       |
 | [@typesugar/react](packages/react)             | React macros                        |
 | [@typesugar/strings](packages/strings)         | String validation macros            |
@@ -87,16 +85,16 @@ const query = sql`SELECT * FROM users WHERE id = ${userId}`;
 
 ### Integrations
 
-| Package                         | Description           |
-| ------------------------------- | --------------------- |
-| [@typesugar/effect](packages/effect) | Effect-TS integration |
-| [@typesugar/kysely](packages/kysely) | Kysely integration    |
+| Package                              | Description                                                           |
+| ------------------------------------ | --------------------------------------------------------------------- |
+| [@typesugar/effect](packages/effect) | Effect-TS integration (`@service`, `@layer`, `resolveLayer`, derives) |
+| [@typesugar/kysely](packages/kysely) | Kysely integration                                                    |
 
 ### Tooling
 
-| Package                                       | Description                                      |
-| --------------------------------------------- | ------------------------------------------------ |
-| [unplugin-typesugar](packages/unplugin-typesugar)       | Bundler plugins (Vite, Webpack, esbuild, Rollup) |
+| Package                                            | Description                                      |
+| -------------------------------------------------- | ------------------------------------------------ |
+| [unplugin-typesugar](packages/unplugin-typesugar)  | Bundler plugins (Vite, Webpack, esbuild, Rollup) |
 | [@typesugar/eslint-plugin](packages/eslint-plugin) | ESLint plugin                                    |
 | [@typesugar/vscode](packages/vscode)               | VSCode/Cursor extension                          |
 | [@typesugar/testing](packages/testing)             | Testing macros                                   |
@@ -148,18 +146,24 @@ const fib10 = comptime(() => {
 }); // Compiles to: const fib10 = 55;
 ```
 
-### Derive Macros
+### Zero-Cost Typeclasses
+
+Typeclasses are auto-derived from type structure and auto-specialized to eliminate overhead:
 
 ```typescript
-import { derive } from "@typesugar/derive";
+interface Point { x: number; y: number }
 
-@derive(Eq, Ord, Clone, Debug, Json, Builder)
-class User {
-  id: number;
-  name: string;
-  email: string;
-}
-// Generates: equals(), compare(), clone(), debug(), toJson(), fromJson(), builder()
+const p1: Point = { x: 1, y: 2 };
+const p2: Point = { x: 1, y: 2 };
+
+// Just use them — the compiler handles derivation + specialization
+p1 === p2;    // Compiles to: p1.x === p2.x && p1.y === p2.y
+p1.show();    // Compiles to: `Point(x = ${p1.x}, y = ${p1.y})`
+p1.clone();   // Compiles to: { x: p1.x, y: p1.y }
+
+// Optional: @derive documents capabilities in the type definition
+@derive(Show, Eq, Ord, Clone, Json)
+interface User { id: number; name: string; }
 ```
 
 ### Type Reflection
@@ -184,45 +188,83 @@ const markup = html`<div>${userInput}</div>`; // XSS-safe
 const speed = units`100 km/h`; // Dimensional analysis
 ```
 
-### Typeclasses
+### Typeclasses (Advanced)
+
+For library authors — define new typeclasses that integrate with implicit resolution:
 
 ```typescript
-import { typeclass, deriving, summon } from "@typesugar/typeclass";
+import { typeclass, instance } from "@typesugar/typeclass";
 
+// Define a typeclass
 @typeclass
-interface Show<A> {
-  show(a: A): string;
+interface Serialize<A> {
+  serialize(a: A): Uint8Array;
+  deserialize(bytes: Uint8Array): A;
 }
 
-@deriving(Show, Eq, Ord)
-class Point {
-  constructor(public x: number, public y: number) {}
-}
+// Provide a custom instance when needed
+@instance
+const serializePoint: Serialize<Point> = {
+  serialize: (p) => new Uint8Array([p.x, p.y]),
+  deserialize: (b) => ({ x: b[0], y: b[1] }),
+};
 
-const s = summon<Show<Point>>();
-s.show(new Point(1, 2)); // "Point(x = 1, y = 2)"
+// Now it just works
+const bytes = myPoint.serialize();  // Uses custom instance, zero-cost
 ```
 
 ### Operator Overloading
 
-```typescript
-import { operators, ops } from "@typesugar/operators";
+Standard operators resolve to typeclass methods automatically:
 
-@operators({ "+": "add", "*": "scale" })
-class Vec2 {
-  constructor(
-    public x: number,
-    public y: number,
-  ) {}
-  add(other: Vec2) {
-    return new Vec2(this.x + other.x, this.y + other.y);
-  }
-  scale(n: number) {
-    return new Vec2(this.x * n, this.y * n);
-  }
+```typescript
+interface Vec2 { x: number; y: number }
+
+// Define how Vec2 handles + via the Semigroup typeclass
+@instance
+const vec2Semigroup: Semigroup<Vec2> = {
+  combine: (a, b) => ({ x: a.x + b.x, y: a.y + b.y }),
+};
+
+// Now + just works on Vec2
+const a: Vec2 = { x: 1, y: 2 };
+const b: Vec2 = { x: 3, y: 4 };
+const c = a + b;  // Compiles to: { x: a.x + b.x, y: a.y + b.y }
+
+// Custom operators for domain-specific types
+@operators({ "*": "scale" })
+class Matrix { /* ... */ }
+```
+
+### Effect-TS Integration
+
+```typescript
+import { service, layer, resolveLayer, EffectSchema } from "@typesugar/effect";
+import { Effect } from "effect";
+
+// Zero-boilerplate services
+@service
+interface UserRepo {
+  findById(id: string): Effect.Effect<User, NotFound>
 }
 
-const result = ops(a + b * 2); // Compiles to: a.add(b.scale(2))
+// Layers with dependency tracking
+@layer(UserRepo, { requires: [Database] })
+const userRepoLive =
+let: {
+  db << Database;
+}
+yield: ({ findById: (id) => db.query(...) })
+
+// Automatic layer composition
+const runnable = program.pipe(
+  Effect.provide(resolveLayer<UserRepo | EmailService>())
+);
+
+// Auto-derive Effect Schema
+@derive(EffectSchema)
+interface User { id: string; name: string; }
+// Generates: export const UserSchema = Schema.Struct({ ... })
 ```
 
 ## Documentation
@@ -234,6 +276,7 @@ See the [docs/](docs/) directory:
 - [Writing Macros](docs/writing-macros.md)
 - [Architecture](docs/architecture.md)
 - [FAQ](docs/faq.md)
+- [Vision](docs/vision/index.md) — Future features (reactivity, components, Fx effects, Effect-TS integration)
 
 ## Safety
 

@@ -1,7 +1,92 @@
 /**
  * @typesugar/effect
  *
- * Effect-TS adapter providing macros for working with Effect.
+ * Deep Effect-TS integration with typesugar's typeclass system.
+ *
+ * ## Core Features
+ *
+ * ### @service - Define Effect Services
+ *
+ * ```ts
+ * @service
+ * interface HttpClient {
+ *   get(url: string): Effect.Effect<Response, HttpError>
+ *   post(url: string, body: unknown): Effect.Effect<Response, HttpError>
+ * }
+ * // Generates: Context.Tag class + accessor functions namespace
+ * ```
+ *
+ * ### @layer - Define Effect Layers
+ *
+ * ```ts
+ * @layer(HttpClient)
+ * const httpClientLive = {
+ *   get: (url) => Effect.tryPromise(() => fetch(url)),
+ *   post: (url, body) => Effect.tryPromise(() => fetch(url, { method: "POST", body: JSON.stringify(body) })),
+ * }
+ * // Generates: Layer.succeed(HttpClientTag, { ... })
+ *
+ * @layer(UserRepo, { requires: [Database] })
+ * const userRepoLive =
+ * let: {
+ *   db << Database;
+ * }
+ * yield: ({ findById: (id) => db.query(...) })
+ * // Generates: Layer.effect(UserRepoTag, ...)
+ * // + registers dependency for automatic layer resolution
+ * ```
+ *
+ * ### resolveLayer<R>() - Automatic Layer Composition
+ *
+ * Automatically resolve and compose layers to satisfy Effect requirements:
+ *
+ * ```ts
+ * // Given registered layers:
+ * @layer(Database) const databaseLive = { ... }
+ * @layer(UserRepo, { requires: [Database] }) const userRepoLive = ...
+ *
+ * // Resolve all layers:
+ * const program: Effect<void, Error, UserRepo> = ...
+ * const runnable = program.pipe(Effect.provide(resolveLayer<UserRepo>()))
+ * // Generates: Layer.merge(userRepoLive.pipe(Layer.provide(databaseLive)))
+ * ```
+ *
+ * ### Extension Methods
+ *
+ * Import `EffectExt` to enable fluent method chaining on Effect types:
+ *
+ * ```ts
+ * import { EffectExt } from "@typesugar/effect";
+ *
+ * // The transformer rewrites .method() calls to direct function calls
+ * effect.map(x => x + 1)  // → EffectExt.map(effect, x => x + 1)
+ *
+ * // Chain operations fluently:
+ * effect
+ *   .map(x => x + 1)
+ *   .flatMap(x => Effect.succeed(x * 2))
+ *   .tap(x => Effect.log(`Got: ${x}`))
+ * ```
+ *
+ * Also available: `OptionExt`, `EitherExt` for Effect's Option and Either types.
+ *
+ * ### @derive Macros
+ *
+ * Automatically generate Effect Schema, Equal, and Hash implementations:
+ *
+ * ```ts
+ * @derive(EffectSchema)
+ * interface User { id: string; name: string; age: number; }
+ * // Generates: export const UserSchema = Schema.Struct({ ... })
+ *
+ * @derive(EffectEqual)
+ * interface Point { x: number; y: number; }
+ * // Generates: export const PointEqual: Equal.Equal<Point> = { ... }
+ *
+ * @derive(EffectHash)
+ * interface Point { x: number; y: number; }
+ * // Generates: export const PointHash: Hash.Hash<Point> = { ... }
+ * ```
  *
  * ## Do-Notation (via @typesugar/std)
  *
@@ -26,24 +111,119 @@
  * );
  * ```
  *
- * ## Additional Macros
- *
- * - `gen$(fn)` — Shorthand for `Effect.gen(fn)`
- * - `map$(effect, fn)` — Shorthand for `Effect.map(effect, fn)`
- * - `flatMap$(effect, fn)` — Shorthand for `Effect.flatMap(effect, fn)`
- * - `pipe$(value, ...fns)` — Shorthand for `Effect.pipe(value, ...fns)`
- *
  * @module
  */
 
-import * as ts from "typescript";
-import {
-  type ExpressionMacro,
-  type MacroContext,
-  defineExpressionMacro,
-  globalRegistry,
-} from "@typesugar/core";
+import { globalRegistry } from "@typesugar/core";
 import { registerFlatMap } from "@typesugar/std/typeclasses/flatmap";
+
+// Import @service and @layer macros
+import {
+  serviceAttribute,
+  service,
+  serviceRegistry,
+  registerService,
+  getService,
+  type ServiceInfo,
+  type ServiceMethodInfo,
+} from "./macros/service.js";
+
+import {
+  layerAttribute,
+  layer,
+  layerRegistry,
+  registerLayer,
+  getLayer,
+  getLayersForService,
+  type LayerInfo,
+} from "./macros/layer.js";
+
+import { resolveLayerMacro, resolveLayer } from "./macros/resolve-layer.js";
+
+// Import derive macros
+import {
+  EffectSchemaDerive,
+  EffectSchema,
+  EffectEqualDerive,
+  EffectEqual,
+  EffectHashDerive,
+  EffectHash,
+} from "./derive/index.js";
+
+// Import extension namespaces
+import { EffectExt, OptionExt, EitherExt } from "./extensions.js";
+
+// Re-export macros and registries
+export {
+  // @service macro
+  serviceAttribute,
+  service,
+  serviceRegistry,
+  registerService,
+  getService,
+  type ServiceInfo,
+  type ServiceMethodInfo,
+  // @layer macro
+  layerAttribute,
+  layer,
+  layerRegistry,
+  registerLayer,
+  getLayer,
+  getLayersForService,
+  type LayerInfo,
+  // resolveLayer<R>() macro
+  resolveLayerMacro,
+  resolveLayer,
+  // @derive macros
+  EffectSchemaDerive,
+  EffectSchema,
+  EffectEqualDerive,
+  EffectEqual,
+  EffectHashDerive,
+  EffectHash,
+  // Extension namespaces (import these to enable .method() syntax on Effect types)
+  EffectExt,
+  OptionExt,
+  EitherExt,
+};
+
+// HKT types for Effect
+export {
+  type EffectF,
+  type ChunkF,
+  type EffectOptionF,
+  type EffectEitherF,
+  type StreamF,
+  type PureEffect,
+  type FailableEffect,
+  type EffectSuccess,
+  type EffectError,
+  type EffectRequirements,
+} from "./hkt.js";
+
+// Typeclass instances for Effect
+export {
+  // Effect.Effect instances
+  effectFunctor,
+  effectApply,
+  effectApplicative,
+  effectMonad,
+  effectMonadError,
+  // Chunk instances
+  chunkFunctor,
+  chunkFoldable,
+  chunkTraverse,
+  // Effect's Option instances
+  effectOptionFunctor,
+  effectOptionMonad,
+  effectOptionMonadError,
+  // Effect's Either instances
+  effectEitherFunctor,
+  effectEitherMonad,
+  effectEitherMonadError,
+  // All instances for specialize()
+  effectInstances,
+} from "./instances.js";
 
 // ============================================================================
 // Effect FlatMap Instance (for @typesugar/std do-notation)
@@ -87,209 +267,6 @@ export const flatMapEffect = {
 };
 
 // ============================================================================
-// Effect Gen Macro (Expression Macro)
-// ============================================================================
-
-/**
- * gen$ macro - shorthand for Effect.gen with yield* syntax
- *
- * ```ts
- * const result = gen$((function* () {
- *   const x = yield* getX();
- *   const y = yield* getY(x);
- *   return { x, y };
- * }));
- * ```
- *
- * Compiles to:
- *
- * ```ts
- * const result = Effect.gen(function* () {
- *   const x = yield* getX();
- *   const y = yield* getY(x);
- *   return { x, y };
- * });
- * ```
- */
-export const genMacro: ExpressionMacro = defineExpressionMacro({
-  name: "gen$",
-  expand(
-    ctx: MacroContext,
-    node: ts.CallExpression,
-    args: readonly ts.Expression[],
-  ): ts.Expression {
-    const { factory } = ctx;
-
-    if (args.length !== 1) {
-      ctx.reportError(
-        node,
-        "gen$ expects exactly one argument: a generator function",
-      );
-      return node;
-    }
-
-    let genFn = args[0];
-    // Unwrap if it's a parenthesized expression
-    if (ts.isParenthesizedExpression(genFn)) {
-      genFn = genFn.expression;
-    }
-
-    // Wrap in Effect.gen
-    return factory.createCallExpression(
-      factory.createPropertyAccessExpression(
-        factory.createIdentifier("Effect"),
-        factory.createIdentifier("gen"),
-      ),
-      undefined,
-      [genFn],
-    );
-  },
-});
-
-// ============================================================================
-// Effect Map Macro (Expression Macro)
-// ============================================================================
-
-/**
- * map$ macro - Effect.map shorthand
- *
- * ```ts
- * const result = map$(getUser(), user => user.name);
- * ```
- *
- * Compiles to:
- *
- * ```ts
- * const result = Effect.map(getUser(), user => user.name);
- * ```
- */
-export const mapMacro: ExpressionMacro = defineExpressionMacro({
-  name: "map$",
-  expand(
-    ctx: MacroContext,
-    node: ts.CallExpression,
-    args: readonly ts.Expression[],
-  ): ts.Expression {
-    const { factory } = ctx;
-
-    if (args.length !== 2) {
-      ctx.reportError(
-        node,
-        "map$ expects exactly two arguments: effect and mapper function",
-      );
-      return node;
-    }
-
-    return factory.createCallExpression(
-      factory.createPropertyAccessExpression(
-        factory.createIdentifier("Effect"),
-        factory.createIdentifier("map"),
-      ),
-      undefined,
-      [args[0], args[1]],
-    );
-  },
-});
-
-// ============================================================================
-// Effect FlatMap Macro (Expression Macro)
-// ============================================================================
-
-/**
- * flatMap$ macro - Effect.flatMap shorthand
- *
- * ```ts
- * const result = flatMap$(getUser(), user => getPosts(user.id));
- * ```
- *
- * Compiles to:
- *
- * ```ts
- * const result = Effect.flatMap(getUser(), user => getPosts(user.id));
- * ```
- */
-export const flatMapMacro: ExpressionMacro = defineExpressionMacro({
-  name: "flatMap$",
-  expand(
-    ctx: MacroContext,
-    node: ts.CallExpression,
-    args: readonly ts.Expression[],
-  ): ts.Expression {
-    const { factory } = ctx;
-
-    if (args.length !== 2) {
-      ctx.reportError(
-        node,
-        "flatMap$ expects exactly two arguments: effect and flatMapper function",
-      );
-      return node;
-    }
-
-    return factory.createCallExpression(
-      factory.createPropertyAccessExpression(
-        factory.createIdentifier("Effect"),
-        factory.createIdentifier("flatMap"),
-      ),
-      undefined,
-      [args[0], args[1]],
-    );
-  },
-});
-
-// ============================================================================
-// Effect Pipe Macro (Expression Macro)
-// ============================================================================
-
-/**
- * pipe$ macro - Effect.pipe shorthand
- *
- * ```ts
- * const result = pipe$(
- *   getUser(),
- *   Effect.flatMap(user => getPosts(user.id)),
- *   Effect.map(posts => posts.length)
- * );
- * ```
- *
- * Compiles to:
- *
- * ```ts
- * const result = Effect.pipe(
- *   getUser(),
- *   Effect.flatMap(user => getPosts(user.id)),
- *   Effect.map(posts => posts.length)
- * );
- * ```
- */
-export const pipeMacro: ExpressionMacro = defineExpressionMacro({
-  name: "pipe$",
-  expand(
-    ctx: MacroContext,
-    node: ts.CallExpression,
-    args: readonly ts.Expression[],
-  ): ts.Expression {
-    const { factory } = ctx;
-
-    if (args.length < 2) {
-      ctx.reportError(
-        node,
-        "pipe$ expects at least two arguments: initial value and pipe functions",
-      );
-      return node;
-    }
-
-    return factory.createCallExpression(
-      factory.createPropertyAccessExpression(
-        factory.createIdentifier("Effect"),
-        factory.createIdentifier("pipe"),
-      ),
-      undefined,
-      [...args],
-    );
-  },
-});
-
-// ============================================================================
 // Registration
 // ============================================================================
 
@@ -300,58 +277,18 @@ export function register(): void {
   // Register FlatMap instance for Effect (enables let:/yield: from @typesugar/std)
   registerFlatMap("Effect", flatMapEffect);
 
-  // Register expression macros
-  globalRegistry.register(genMacro);
-  globalRegistry.register(mapMacro);
-  globalRegistry.register(flatMapMacro);
-  globalRegistry.register(pipeMacro);
+  // Register @service and @layer attribute macros
+  globalRegistry.register(serviceAttribute);
+  globalRegistry.register(layerAttribute);
+
+  // Register resolveLayer<R>() expression macro
+  globalRegistry.register(resolveLayerMacro);
+
+  // Register @derive macros for Effect Schema, Equal, Hash
+  globalRegistry.register(EffectSchemaDerive);
+  globalRegistry.register(EffectEqualDerive);
+  globalRegistry.register(EffectHashDerive);
 }
 
 // Auto-register on import
 register();
-
-/**
- * Runtime placeholder for gen$ (should be transformed at compile time)
- */
-export function gen$<T>(_fn: () => Generator<unknown, T, unknown>): never {
-  throw new Error(
-    "gen$ was not transformed at compile time. " +
-      "Make sure @typesugar/effect is registered with the transformer.",
-  );
-}
-
-/**
- * Runtime placeholder for map$ (should be transformed at compile time)
- */
-export function map$<A, B>(_effect: unknown, _fn: (a: A) => B): never {
-  throw new Error(
-    "map$ was not transformed at compile time. " +
-      "Make sure @typesugar/effect is registered with the transformer.",
-  );
-}
-
-/**
- * Runtime placeholder for flatMap$ (should be transformed at compile time)
- */
-export function flatMap$<A, B>(
-  _effect: unknown,
-  _fn: (a: A) => unknown,
-): never {
-  throw new Error(
-    "flatMap$ was not transformed at compile time. " +
-      "Make sure @typesugar/effect is registered with the transformer.",
-  );
-}
-
-/**
- * Runtime placeholder for pipe$ (should be transformed at compile time)
- */
-export function pipe$<A>(
-  _initial: A,
-  ..._fns: Array<(a: unknown) => unknown>
-): never {
-  throw new Error(
-    "pipe$ was not transformed at compile time. " +
-      "Make sure @typesugar/effect is registered with the transformer.",
-  );
-}

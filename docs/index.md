@@ -1,40 +1,43 @@
 # typesugar
 
-> Type-safe macros for TypeScript — compile-time metaprogramming without the footguns.
+> Zero-cost typeclasses for TypeScript — operators and methods that just work, compiled to exactly what you'd write by hand.
 
 ## What is typesugar?
 
-typesugar is a macro system for TypeScript that runs at compile time. Write expressive, high-level code that expands to efficient, type-safe JavaScript. No runtime overhead, no magic strings, no loss of type safety.
+typesugar is a macro system for TypeScript that runs at compile time. Define your types, and typeclass operations (`===`, `.show()`, `.clone()`) work automatically — derived from type structure and specialized to direct code with zero runtime overhead.
 
 ## Quick Example
 
 ```typescript
-import { comptime } from "@typesugar/comptime";
-import { derive } from "@typesugar/derive";
-import { sql } from "@typesugar/sql";
-
-// Compile-time evaluation
-const buildTime = comptime(new Date().toISOString());
-
-// Auto-generated implementations
-@derive(Eq, Clone, Debug, Json)
-class User {
-  constructor(
-    public id: number,
-    public name: string,
-  ) {}
+// Define your types — no decorators needed
+interface User {
+  id: number;
+  name: string;
+  email: string;
 }
 
-// Type-safe SQL with compile-time validation
-const query = sql`SELECT * FROM users WHERE id = ${userId}`;
+const alice: User = { id: 1, name: "Alice", email: "alice@example.com" };
+const bob: User = { id: 2, name: "Bob", email: "bob@example.com" };
+
+// Operators just work — auto-derived, auto-specialized
+alice === bob; // false (compiles to: alice.id === bob.id && ...)
+alice < bob; // true  (lexicographic comparison)
+
+// Methods just work too
+alice.show(); // "User(id = 1, name = Alice, email = alice@example.com)"
+alice.clone(); // deep copy
+alice.toJson(); // JSON serialization
 ```
+
+**How it works:** The compiler sees `===` on a `User`, resolves the `Eq` typeclass, auto-derives an instance from the type's fields, and inlines the comparison directly — no dictionary lookup, no runtime cost.
 
 ## Features
 
-- **Expression Macros** — `comptime()`, `typeInfo<T>()`, `summon<T>()`
-- **Attribute Macros** — `@derive()`, `@reflect`, `@operators()`
-- **Tagged Templates** — `sql\`\``, `regex\`\``, `html\`\``
-- **Labeled Blocks** — `let: { } yield: { }`
+- **Zero-Cost Typeclasses** — `===`, `.show()`, `.clone()` just work on any type
+- **Auto-Specialization** — typeclass methods inline to direct code
+- **Compile-time Eval** — `comptime()` runs code at build time
+- **Tagged Templates** — sql, regex, html tagged templates with validation
+- **Labeled Blocks** — `let: { } yield: { }` for monadic do-notation
 - **Type Macros** — `Refined<T>`, `Opaque<T>`, `Phantom<S, T>`
 
 ## Getting Started
@@ -49,28 +52,28 @@ See the [Getting Started Guide](./getting-started.md) for detailed setup instruc
 
 ### Core
 
-| Package                                     | Description                  |
-| ------------------------------------------- | ---------------------------- |
-| [@typesugar/transformer](./packages/transformer) | Core TypeScript transformer  |
-| [@typesugar/core](./packages/core)               | Macro registration and types |
-| [@typesugar/typesugar](./packages/typesugar)               | Umbrella package             |
-| [unplugin-typesugar](./packages/unplugin-typesugar)   | Bundler plugins              |
+| Package                                             | Description                  |
+| --------------------------------------------------- | ---------------------------- |
+| [@typesugar/transformer](./packages/transformer)    | Core TypeScript transformer  |
+| [@typesugar/core](./packages/core)                  | Macro registration and types |
+| [@typesugar/typesugar](./packages/typesugar)        | Umbrella package             |
+| [unplugin-typesugar](./packages/unplugin-typesugar) | Bundler plugins              |
 
-### Macros
+### Typeclasses & Macros
 
-| Package                                   | Description                 |
-| ----------------------------------------- | --------------------------- |
-| [@typesugar/comptime](./packages/comptime)     | Compile-time evaluation     |
-| [@typesugar/derive](./packages/derive)         | Auto-derive implementations |
-| [@typesugar/reflect](./packages/reflect)       | Type reflection             |
-| [@typesugar/operators](./packages/operators)   | Operator overloading        |
-| [@typesugar/typeclass](./packages/typeclass)   | Scala-style typeclasses     |
-| [@typesugar/specialize](./packages/specialize) | Zero-cost specialization    |
+| Package                                        | Description                         |
+| ---------------------------------------------- | ----------------------------------- |
+| [@typesugar/typeclass](./packages/typeclass)   | Implicit typeclass resolution       |
+| [@typesugar/specialize](./packages/specialize) | Auto-specialization for zero-cost   |
+| [@typesugar/derive](./packages/derive)         | Explicit derive (for documentation) |
+| [@typesugar/comptime](./packages/comptime)     | Compile-time evaluation             |
+| [@typesugar/reflect](./packages/reflect)       | Type reflection                     |
+| [@typesugar/operators](./packages/operators)   | Custom operator mapping             |
 
 ### Domain-Specific
 
-| Package                                     | Description                         |
-| ------------------------------------------- | ----------------------------------- |
+| Package                                          | Description                         |
+| ------------------------------------------------ | ----------------------------------- |
 | [@typesugar/sql](./packages/sql)                 | Type-safe SQL                       |
 | [@typesugar/strings](./packages/strings)         | String validation macros            |
 | [@typesugar/units](./packages/units)             | Physical units                      |
@@ -79,12 +82,12 @@ See the [Getting Started Guide](./getting-started.md) for detailed setup instruc
 
 ### Adapters
 
-| Package                             | Description           |
-| ----------------------------------- | --------------------- |
-| [@typesugar/effect](./packages/effect)   | Effect-TS integration |
-| [@typesugar/kysely](./packages/kysely)   | Kysely integration    |
-| [@typesugar/react](./packages/react)     | React macros          |
-| [@typesugar/testing](./packages/testing) | Testing macros        |
+| Package                                  | Description                                            |
+| ---------------------------------------- | ------------------------------------------------------ |
+| [@typesugar/effect](./packages/effect)   | Deep Effect-TS integration (@service, @layer, derives) |
+| [@typesugar/kysely](./packages/kysely)   | Kysely integration                                     |
+| [@typesugar/react](./packages/react)     | React macros                                           |
+| [@typesugar/testing](./packages/testing) | Testing macros                                         |
 
 ## Documentation
 
@@ -94,6 +97,17 @@ See the [Getting Started Guide](./getting-started.md) for detailed setup instruc
 - [Writing Macros](./writing-macros.md)
 - [Architecture](./architecture.md)
 - [FAQ](./faq.md)
+
+## Vision
+
+Long-term vision documents for typesugar's future features:
+
+- [Vision Index](./vision/index.md) — Overview, philosophy, roadmap
+- [Reactivity](./vision/reactivity.md) — State model with type-aware auto-unwrapping
+- [Components](./vision/components.md) — Component definitions and template system
+- [Fx](./vision/fx.md) — Typed effects that compile to async/await
+- [Server](./vision/server.md) — Server integration, RPC, SSR
+- [Effect Integration](./vision/effect-integration.md) — Deep Effect-TS integration
 
 ## License
 

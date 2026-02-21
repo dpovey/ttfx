@@ -1,10 +1,18 @@
 # @typesugar/effect
 
-> Effect-TS adapter for typesugar do-notation macros.
+> Deep Effect-TS integration with typesugar's compile-time macro system.
 
 ## Overview
 
-`@typesugar/effect` provides seamless integration between typesugar macros and Effect-TS. Use labeled block syntax or expression macros to write Effect code with cleaner syntax that compiles to standard Effect API calls.
+`@typesugar/effect` provides comprehensive integration between typesugar and Effect-TS:
+
+- **@service** — Zero-boilerplate service definitions with Context.Tag generation
+- **@layer** — Declarative dependency injection with automatic registration
+- **resolveLayer<R>()** — Automatic layer composition from dependency graph
+- **Enhanced do-notation** — `let:/yield:` syntax with proper E/R type inference
+- **@derive macros** — Auto-generate Schema, Equal, Hash implementations
+- **Extension methods** — Fluent API for Effect types
+- **Typeclass instances** — Bridge Effect to typesugar's generic FP typeclasses
 
 ## Installation
 
@@ -20,143 +28,187 @@ Requires Effect-TS as a peer dependency:
 npm install effect
 ```
 
-## Usage
+## Quick Start
 
-### Labeled Block Syntax
+### @service — Define Services
 
 ```typescript
-import { Effect } from "effect";
+import { service } from "@typesugar/effect";
 
-// Use let:/yield: blocks for do-notation
+@service
+interface HttpClient {
+  get(url: string): Effect.Effect<Response, HttpError>
+  post(url: string, body: unknown): Effect.Effect<Response, HttpError>
+}
+
+// Generates:
+// - HttpClientTag (Context.Tag class)
+// - HttpClient.get, HttpClient.post (accessor functions)
+```
+
+### @layer — Define Layers
+
+```typescript
+import { layer } from "@typesugar/effect";
+
+@layer(HttpClient)
+const httpClientLive = {
+  get: (url) => Effect.tryPromise(() => fetch(url)),
+  post: (url, body) => Effect.tryPromise(() => fetch(url, { method: "POST", body })),
+};
+// Generates: Layer.succeed(HttpClientTag, { ... })
+
+@layer(UserRepo, { requires: [Database] })
+const userRepoLive =
 let: {
-  user << getUserById(id);
-  posts << getPostsForUser(user.id);
-  comments << getCommentsForPost(posts[0].id);
+  db << Database;
 }
-yield: {
-  {
-    (user, posts, comments);
-  }
-}
+yield: ({ findById: (id) => db.query(sql`SELECT * FROM users WHERE id = ${id}`) })
+// Generates: Layer.effect(UserRepoTag, ...)
+// + registers dependency for automatic resolution
+```
 
-// Compiles to:
-Effect.flatMap(getUserById(id), (user) =>
-  Effect.flatMap(getPostsForUser(user.id), (posts) =>
-    Effect.flatMap(getCommentsForPost(posts[0].id), (comments) =>
-      Effect.succeed({ user, posts, comments }),
-    ),
-  ),
+### resolveLayer<R>() — Automatic Layer Composition
+
+```typescript
+import { resolveLayer } from "@typesugar/effect";
+
+const program: Effect<void, Error, UserRepo | HttpClient> = ...;
+
+// Automatically resolve and compose all required layers:
+const runnable = program.pipe(
+  Effect.provide(resolveLayer<UserRepo | HttpClient>())
 );
 ```
 
-### gen$ — Effect.gen Shorthand
+### Do-Notation with E/R Inference
 
 ```typescript
-import { gen$ } from "@typesugar/effect";
-
-const program = gen$(function* () {
-  const user = yield* getUserById(id);
-  const posts = yield* getPostsForUser(user.id);
-  return { user, posts };
-});
-
-// Compiles to:
-const program = Effect.gen(function* () {
-  const user = yield* getUserById(id);
-  const posts = yield* getPostsForUser(user.id);
-  return { user, posts };
-});
-```
-
-### map$ — Effect.map Shorthand
-
-```typescript
-import { map$ } from "@typesugar/effect";
-
-const userName = map$(getUser(), (user) => user.name);
-
-// Compiles to:
-const userName = Effect.map(getUser(), (user) => user.name);
-```
-
-### flatMap$ — Effect.flatMap Shorthand
-
-```typescript
-import { flatMap$ } from "@typesugar/effect";
-
-const posts = flatMap$(getUser(), (user) => getPostsForUser(user.id));
-
-// Compiles to:
-const posts = Effect.flatMap(getUser(), (user) => getPostsForUser(user.id));
-```
-
-### pipe$ — Effect.pipe Shorthand
-
-```typescript
-import { pipe$ } from "@typesugar/effect";
-
-const result = pipe$(
-  getUser(),
-  Effect.flatMap((user) => getPosts(user.id)),
-  Effect.map((posts) => posts.length),
-);
-
-// Compiles to:
-const result = Effect.pipe(
-  getUser(),
-  Effect.flatMap((user) => getPosts(user.id)),
-  Effect.map((posts) => posts.length),
-);
-```
-
-## Labeled Block Syntax Details
-
-> **Note:** The `let:/yield:` syntax is provided by `@typesugar/std`. This package registers a `FlatMap` instance for Effect that enables it.
-
-The `let:` block uses the `<<` operator for bindings:
-
-```typescript
+// Error and requirement types are correctly accumulated:
 let: {
-  x << effectA; // Bind result of effectA to x
-  y << effectB(x); // Use x in subsequent effects
+  user << getUserById(id); // Effect<User, NotFound, UserRepo>
+  posts << getPostsForUser(user.id); // Effect<Post[], DbError, PostRepo>
 }
-yield: {
-  expression; // Final value wrapped in Effect.succeed
-}
+yield: ({ user, posts });
+
+// Result type: Effect<{ user: User, posts: Post[] }, NotFound | DbError, UserRepo | PostRepo>
 ```
 
-Continuation labels:
+### @derive Macros
 
-- `yield:` — Wrap result in `Effect.succeed`
-- `pure:` — Alias for `yield:`
-- `return:` — Alias for `yield:`
+```typescript
+import { EffectSchema, EffectEqual, EffectHash } from "@typesugar/effect";
+
+@derive(EffectSchema)
+interface User { id: string; name: string; age: number; }
+// Generates: export const UserSchema = Schema.Struct({ ... })
+
+@derive(EffectEqual)
+interface Point { x: number; y: number; }
+// Generates: export const PointEqual: Equal.Equal<Point> = { ... }
+
+@derive(EffectHash)
+interface Point { x: number; y: number; }
+// Generates: export const PointHash: Hash.Hash<Point> = { ... }
+```
+
+### Extension Methods
+
+```typescript
+import { EffectExt, OptionExt, EitherExt } from "@typesugar/effect";
+
+// Fluent method chaining (transformer rewrites to direct calls)
+effect
+  .map((x) => x + 1)
+  .flatMap((x) => Effect.succeed(x * 2))
+  .tap((x) => Effect.log(`Got: ${x}`))
+  .orElseSucceed(() => 0);
+```
+
+### Typeclass Instances
+
+```typescript
+import {
+  effectFunctor,
+  effectMonad,
+  effectMonadError,
+  chunkFoldable,
+} from "@typesugar/effect";
+
+// Use with generic FP functions
+const mapped = genericMap(effectFunctor<never, never>(), effect, f);
+```
 
 ## API Reference
 
-### Labeled Block Macros
+### Attribute Macros
 
-- `let: { ... } yield: { ... }` — Do-notation (provided by `@typesugar/std`, enabled by this package's FlatMap registration)
+| Macro                    | Description                                                  |
+| ------------------------ | ------------------------------------------------------------ |
+| `@service`               | Generate Context.Tag and accessor namespace for an interface |
+| `@layer(Service, opts?)` | Wrap a const in Layer.succeed/effect/scoped                  |
+| `@derive(EffectSchema)`  | Generate Effect Schema.Struct for a type                     |
+| `@derive(EffectEqual)`   | Generate Equal.Equal instance for a type                     |
+| `@derive(EffectHash)`    | Generate Hash.Hash instance for a type                       |
 
 ### Expression Macros
 
-- `gen$(fn)` — Shorthand for `Effect.gen(fn)`
-- `map$(effect, fn)` — Shorthand for `Effect.map(effect, fn)`
-- `flatMap$(effect, fn)` — Shorthand for `Effect.flatMap(effect, fn)`
-- `pipe$(initial, ...ops)` — Shorthand for `Effect.pipe(initial, ...ops)`
+| Macro               | Description                                     |
+| ------------------- | ----------------------------------------------- |
+| `resolveLayer<R>()` | Automatically compose layers for requirements R |
 
-### Registration
+### Registries
 
-- `register()` — Register macros (called automatically on import)
+| Export                      | Description                        |
+| --------------------------- | ---------------------------------- |
+| `serviceRegistry`           | Map of registered services         |
+| `layerRegistry`             | Map of registered layers           |
+| `registerService(info)`     | Manually register a service        |
+| `registerLayer(info)`       | Manually register a layer          |
+| `getService(name)`          | Look up service metadata           |
+| `getLayer(name)`            | Look up layer metadata             |
+| `getLayersForService(name)` | Get all layers providing a service |
 
-## Why Use This?
+### Extension Namespaces
 
-| Before (Verbose)                                                        | After (with adapter)                       |
-| ----------------------------------------------------------------------- | ------------------------------------------ |
-| `Effect.flatMap(a, x => Effect.flatMap(b, y => Effect.succeed(x + y)))` | `let: { x << a; y << b } yield: { x + y }` |
-| `Effect.gen(function* () { ... })`                                      | `gen$(function* () { ... })`               |
-| `Effect.map(effect, fn)`                                                | `map$(effect, fn)`                         |
+| Export      | Description                           |
+| ----------- | ------------------------------------- |
+| `EffectExt` | Extension methods for Effect.Effect   |
+| `OptionExt` | Extension methods for Effect's Option |
+| `EitherExt` | Extension methods for Effect's Either |
 
-The macros compile away completely — you get cleaner syntax with zero runtime overhead.
+### Typeclass Instances
+
+| Export                      | Description                   |
+| --------------------------- | ----------------------------- |
+| `effectFunctor<E, R>()`     | Functor for Effect.Effect     |
+| `effectApplicative<E, R>()` | Applicative for Effect.Effect |
+| `effectMonad<E, R>()`       | Monad for Effect.Effect       |
+| `effectMonadError<E, R>()`  | MonadError for Effect.Effect  |
+| `chunkFunctor`              | Functor for Chunk             |
+| `chunkFoldable`             | Foldable for Chunk            |
+| `chunkTraverse`             | Traverse for Chunk            |
+| `effectOptionFunctor`       | Functor for Option            |
+| `effectOptionMonad`         | Monad for Option              |
+| `effectEitherFunctor<E>()`  | Functor for Either            |
+| `effectEitherMonad<E>()`    | Monad for Either              |
+
+### HKT Types
+
+| Export                   | Description                    |
+| ------------------------ | ------------------------------ |
+| `EffectF<E, R>`          | HKT for Effect.Effect          |
+| `ChunkF`                 | HKT for Chunk                  |
+| `EffectOptionF<E, R>`    | HKT for Effect wrapping Option |
+| `EffectEitherF<L, E, R>` | HKT for Effect wrapping Either |
+| `StreamF<E, R>`          | HKT for Stream                 |
+
+## Vision
+
+See the [Effect Integration Vision Doc](../../docs/vision/effect-integration.md) for the full design including:
+
+- Track 1: Deep Effect-TS integration (current implementation)
+- Track 2: Fx compile-away system (future)
 
 ## License
 

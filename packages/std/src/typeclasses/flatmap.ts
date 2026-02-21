@@ -24,7 +24,7 @@
  *   x << [1, 2, 3]
  *   y << [x * 10, x * 20]
  * }
- * yield: { x, y }
+ * yield: ({ x, y })
  * // → [{ x: 1, y: 10 }, { x: 1, y: 20 }, { x: 2, y: 20 }, ...]
  *
  * // With Promise
@@ -32,7 +32,7 @@
  *   user << fetchUser(id)
  *   posts << fetchPosts(user.id)
  * }
- * yield: { user, posts }
+ * yield: ({ user, posts })
  * // → Promise<{ user, posts }>
  * ```
  */
@@ -122,8 +122,7 @@ interface _AsyncIterableTag {
  * This compiles to direct method calls — zero overhead.
  */
 export const flatMapArray: FlatMap<_ArrayTag> = {
-  map: <A, B>(fa: unknown, f: (a: A) => B): unknown =>
-    (fa as A[]).map(f),
+  map: <A, B>(fa: unknown, f: (a: A) => B): unknown => (fa as A[]).map(f),
   flatMap: <A, B>(fa: unknown, f: (a: A) => unknown): unknown =>
     (fa as A[]).flatMap(f as (a: A) => B[]),
 };
@@ -165,7 +164,10 @@ export const flatMapAsyncIterable: FlatMap<_AsyncIterableTag> = {
   map: <A, B>(fa: unknown, f: (a: A) => B): unknown =>
     asyncIterableMap(fa as AsyncIterable<A>, f),
   flatMap: <A, B>(fa: unknown, f: (a: A) => unknown): unknown =>
-    asyncIterableFlatMap(fa as AsyncIterable<A>, f as (a: A) => AsyncIterable<B>),
+    asyncIterableFlatMap(
+      fa as AsyncIterable<A>,
+      f as (a: A) => AsyncIterable<B>,
+    ),
 };
 
 // ============================================================================
@@ -230,7 +232,10 @@ async function* asyncIterableFlatMap<A, B>(
  *
  * Module-private — use {@link registerFlatMap} and {@link getFlatMap} to access.
  */
-const flatMapInstances: GenericRegistry<string, FlatMap<unknown>> = createGenericRegistry({
+const flatMapInstances: GenericRegistry<
+  string,
+  FlatMap<unknown>
+> = createGenericRegistry({
   name: "FlatMapRegistry",
   duplicateStrategy: "replace",
 });
@@ -247,10 +252,7 @@ flatMapInstances.set("AsyncIterable", flatMapAsyncIterable as FlatMap<unknown>);
  * @param name The name of the type constructor (e.g., "Option", "Effect")
  * @param instance The FlatMap instance
  */
-export function registerFlatMap<F>(
-  name: string,
-  instance: FlatMap<F>,
-): void {
+export function registerFlatMap<F>(name: string, instance: FlatMap<F>): void {
   if (flatMapInstances.has(name)) {
     console.warn(
       `[typesugar] FlatMap instance for '${name}' is already registered. Overriding.`,

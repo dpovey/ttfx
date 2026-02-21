@@ -295,20 +295,57 @@ config.when("debug", debugCode, releaseCode); // compile-time conditional
 
 ### Typeclass System (`typeclass.ts`, `specialize.ts`, `implicits.ts`, `hkt.ts`)
 
-The typeclass system is the flagship feature. It provides Scala 3-style typeclasses with zero-cost specialization.
+The typeclass system is the flagship feature. It provides **implicit resolution** with **zero-cost specialization**.
 
-| Macro                           | Kind       | Purpose                                                                          |
-| ------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| `@typeclass`                    | Attribute  | Declares a typeclass interface, registers methods, generates companion namespace |
-| `@instance`                     | Attribute  | Registers a typeclass instance, registers methods for specialization             |
-| `@deriving`                     | Attribute  | Auto-derives typeclass instances for a type (supports transitive derivation)     |
-| `summon<TC<T>>()`               | Expression | Resolves a typeclass instance at compile time                                    |
-| `extend(value).method(args)`    | Expression | Extension method syntax via typeclass instances                                  |
-| `specialize(fn)`                | Expression | Inlines typeclass dictionary methods — **the zero-cost core**                    |
-| `@implicits`                    | Attribute  | Auto-fills typeclass instance parameters at call sites                           |
-| `summonAll<TC1<T1>, TC2<T2>>()` | Expression | Resolves multiple instances at once                                              |
-| `@hkt`                          | Attribute  | Higher-kinded type parameter support (`F<_>` → `$<F, A>`)                        |
-| `summonHKT<TC<F>>()`            | Expression | Resolves HKT typeclass instances                                                 |
+**Primary behavior — implicit resolution:**
+
+Operators and methods automatically resolve to typeclasses:
+
+```typescript
+interface Point {
+  x: number;
+  y: number;
+}
+
+// Operators resolve to typeclasses automatically
+p1 === p2; // Eq typeclass → compiles to: p1.x === p2.x && p1.y === p2.y
+p1 < p2; // Ord typeclass → compiles to: lexicographic comparison
+
+// Methods resolve to typeclasses automatically
+p1.show(); // Show typeclass → compiles to: `Point(x = ${p1.x}, y = ${p1.y})`
+p1.clone(); // Clone typeclass → compiles to: { x: p1.x, y: p1.y }
+```
+
+**Resolution flow:**
+
+1. Compiler sees `===` or `.show()` on a type
+2. Identifies the relevant typeclass (Eq, Show, etc.)
+3. Checks for explicit `@instance` — use it if found
+4. Checks for explicit `@derive()` — use generated instance if found
+5. **Auto-derives via Mirror** — extracts type structure from TypeChecker, synthesizes instance
+6. **Auto-specializes** — inlines method body at call site (zero-cost)
+
+**Explicit patterns (progressive disclosure):**
+
+| Pattern                             | Use Case                                        |
+| ----------------------------------- | ----------------------------------------------- |
+| `p1 === p2`, `p1.show()`            | Default — implicit resolution + auto-derivation |
+| `summon<TC<T>>()`                   | Generic code where type isn't concrete          |
+| `@derive(Show, Eq)`                 | Documentation — make capabilities explicit      |
+| `@instance const eq: Eq<T> = {...}` | Custom behavior — override auto-derivation      |
+
+**Macros reference:**
+
+| Macro                | Kind       | Purpose                                                         |
+| -------------------- | ---------- | --------------------------------------------------------------- |
+| `@typeclass`         | Attribute  | Declares a typeclass interface (for library authors)            |
+| `@instance`          | Attribute  | Provides custom typeclass instance, overrides auto-derivation   |
+| `@derive(...)`       | Attribute  | Documents capabilities (optional, same operations work without) |
+| `summon<TC<T>>()`    | Expression | Explicit resolution for generic code                            |
+| `specialize(fn)`     | Expression | Manual inlining (usually automatic via auto-specialization)     |
+| `@implicits`         | Attribute  | Auto-fills typeclass instance parameters at call sites          |
+| `@hkt`               | Attribute  | Higher-kinded type parameter support (`F<_>` → `$<F, A>`)       |
+| `summonHKT<TC<F>>()` | Expression | Resolves HKT typeclass instances                                |
 
 **Key registries:**
 
@@ -324,65 +361,53 @@ The typeclass system is the flagship feature. It provides Scala 3-style typeclas
 - `registerInstanceMethods(typeName, methods)` — registers methods for later inlining
 - `findInstance(typeclassName, typeName)` — looks up a registered instance
 - `getTypeclass(name)` — retrieves typeclass metadata
+- `extractGenericMeta(ctx, type)` — extracts Mirror-style metadata for auto-derivation
 
 ### Standalone Extension Methods (`extension.ts`, `macro-transformer.ts`)
 
-Scala 3 has two extension mechanisms: typeclass-derived (above) and standalone
-extensions on concrete types. The standalone extension system handles the latter.
+Beyond typeclass methods, standalone extensions provide additional methods on concrete types.
+These compile to direct function calls — inherently zero-cost.
 
-Unlike typeclass extensions (which go through `TC.summon<T>().method()`), standalone
-extensions compile to direct function calls — inherently zero-cost.
-
-**Usage — extensions are import-scoped (like Scala 3):**
+**Usage — implicit, like typeclasses:**
 
 ```typescript
-import { extend } from "typesugar";
-import { NumberExt, StringExt } from "@typesugar/std";
-
-// No registration needed — the transformer scans imports when it encounters
-// an undefined method call. If NumberExt has a callable `clamp` whose first
-// param matches the receiver type, it rewrites automatically.
-
-extend(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
-extend("hello").capitalize(); // → StringExt.capitalize("hello")
-(42).isPrime(); // implicit rewrite → NumberExt.isPrime(42)
+// Methods on primitives just work
+(42).clamp(0, 100); // → NumberExt.clamp(42, 0, 100)
+"hello".capitalize(); // → StringExt.capitalize("hello")
+[1, 2, 3].sum(); // → ArrayExt.sum([1, 2, 3])
 ```
 
-Bare function imports work too:
+**How it works (resolution order for method calls):**
 
-```typescript
-import { clamp } from "@typesugar/std";
-(42).clamp(0, 100); // → clamp(42, 0, 100)
-```
+1. **Typeclass methods** — auto-derived or explicit instances (`.show()`, `.clone()`, etc.)
+2. **Extension registry** — explicit `registerExtensions()` calls
+3. **Import-scoped scan** — enumerate imports, match method name and receiver type
 
-**How it works (3-tier resolution for undefined method calls):**
+All paths produce zero-cost output — direct function calls, no indirection.
 
-1. Check `extensionMethodRegistry` (typeclass extensions from `@instance`/`@deriving`)
-2. Check `standaloneExtensionRegistry` (explicit `registerExtensions()` calls)
-3. **Import-scoped scan**: enumerate all imports in the current file, check if any
-   imported identifier (namespace or bare function) has a callable property or
-   signature matching the method name and receiver type. Uses the type checker's
-   `isTypeAssignableTo` for parameter matching. Results are cached per file.
-
-The `extend()` macro also goes through this chain — if registries don't match, it
-strips itself and emits `value.method(args)` for the implicit rewriter to handle.
-
-**Explicit registration (optional, for programmatic use):**
+**Explicit registration (optional):**
 
 | Macro                                 | Kind       | Purpose                                        |
 | ------------------------------------- | ---------- | ---------------------------------------------- |
 | `registerExtensions(type, namespace)` | Expression | Pre-register namespace methods as extensions   |
 | `registerExtension(type, fn)`         | Expression | Pre-register a single function as an extension |
 
-**Key difference from typeclass extensions:**
+**When to use `extend()` wrapper:**
 
-| Aspect       | Typeclass                    | Standalone                   |
-| ------------ | ---------------------------- | ---------------------------- |
-| Resolution   | Instance lookup via `summon` | Direct function call         |
-| Output       | `ShowNumber.show(x)`         | `NumberExt.clamp(x, 0, 100)` |
-| Polymorphism | Yes (any `T` with instance)  | No (concrete type only)      |
-| Scoping      | Global (once registered)     | Import-scoped (like Scala 3) |
-| Zero-cost    | Via `specialize()` inlining  | Inherently (direct call)     |
+The `extend()` wrapper is rarely needed. Use it for:
+
+- **Disambiguation** — multiple typeclasses define same method name
+- **Generic contexts** — type parameter not concrete at call site
+- **Explicit intent** — documentation or teaching
+
+```typescript
+// Rare: disambiguate when multiple typeclasses have .map()
+extend(value, Functor).map(f);
+
+// Common: just call methods directly
+value.show();
+value.clone();
+```
 
 ### HKT Conventions
 
