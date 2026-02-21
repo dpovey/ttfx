@@ -402,7 +402,7 @@ function transformTypeHKT(
 export const hktAttribute = defineAttributeMacro({
   name: "hkt",
   description: "Enable HKT syntax (F<_> kind annotations) in an interface or type alias",
-  validTargets: ["interface", "typeAlias"],
+  validTargets: ["interface", "type"],
   expand(ctx, decorator, node) {
     if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
       return transformHKTDeclaration(ctx, node);
