@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
+*.transformed.js
 
 # IDE
 .idea/
@@ -24,6 +25,10 @@ pnpm-debug.log*
 
 # Test coverage
 coverage/
+
+# VitePress
+docs/.vitepress/cache/
+docs/.vitepress/dist/
 
 # VSCode extension packaging
 *.vsix
