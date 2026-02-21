@@ -3,9 +3,10 @@
  *
  * Self-documenting examples of type-safe symbolic mathematics.
  *
- * NOTE: Operator overloading (a + b → instance.add(a, b)) is planned
- * but not yet implemented in the transformer. This showcase uses explicit
- * builder functions which compile to zero-cost direct calls.
+ * Operator overloading is enabled via the Op<> typeclass system:
+ * - `a + b` compiles to `numericExpr.add(a, b)` → `add(a, b)`
+ * - `a - b` compiles to `numericExpr.sub(a, b)` → `sub(a, b)`
+ * - `a * b` compiles to `numericExpr.mul(a, b)` → `mul(a, b)`
  *
  * Type assertions used:
  *   typeAssert<Equal<A, B>>()        - A and B are the same type
@@ -415,29 +416,43 @@ if (system) {
 }
 
 // ============================================================================
-// 10. TYPECLASS INTEGRATION - Operator Overloading Ready
+// 10. OPERATOR OVERLOADING - Zero-Cost Symbolic Algebra
 // ============================================================================
 
-// Numeric<Expression<T>> instance for future operator overloading
-const N = numericExpr;
-const exprSum = N.add(x, y); // x + y
-const exprProd = N.mul(x, y); // x × y
-const exprNeg = N.negate(x); // -x
+// With Op<> typeclass system, operators work directly on expressions!
+// These compile to the underlying builder functions via the transformer.
+
+// Arithmetic operators
+const exprSum = x + y; // → add(x, y)
+const exprDiff = x - y; // → sub(x, y)
+const exprProd = x * y; // → mul(x, y)
 
 typeAssert<Equal<typeof exprSum, Expression<number>>>();
 typeAssert<Equal<typeof exprProd, Expression<number>>>();
 
-// When transformer is ready:
-// const velocity = const_(9.8) * t;           // → mul(const_(9.8), t)
-// const position = const_(0.5) * const_(9.8) * t * t;  // → ...
+// Build complex expressions naturally
+const kinetic = const_(0.5) * var_("m") * var_("v") * var_("v"); // ½mv²
+const potential = var_("m") * const_(9.8) * var_("h"); // mgh
+
+// The quadratic formula: (-b ± √(b²-4ac)) / 2a
+const a = var_("a");
+const b = var_("b");
+const c = var_("c");
+const discriminantExpr = b * b - const_(4) * a * c; // b² - 4ac
+
+// Explicit Numeric instance also available for generic code
+const N = numericExpr;
+const explicitSum = N.add(x, y); // Same as x + y
+const explicitNeg = N.negate(x); // -x
 
 // ============================================================================
-// 11. PHYSICS EXAMPLE - Kinematics
+// 11. PHYSICS EXAMPLE - Kinematics with Operator Overloading
 // ============================================================================
 
 // Position of falling object: s(t) = ½gt²
+// Using operators makes the formula readable!
 const g = const_(9.8);
-const pos = mul(mul(const_(0.5), g), pow(t, TWO));
+const pos = const_(0.5) * g * t * t; // ½gt² - much cleaner than mul(mul(...))
 
 // Velocity: v(t) = ds/dt = gt
 const vel = simplify(diff(pos, "t"));
@@ -450,19 +465,29 @@ assert(Math.abs(evaluate(pos, { t: 2 }) - 19.6) < 1e-10);
 assert(Math.abs(evaluate(vel, { t: 2 }) - 19.6) < 1e-10);
 assert(Math.abs(evaluate(acc, { t: 2 }) - 9.8) < 1e-10);
 
+// Newton's second law: F = ma
+const m = var_("m");
+const force = m * acc; // F = m * a
+
+// Work done: W = F * d
+const d = var_("d");
+const work = force * d; // W = F * d = m * a * d
+
 // ============================================================================
 // 12. RENDERING SHOWCASE - Publication Quality Output
 // ============================================================================
 
-// Complex physics formula
-const schrodinger = mul(neg(div(const_(1), mul(TWO, var_("m")))), diff(diff(var_("psi"), "x"), "x"));
+// Complex physics formula using operators
+const hbar = var_("ℏ");
+const psi = var_("ψ");
+const schrodinger = neg(hbar * hbar) / (TWO * m) * diff(diff(psi, "x"), "x");
 
-// Quadratic formula discriminant
-const discriminant = sub(pow(var_("b"), TWO), mul(const_(4), mul(var_("a"), var_("c"))));
-assert(toLatex(discriminant) === "b^{2} - 4 a c");
+// Quadratic formula discriminant - operators make it readable
+const discriminantRender = b * b - const_(4) * a * c;
+assert(toLatex(discriminantRender) === "b^{2} - 4 a c");
 
-// Euler's identity setup
-const eulerExpr = add(exp(mul(var_("i"), PI)), ONE);
-// e^(iπ) + 1 = 0
+// Euler's identity setup: e^(iπ) + 1 = 0
+const i = var_("i");
+const eulerExpr = exp(i * PI) + ONE;
 
 console.log("✓ All assertions passed");
