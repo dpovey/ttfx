@@ -154,6 +154,211 @@ export {
 } from "./types/bigdecimal.js";
 
 // ============================================================================
+// Rounding
+// ============================================================================
+
+export {
+  type RoundingMode,
+  DEFAULT_ROUNDING_MODE,
+  roundBigInt,
+  roundNumber,
+  isValidRoundingMode,
+} from "./types/rounding.js";
+
+// ============================================================================
+// FixedDecimal (Fixed-Point with Compile-Time Scale)
+// ============================================================================
+
+export {
+  // Type
+  type FixedDecimal,
+  type FixedDecimalConfig,
+  // Constructors
+  fixed,
+  fixedZero,
+  fixedOne,
+  // Typeclass instances
+  fixedNumeric,
+  fixedIntegral,
+  fixedEq,
+  fixedOrd,
+  // Pre-configured instances
+  fixedNumeric2,
+  fixedNumeric4,
+  fixedNumeric6,
+  fixedNumeric8,
+  fixedIntegral2,
+  fixedIntegral4,
+  // Operations
+  fixedAdd,
+  fixedSub,
+  fixedMul,
+  fixedDiv,
+  fixedQuot,
+  fixedMod,
+  fixedNegate,
+  fixedAbs,
+  fixedSignum,
+  fixedScale,
+  fixedMin,
+  fixedMax,
+  fixedClamp,
+  // Conversions
+  fixedToNumber,
+  fixedToString,
+  fixedFormat,
+  fixedRound,
+  fixedRescale,
+  // Queries
+  fixedCompare,
+  fixedEquals,
+  fixedIsZero,
+  fixedIsPositive,
+  fixedIsNegative,
+} from "./types/fixed-decimal.js";
+
+// ============================================================================
+// Currencies (ISO 4217)
+// ============================================================================
+
+export {
+  // Type
+  type CurrencyDef,
+  type CurrencyCode,
+  // Major currencies
+  USD,
+  EUR,
+  GBP,
+  JPY,
+  CNY,
+  CHF,
+  CAD,
+  AUD,
+  NZD,
+  HKD,
+  SGD,
+  // European
+  SEK,
+  NOK,
+  DKK,
+  PLN,
+  CZK,
+  HUF,
+  RUB,
+  // Asian
+  KRW,
+  INR,
+  THB,
+  MYR,
+  IDR,
+  PHP,
+  VND,
+  TWD,
+  // Americas
+  MXN,
+  BRL,
+  ARS,
+  CLP,
+  COP,
+  // Middle East & Africa
+  AED,
+  SAR,
+  ILS,
+  TRY,
+  ZAR,
+  EGP,
+  KWD,
+  BHD,
+  OMR,
+  // Precious metals
+  XAU,
+  XAG,
+  XPT,
+  XPD,
+  // Crypto
+  BTC,
+  ETH,
+  // Utilities
+  ALL_CURRENCIES,
+  CURRENCY_MAP,
+  getCurrency,
+  currencyScaleFactor,
+} from "./types/currencies.js";
+
+// ============================================================================
+// Money (Type-Safe Currency)
+// ============================================================================
+
+export {
+  // Type
+  type Money,
+  // Constructors
+  money,
+  moneyFromMajor,
+  moneyZero,
+  // Typeclass instances
+  moneyNumeric,
+  moneyEq,
+  moneyOrd,
+  // Operations
+  moneyAdd,
+  moneySub,
+  moneyNegate,
+  moneyAbs,
+  moneyScale,
+  moneyDivide,
+  moneyMin,
+  moneyMax,
+  moneySum,
+  moneyPercentage,
+  moneyAddPercentage,
+  // Allocation
+  moneyAllocate,
+  moneySplit,
+  // Conversion
+  moneyConvert,
+  moneyMinorUnits,
+  moneyToMajor,
+  // Formatting
+  moneyFormat,
+  moneyToString,
+  // Queries
+  moneyCompare,
+  moneyEquals,
+  moneyIsZero,
+  moneyIsPositive,
+  moneyIsNegative,
+} from "./types/money.js";
+
+// ============================================================================
+// Type Conversions
+// ============================================================================
+
+export {
+  // Rational conversions
+  rationalToBigDecimal,
+  rationalToFixed,
+  rationalToMoney,
+  // BigDecimal conversions
+  bigDecimalToRational,
+  bigDecimalToFixed,
+  bigDecimalToMoney,
+  // FixedDecimal conversions
+  fixedToRational,
+  fixedToBigDecimal,
+  fixedToMoney,
+  // Money conversions
+  moneyToRational,
+  moneyToBigDecimal,
+  moneyToFixed,
+  // Number conversions
+  numberToRational,
+  numberToBigDecimal,
+  numberToFixed,
+  numberToMoney,
+} from "./types/conversions.js";
+
+// ============================================================================
 // Matrix (Type-Safe Dimensions)
 // ============================================================================
 

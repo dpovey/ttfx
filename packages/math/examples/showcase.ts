@@ -17,6 +17,14 @@ import {
   bigDecimal, bigDecimalFromString, toFixed,
   numericBigDecimal,
   
+  // FixedDecimal - fixed-point arithmetic
+  fixed, fixedNumeric, fixedToString,
+  
+  // Money - currency-safe finance
+  money, moneyFromMajor, moneyFormat, moneyToString,
+  moneyAllocate, moneySplit, moneyAddPercentage, moneyConvert, moneySum,
+  USD, EUR, GBP, JPY, BTC,
+  
   // Matrix - type-safe dimensions
   matrix, identity, zeros, matMul, transpose, det, matrixInverse,
   
@@ -72,7 +80,90 @@ console.log(`  + 8% tax = $${rationalToString(taxAmount)}`);
 console.log(`  Total: $${rationalToString(total)} = $${rationalToNumber(total).toFixed(2)}`);
 
 // ============================================================================
-// 2. COMPLEX NUMBERS - From Basics to Transcendentals
+// 2. MONEY - Type-Safe Currency with No Floating Point Errors
+// ============================================================================
+
+console.log("\n=== Money - Type-Safe Currency ===\n");
+
+// Money stores cents (minor units) to avoid floating point issues
+const itemPrice = money(1999, USD);  // $19.99
+const shippingCost = money(499, USD);  // $4.99
+
+console.log("E-commerce order:");
+console.log(`  Item price: ${moneyFormat(itemPrice, USD)}`);
+console.log(`  Shipping: ${moneyFormat(shippingCost, USD)}`);
+
+// Safe addition - types ensure same currency
+const subtotalMoney = money(
+  (itemPrice as bigint) + (shippingCost as bigint),
+  USD
+);
+console.log(`  Subtotal: ${moneyFormat(subtotalMoney, USD)}`);
+
+// Add sales tax (8.25%)
+const withTax = moneyAddPercentage(subtotalMoney, 8.25, USD);
+console.log(`  + 8.25% tax: ${moneyFormat(withTax, USD)}`);
+
+// Split a bill three ways (Foemmel's conundrum - fair allocation)
+console.log("\nSplitting $100.00 three ways:");
+const bill = money(10000, USD);
+const [share1, share2, share3] = moneyAllocate(bill, [1, 1, 1], USD);
+console.log(`  Person 1: ${moneyFormat(share1, USD)}`);  // $33.34
+console.log(`  Person 2: ${moneyFormat(share2, USD)}`);  // $33.33
+console.log(`  Person 3: ${moneyFormat(share3, USD)}`);  // $33.33
+console.log(`  Total: ${moneyFormat(money((share1 as bigint) + (share2 as bigint) + (share3 as bigint), USD), USD)}`);
+
+// Weighted split for expense report
+console.log("\nSplitting $150.00 expense (40/35/25 ratio):");
+const expense = money(15000, USD);
+const [mgr, dev1, dev2] = moneyAllocate(expense, [40, 35, 25], USD);
+console.log(`  Manager (40%): ${moneyFormat(mgr, USD)}`);
+console.log(`  Dev 1 (35%): ${moneyFormat(dev1, USD)}`);
+console.log(`  Dev 2 (25%): ${moneyFormat(dev2, USD)}`);
+
+// Currency conversion
+console.log("\nCurrency conversion:");
+const usdAmount = money(10000, USD);  // $100.00
+const eurAmount = moneyConvert(usdAmount, 0.92, USD, EUR);
+const gbpAmount = moneyConvert(usdAmount, 0.79, USD, GBP);
+const jpyAmount = moneyConvert(usdAmount, 149.5, USD, JPY);
+
+console.log(`  $${moneyToString(usdAmount, USD)} USD =`);
+console.log(`    ${moneyFormat(eurAmount, EUR)}`);
+console.log(`    ${moneyFormat(gbpAmount, GBP)}`);
+console.log(`    ${moneyFormat(jpyAmount, JPY)}`);
+
+// Type safety prevents currency mixing
+// This would be a TYPE ERROR (uncomment to see):
+// const mixed = money((usdAmount as bigint) + (eurAmount as bigint), USD);
+
+// ============================================================================
+// 2b. FIXED DECIMAL - When You Need Exact Scale Control
+// ============================================================================
+
+console.log("\n=== FixedDecimal - Fixed-Point Arithmetic ===\n");
+
+// FixedDecimal<N> = N decimal places, auto-rounds after operations
+const FD4 = fixedNumeric(4);  // 4 decimal places
+
+const rate = fixed(0.0825, 4);  // 8.25% as 0.0825
+const principal = fixed(1000, 4);  // $1000.0000
+
+console.log("Interest calculation (4 decimal places):");
+console.log(`  Principal: ${fixedToString(principal, 4)}`);
+console.log(`  Rate: ${fixedToString(rate, 4)} (8.25%)`);
+
+// Compound interest formula: P(1+r)^n
+// After 1 year
+const afterYear1 = FD4.mul(principal, FD4.add(FD4.one(), rate));
+console.log(`  After 1 year: ${fixedToString(afterYear1, 4)}`);
+
+// After 2 years
+const afterYear2 = FD4.mul(afterYear1, FD4.add(FD4.one(), rate));
+console.log(`  After 2 years: ${fixedToString(afterYear2, 4)}`);
+
+// ============================================================================
+// 3. COMPLEX NUMBERS - From Basics to Transcendentals
 // ============================================================================
 
 console.log("\n=== Complex Numbers ===\n");

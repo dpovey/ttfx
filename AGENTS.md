@@ -77,38 +77,60 @@ src/
 └── index.ts            # Main exports and runtime placeholder functions
 
 packages/
+│
+│   ## Build Infrastructure
 ├── core/               # @typesugar/core — macro registration, types, context
 ├── transformer/        # @typesugar/transformer — ts-patch transformer plugin
-├── typeclass/          # @typesugar/typeclass — Scala 3-style typeclasses
-├── specialize/         # @typesugar/specialize — zero-cost specialization
-├── operators/          # @typesugar/operators — operator overloading
-├── derive/             # @typesugar/derive — custom derive API
-├── reflect/            # @typesugar/reflect — compile-time reflection
-├── comptime/           # @typesugar/comptime — compile-time evaluation
-├── fp/                 # @typesugar/fp — functional programming (Option, Result, IO)
-├── std/                # @typesugar/std — standard library extensions
-├── react/              # @typesugar/react — reactive signals, JSX macros
-├── sql/                # @typesugar/sql — typed SQL fragments
-├── contracts/          # @typesugar/contracts — requires/ensures/invariant
-├── contracts-z3/       # @typesugar/contracts-z3 — Z3 SMT solver integration
-├── contracts-refined/  # @typesugar/contracts-refined — refinement types
+├── preprocessor/       # @typesugar/preprocessor — lexical preprocessor for custom syntax
+├── unplugin-typesugar/ # unplugin-typesugar — build tool integrations (Vite, esbuild, Rollup, Webpack)
+│
+│   ## Developer Experience
+├── vscode/             # @typesugar/vscode — VS Code/Cursor extension
+├── eslint-plugin/      # @typesugar/eslint-plugin — ESLint processor and rules
+├── prettier-plugin/    # @typesugar/prettier-plugin — Prettier formatting
 ├── testing/            # @typesugar/testing — powerAssert, comptimeAssert, ArbitraryDerive
-├── type-system/        # @typesugar/type-system — refined types, newtype, vec
-├── units/              # @typesugar/units — units of measure
+│
+│   ## Standard Library
+├── std/                # @typesugar/std — standard library extensions, match(), FlatMap
+│
+│   ## Typeclasses & Derivation
+├── typeclass/          # @typesugar/typeclass — Scala 3-style typeclasses
+├── derive/             # @typesugar/derive — custom derive API
+├── specialize/         # @typesugar/specialize — zero-cost specialization
+├── reflect/            # @typesugar/reflect — compile-time reflection
+│
+│   ## Syntax Sugar
+├── operators/          # @typesugar/operators — operator overloading
 ├── strings/            # @typesugar/strings — string manipulation macros
-├── effect/             # @typesugar/effect — Effect TS integration (@service, @layer, resolveLayer, derives)
-├── kysely/             # @typesugar/kysely-adapter — Kysely integration
-├── unplugin-typesugar/      # unplugin-typesugar — build tool integrations
-├── eslint-plugin/      # @typesugar/eslint-plugin
+├── comptime/           # @typesugar/comptime — compile-time evaluation
+├── named-args/         # @typesugar/named-args — named function arguments (Boost.Parameter)
+│
+│   ## Type Safety & Contracts
+├── type-system/        # @typesugar/type-system — refined types, newtype, vec
+├── contracts/          # @typesugar/contracts — requires/ensures/invariant
+├── contracts-refined/  # @typesugar/contracts-refined — refinement types
+├── contracts-z3/       # @typesugar/contracts-z3 — Z3 SMT solver integration
+├── validate/           # @typesugar/validate — schema validation macros
+├── units/              # @typesugar/units — units of measure
+│
+│   ## Data Structures & Algorithms
+├── fp/                 # @typesugar/fp — functional programming (Option, Result, IO)
 ├── hlist/              # @typesugar/hlist — heterogeneous lists (Boost.Fusion)
-├── parser/             # @typesugar/parser — PEG parser generation (Boost.Spirit)
 ├── fusion/             # @typesugar/fusion — iterator fusion, expression templates (Blitz++)
+├── parser/             # @typesugar/parser — PEG parser generation (Boost.Spirit)
 ├── graph/              # @typesugar/graph — graph algorithms, state machines (Boost.Graph)
 ├── erased/             # @typesugar/erased — typeclass-based type erasure (dyn Trait)
 ├── codec/              # @typesugar/codec — versioned codecs, schema evolution (serde)
-├── named-args/         # @typesugar/named-args — named function arguments (Boost.Parameter)
 ├── geometry/           # @typesugar/geometry — coordinate system safety (Boost.Geometry)
-└── vscode/             # @typesugar/vscode
+├── math/               # @typesugar/math — math types and typeclasses
+├── mapper/             # @typesugar/mapper — zero-cost object mapping
+│
+│   ## Ecosystem Integrations
+├── effect/             # @typesugar/effect — Effect TS integration (@service, @layer, resolveLayer, derives)
+├── react/              # @typesugar/react — reactive signals, JSX macros
+├── sql/                # @typesugar/sql — typed SQL fragments
+├── kysely/             # @typesugar/kysely-adapter — Kysely integration
+└── drizzle/            # @typesugar/drizzle-adapter — Drizzle integration
 ```
 
 ---
@@ -567,11 +589,51 @@ const guard = validator<User>();   // runtime type guard function
 
 ### Operators (`operators.ts`)
 
+**Two operator systems exist — use the right one for your case:**
+
+| System | Operators | When to Use | Registration |
+| ------ | --------- | ----------- | ------------ |
+| **Op\<\> Typeclass** | `+`, `-`, `*`, `/`, `===`, etc. (standard JS) | Types with typeclass instances (Numeric, Eq, Ord) | `Op<"+">` on typeclass method return type |
+| **@operators / ops()** | Any operator | Class-specific method mapping (legacy pattern) | `@operators` decorator on class |
+
+#### Primary: Op\<\> on Typeclass Returns (Zero-Cost)
+
+Standard JS operators work **automatically** on types with typeclass instances. The transformer rewrites them via `tryRewriteTypeclassOperator()`. No wrapper needed.
+
+```typescript
+// Numeric typeclass has Op<"+"> on add(), Op<"*"> on mul(), etc.
+// Any type with a Numeric instance gets operator support automatically:
+
+const a: Rational = rational(1, 2);
+const b: Rational = rational(1, 3);
+const c = a + b;        // Compiles to: rationalNumeric.add(a, b)
+const d = a * b;        // Compiles to: rationalNumeric.mul(a, b)
+
+// Same for Eq (===), Ord (<, >, <=, >=), etc.
+a === b;                // Compiles to: rationalEq.equals(a, b)
+a < b;                  // Compiles to: rationalOrd.compare(a, b) < 0
+```
+
+#### Secondary: @operators + ops() (Class-Specific)
+
+For classes that need custom method names (not using typeclasses):
+
 ```typescript
 @operators({ "+": "add", "*": "mul", "==": "equals" })
-class Vec2 { ... }
+class Vec2 {
+  add(other: Vec2): Vec2 { ... }
+  mul(other: Vec2): Vec2 { ... }
+  equals(other: Vec2): boolean { ... }
+}
 
 const result = ops(a + b * c);  // → a.add(b.mul(c))
+```
+
+**Prefer the `Op<>` typeclass approach** — it's zero-cost and integrates with the rest of the typeclass system.
+
+#### Utilities
+
+```typescript
 const piped = pipe(x, f, g, h); // → h(g(f(x)))
 const composed = compose(f, g); // → (x) => f(g(x))
 ```
@@ -949,20 +1011,16 @@ Every symbol exported from `index.ts` must have at least one consumer in the cod
 
 Shared helpers (like `isBoundaryToken`) must live in **one file** and be imported. Duplicating logic across files means divergence bugs — one copy gets fixed, others don't. Hoist hot-path allocations (like `new Set(...)`) to module scope.
 
-### Operator System Boundary
+### Preprocessor Custom Operators
 
-There are two operator systems that must **never overlap**:
+The preprocessor handles **non-JS operators** (`|>`, `::`, `<|`) via text rewriting to `__binop__()` calls.
 
-| System           | Operators                           | Mechanism                               | Registration                       |
-| ---------------- | ----------------------------------- | --------------------------------------- | ---------------------------------- |
-| Preprocessor     | `\|>`, `::`, `<\|` (custom, non-JS) | Text → `__binop__()` → macro resolution | `@operator(symbol)` on method      |
-| Op\<\> Typeclass | `+`, `-`, `===`, etc. (standard JS) | AST `tryRewriteTypeclassOperator()`     | `Op<"+">` on typeclass return type |
+For standard JS operators (`+`, `-`, `*`, `/`, `===`, etc.), see the **Operators** section above — those use the `Op<>` typeclass system at AST level.
 
-**Rules:**
+**Validation rules (to prevent overlap):**
 
-- The `@operator` decorator must **reject** symbols in `OPERATOR_SYMBOLS` (from `core/types.ts`). Use `Op<>` for standard operators.
-- The `Op<>` system must **warn** on non-standard symbols. Use `@operator` for custom operators.
-- The `__binop__` macro should check both `methodOperatorMappings` and `syntaxRegistry` and emit an ambiguity error if both match.
+- `@operator(symbol)` decorator must **reject** symbols in `OPERATOR_SYMBOLS` (from `core/types.ts`) — use `Op<>` for those
+- The `__binop__` macro should check both `methodOperatorMappings` and `syntaxRegistry` and emit an ambiguity error if both match
 
 ### Scanner Must Respect File Type
 
