@@ -83,7 +83,7 @@ function createSandboxFs(
 
   const checkRead = () => {
     const fsPermission = permissions.fs;
-    if (!fsPermission || fsPermission === false) {
+    if (!fsPermission) {
       throw new ComptimePermissionError("fs", "File read");
     }
   };
@@ -136,7 +136,10 @@ function createSandboxFs(
     ): string[] | nodeFs.Dirent[] => {
       checkRead();
       const absolutePath = resolvePath(dirPath);
-      return nodeFs.readdirSync(absolutePath, options) as string[] | nodeFs.Dirent[];
+      if (options?.withFileTypes) {
+        return nodeFs.readdirSync(absolutePath, { withFileTypes: true });
+      }
+      return nodeFs.readdirSync(absolutePath);
     },
 
     statSync: (filePath: string): nodeFs.Stats => {
@@ -172,7 +175,7 @@ function createSandboxProcess(
 ): Record<string, unknown> {
   const checkEnvRead = () => {
     const envPermission = permissions.env;
-    if (!envPermission || envPermission === false) {
+    if (!envPermission) {
       throw new ComptimePermissionError("env", "Environment variable read");
     }
   };
