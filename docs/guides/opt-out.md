@@ -213,7 +213,7 @@ You can also configure opt-out patterns in `tsconfig.json`:
 }
 ```
 
-See the [Resolution Modes](./resolution-modes.md) guide for more configuration options.
+See the [Architecture doc](/architecture#macro-resolution) for more on resolution modes.
 
 ## Notes
 

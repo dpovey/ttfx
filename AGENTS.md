@@ -100,6 +100,14 @@ packages/
 ├── kysely/             # @typesugar/kysely — Kysely integration
 ├── unplugin-typesugar/      # unplugin-typesugar — build tool integrations
 ├── eslint-plugin/      # @typesugar/eslint-plugin
+├── hlist/              # @typesugar/hlist — heterogeneous lists (Boost.Fusion)
+├── parser/             # @typesugar/parser — PEG parser generation (Boost.Spirit)
+├── fusion/             # @typesugar/fusion — iterator fusion, expression templates (Blitz++)
+├── graph/              # @typesugar/graph — graph algorithms, state machines (Boost.Graph)
+├── erased/             # @typesugar/erased — typeclass-based type erasure (dyn Trait)
+├── codec/              # @typesugar/codec — versioned codecs, schema evolution (serde)
+├── named-args/         # @typesugar/named-args — named function arguments (Boost.Parameter)
+├── geometry/           # @typesugar/geometry — coordinate system safety (Boost.Geometry)
 └── vscode/             # @typesugar/vscode
 ```
 
@@ -527,6 +535,35 @@ const result = comptime(() => {
 
 Supports AST evaluation for simple expressions, falls back to sandboxed `vm` for complex code.
 
+**Sandbox Permissions:**
+
+By default, comptime runs in a restricted sandbox. File system and environment access require explicit permissions:
+
+```typescript
+// Read files at compile time
+const schema = comptime({ fs: "read" }, () => {
+  return fs.readFileSync("./schema.json", "utf8");
+});
+
+// Read environment variables
+const apiKey = comptime({ env: "read" }, () => {
+  return process.env.API_KEY;
+});
+
+// Combined permissions
+const config = comptime({ fs: "read", env: "read" }, () => {
+  const base = JSON.parse(fs.readFileSync("./config.json", "utf8"));
+  return { ...base, apiKey: process.env.API_KEY };
+});
+```
+
+Permission types:
+
+- `fs: 'read' | 'write' | true` — File system access
+- `env: 'read' | true` — Environment variable access
+- `net: boolean | string[]` — Network access (not yet implemented)
+- `time: boolean` — Real time access (not yet implemented)
+
 ### Reflection (`reflect.ts`)
 
 ```typescript
@@ -688,6 +725,32 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 5. **Implicit propagation** — `@implicits` functions propagate their scope to nested calls
 6. **Auto-specialization** — detects calls with typeclass instance arguments and attempts inlining
 7. **Transitive derivation** — `@deriving` builds a plan of dependent types and derives them in order
+8. **Opt-out detection** — checks for `"use no typesugar"` and `// @ts-no-typesugar` before expanding
+
+### Opt-Out System (`packages/core/src/resolution-scope.ts`)
+
+The transformer respects opt-out directives at multiple granularities:
+
+| Scope | Syntax | Checked by |
+| --- | --- | --- |
+| File | `"use no typesugar"` at top of file | `scanImportsForScope()` |
+| Function | `"use no typesugar"` as first statement | `isInOptedOutScope()` |
+| Line | `// @ts-no-typesugar` comment | `hasInlineOptOut()` |
+| Feature | `"use no typesugar extensions"` | `isFeatureOptedOut()` |
+
+All macro expansion points in the transformer check `isInOptedOutScope()` before transforming.
+
+### Import Suggestion System (`packages/core/src/import-suggestions.ts`)
+
+When a symbol isn't in scope, the diagnostics can include "Did you mean to import?" hints:
+
+```typescript
+getSuggestionsForSymbol("Eq"); // → suggests "@typesugar/std"
+getSuggestionsForMethod("clamp", "number"); // → suggests "NumberExt from @typesugar/std"
+getSuggestionsForMacro("comptime"); // → suggests "typesugar"
+```
+
+The export index is pre-populated with known typesugar exports and can be extended via `registerExport()`.
 
 ---
 
@@ -722,7 +785,12 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 | Include file at compile time    | `includeStr()`, `includeJson()`                                     | `macros/include.ts`       |
 | Assert at compile time          | `static_assert(cond, msg)`                                          | `macros/static-assert.ts` |
 | Register FlatMap instance       | `registerFlatMap<F>(name, impl)`                                    | `@typesugar/std`          |
-| Use do-notation for monads      | `let: { x << ... } yield: { ... }`                                  | `@typesugar/std`          |
+| Use do-notation for monads      | `let: { x << ... } yield: { ... }`                                  | `@typesugar/std`            |
+| Check if node is opted out      | `isInOptedOutScope(sourceFile, node, tracker, feature?)`            | `core/resolution-scope.ts`  |
+| Check for inline opt-out        | `hasInlineOptOut(sourceFile, node, feature?)`                       | `core/resolution-scope.ts`  |
+| Get import suggestions          | `getSuggestionsForSymbol(name)`, `getSuggestionsForMethod(name)`    | `core/import-suggestions.ts`|
+| Register export for suggestions | `registerExport(symbol)`                                            | `core/import-suggestions.ts`|
+| Emit rich diagnostic            | `DiagnosticBuilder(descriptor, sourceFile, emitter).at(node).emit()`| `core/diagnostics.ts`       |
 
 ---
 
@@ -749,18 +817,29 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 
 Understanding what goes where prevents architecture confusion:
 
-| Package                  | Contents                                                                                                               | Does NOT contain          |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `@typesugar/typeclass`   | Machinery: `@typeclass`, `@instance`, `@deriving`, `summon`, `extend`, `specialize`, `defineExpressionMacro`           | Typeclass definitions     |
-| `@typesugar/std`         | Standard typeclasses (Eq, Ord, Show, Semigroup, FlatMap), built-in type extensions, `let:/yield:` do-notation, `match` | FP data types             |
-| `@typesugar/fp`          | FP data types (Option, Either, IO, List, etc.) and their typeclass instances                                           | General-purpose utilities |
-| `@typesugar/collections` | Collection typeclass hierarchy (IterableOnce, Iterable, Seq, MapLike, SetLike)                                         | Data type implementations |
+| Package                  | Contents                                                                                                               | Does NOT contain              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `@typesugar/typeclass`   | Machinery: `@typeclass`, `@instance`, `@deriving`, `summon`, `extend`, `specialize`, `defineExpressionMacro`           | Typeclass definitions         |
+| `@typesugar/std`         | Standard typeclasses (Eq, Ord, Show, Semigroup, FlatMap), built-in type extensions, `let:/yield:` do-notation, `match` | FP data types                 |
+| `@typesugar/fp`          | FP data types (Option, Either, IO, List, etc.) and their typeclass instances                                           | General-purpose utilities     |
+| `@typesugar/collections` | Collection typeclass hierarchy (IterableOnce, Iterable, Seq, MapLike, SetLike)                                         | Data type implementations     |
+| `@typesugar/hlist`       | Heterogeneous lists with compile-time type tracking, labeled HList, map/fold operations                                | Typeclass instances           |
+| `@typesugar/parser`      | PEG grammar DSL, parser combinators, tagged template macro                                                             | Compile-time code gen         |
+| `@typesugar/fusion`      | Single-pass lazy iterator pipelines, element-wise vec operations                                                       | Matrix operations             |
+| `@typesugar/graph`       | Graph construction/algorithms (topo sort, SCC, Dijkstra), state machine definition/verification                        | Visual rendering              |
+| `@typesugar/erased`      | Typeclass-based type erasure, vtable dispatch, capability widen/narrow                                                 | Typeclass definitions         |
+| `@typesugar/codec`       | Versioned schema builder, JSON/binary codecs, migration chain generation                                               | Transport/network layer       |
+| `@typesugar/named-args`  | Named argument wrappers, builder pattern for complex functions                                                         | Call-site rewriting (Phase 2) |
+| `@typesugar/geometry`    | Points, vectors, transforms with coordinate system and dimension safety                                                | Physics simulation            |
 
 **Key clarifications:**
 
 - `match` is a general-purpose control flow primitive — it belongs in `std`, not `fp`
 - `@typesugar/typeclass` provides the machinery to define typeclasses, but the typeclasses themselves live in `std`
 - Extensions on built-in types (`number`, `string`, `Array`) go in `std`
+- `@typesugar/hlist` does NOT depend on Generic/macros — it's a peer, not a dependency
+- `@typesugar/fusion`'s `lazy()` is always single-pass — it MUST NOT create intermediate arrays
+- `@typesugar/geometry` types (Point, Vector) are branded arrays — brands are type-only, zero runtime cost
 
 ### `@derive` vs `@deriving` vs Auto-derivation
 

@@ -285,6 +285,13 @@ See the [docs/](docs/) directory:
 - **Loud failures** — failed expansions emit `throw new Error(...)` so bugs are never silent
 - **Diagnostics** — all errors flow through the TypeScript diagnostic pipeline
 
+## Developer Experience
+
+- **Rust-style errors** — rich diagnostics with code snippets, labeled spans, and fix suggestions
+- **"Did you mean?"** — import suggestions when symbols aren't in scope
+- **No false positives** — ESLint/language service automatically handle typesugar imports
+- **Opt-out** — disable transformations per-file, per-function, or per-line with `"use no typesugar"` or `// @ts-no-typesugar`
+
 ## License
 
 MIT

@@ -147,6 +147,7 @@ Move computation from runtime to compile time:
 - **`static_assert()`** — compile-time assertions that disappear in output
 - **`cfg()` / `@cfgAttr`** — conditional compilation for feature flags
 - **`collectTypes()`** — introspect your entire project at compile time
+- **`"use no typesugar"`** — [opt-out directives](/guides/opt-out) for debugging and interop
 
 ```typescript
 // Computed at compile time, inlined as a literal
@@ -208,6 +209,49 @@ class Point {
 ```
 
 [Pattern Matching](/guides/typeclasses#pattern-matching) · [Derive Guide](/guides/derive) · [Extension Methods](/guides/extension-methods)
+
+---
+
+## C++ / Boost Inspired
+
+_The best of template metaprogramming, brought to TypeScript_
+
+Eight new packages inspired by Boost and C++ template techniques, all following typesugar's zero-cost philosophy:
+
+- **HList** — Heterogeneous lists with compile-time type tracking (Boost.Fusion)
+- **Parser** — Compile-time parser generation from PEG grammars (Boost.Spirit)
+- **Fusion** — Single-pass iterator pipelines and expression templates (Blitz++)
+- **Graph** — Graph algorithms and state machine verification (Boost.Graph)
+- **Erased** — Typeclass-based type erasure for heterogeneous collections (dyn Trait)
+- **Codec** — Versioned serialization with schema evolution (Boost.Serialization)
+- **Named Args** — Named function arguments with compile-time validation (Boost.Parameter)
+- **Geometry** — Type-safe geometry with coordinate system safety (Boost.Geometry)
+
+```typescript
+// Lazy iterator fusion — single pass, no intermediate arrays
+const result = lazy([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+  .filter(x => x % 2 === 0)
+  .map(x => x * x)
+  .take(3)
+  .toArray();
+// → [4, 16, 36] — single loop, early termination
+
+// PEG grammar → recursive descent parser
+const csv = grammar`
+  file   = record ("\\n" record)*
+  record = field ("," field)*
+  field  = quoted | unquoted
+  quoted = '"' (!'"' .)* '"'
+  unquoted = (!',' !'\\n' .)*
+`;
+
+// Type-safe geometry — can't mix 2D/3D or coordinate systems
+const p = point2d(1, 2);
+const v = vec2(3, 4);
+const moved = translate(p, v); // Point2D
+```
+
+[HList Guide](/guides/hlist) · [Parser Guide](/guides/parser) · [Fusion Guide](/guides/fusion) · [Graph Guide](/guides/graph)
 
 ---
 
@@ -302,14 +346,16 @@ forAll(Point, 1000, (p) => p.x * 0 === 0); // custom iteration count
 
 ## Packages
 
-| Core                                                      | Features                                                  | Adapters                                          |
-| --------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------- |
-| [@typesugar/transformer](/reference/packages#transformer) | [@typesugar/fp](/reference/packages#fp)                   | [@typesugar/effect](/reference/packages#effect)   |
-| [@typesugar/core](/reference/packages#core)               | [@typesugar/typeclass](/reference/packages#typeclass)     | [@typesugar/kysely](/reference/packages#kysely)   |
-| [unplugin-typesugar](/reference/packages#unplugin)        | [@typesugar/std](/reference/packages#std)                 | [@typesugar/react](/reference/packages#react)     |
-|                                                           | [@typesugar/contracts](/reference/packages#contracts)     | [@typesugar/testing](/reference/packages#testing) |
-|                                                           | [@typesugar/type-system](/reference/packages#type-system) |                                                   |
-|                                                           | [@typesugar/derive](/reference/packages#derive)           |                                                   |
+| Core | Features | Adapters | C++ Inspired |
+| --- | --- | --- | --- |
+| [@typesugar/transformer](/reference/packages#transformer) | [@typesugar/fp](/reference/packages#fp) | [@typesugar/effect](/reference/packages#effect) | [@typesugar/hlist](/reference/packages#hlist) |
+| [@typesugar/core](/reference/packages#core) | [@typesugar/typeclass](/reference/packages#typeclass) | [@typesugar/kysely](/reference/packages#kysely) | [@typesugar/parser](/reference/packages#parser) |
+| [unplugin-typesugar](/reference/packages#unplugin) | [@typesugar/std](/reference/packages#std) | [@typesugar/react](/reference/packages#react) | [@typesugar/fusion](/reference/packages#fusion) |
+| | [@typesugar/contracts](/reference/packages#contracts) | [@typesugar/testing](/reference/packages#testing) | [@typesugar/graph](/reference/packages#graph) |
+| | [@typesugar/type-system](/reference/packages#type-system) | | [@typesugar/erased](/reference/packages#erased) |
+| | [@typesugar/derive](/reference/packages#derive) | | [@typesugar/codec](/reference/packages#codec) |
+| | | | [@typesugar/named-args](/reference/packages#named-args) |
+| | | | [@typesugar/geometry](/reference/packages#geometry) |
 
 [Full Package Reference](/reference/packages)
 

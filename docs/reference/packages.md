@@ -46,6 +46,31 @@ ComptimeValue;
 config;
 cfg;
 cfgAttr;
+
+// Diagnostics (Rust/Elm-style error messages)
+DiagnosticBuilder;
+DiagnosticCategory;
+DiagnosticDescriptor;
+RichDiagnostic;
+renderDiagnosticCLI;
+DIAGNOSTIC_CATALOG;
+TS9001 - TS9999; // Error descriptors
+
+// Resolution Scope
+globalResolutionScope;
+ResolutionScopeTracker;
+scanImportsForScope;
+isInOptedOutScope;
+hasInlineOptOut;
+
+// Import Suggestions
+getExportIndex;
+getSuggestionsForSymbol;
+getSuggestionsForMethod;
+getSuggestionsForTypeclass;
+getSuggestionsForMacro;
+formatSuggestionsMessage;
+generateImportFix;
 ```
 
 ### unplugin-typesugar
@@ -409,7 +434,7 @@ assertExpands();
 
 ### @typesugar/eslint-plugin
 
-ESLint plugin.
+ESLint plugin with processor for typesugar files.
 
 ```bash
 npm install --save-dev @typesugar/eslint-plugin
@@ -421,7 +446,14 @@ npm install --save-dev @typesugar/eslint-plugin
 configs.recommended;
 configs.full;
 configs.strict;
+processor; // Transforms typesugar syntax before linting
 ```
+
+**Features:**
+
+- Transforms macro syntax before ESLint sees it (prevents false positives)
+- Automatically filters "unused import" errors for typesugar packages
+- Maps error locations back to original source
 
 ### @typesugar/vscode
 
@@ -440,6 +472,143 @@ npm install --save-dev @typesugar/preprocessor
 ```typescript
 preprocess();
 ```
+
+## C++ / Boost Inspired {#cpp-inspired}
+
+### @typesugar/hlist {#hlist}
+
+Heterogeneous lists with compile-time type tracking. Inspired by Boost.Fusion/Hana.
+
+```bash
+npm install @typesugar/hlist
+```
+
+**Key exports:**
+- `hlist()` — construct an HList
+- `head()`, `tail()`, `last()`, `init()`, `at()` — element access
+- `append()`, `prepend()`, `concat()`, `reverse()`, `zip()`, `splitAt()` — operations
+- `labeled()`, `get()`, `set()`, `project()`, `merge()` — labeled HList
+- `map()`, `foldLeft()`, `forEach()` — higher-order operations
+
+[Guide](/guides/hlist) · [README](https://github.com/dpovey/typesugar/tree/main/packages/hlist)
+
+### @typesugar/parser {#parser}
+
+Compile-time parser generation from PEG grammars and programmatic combinators. Inspired by Boost.Spirit.
+
+```bash
+npm install @typesugar/parser
+```
+
+**Key exports:**
+- `` grammar`...` `` — PEG grammar tagged template
+- `literal()`, `char()`, `charRange()`, `regex()` — primitive parsers
+- `seq()`, `alt()`, `many()`, `many1()`, `optional()`, `not()` — combinators
+- `map()`, `sepBy()`, `between()`, `lazy()` — composition
+- `digit()`, `integer()`, `float()`, `quotedString()` — convenience
+
+[Guide](/guides/parser) · [README](https://github.com/dpovey/typesugar/tree/main/packages/parser)
+
+### @typesugar/fusion {#fusion}
+
+Single-pass iterator fusion and array expression templates. Inspired by Blitz++ and Rust iterators.
+
+```bash
+npm install @typesugar/fusion
+```
+
+**Key exports:**
+- `lazy()` — create a fused iterator pipeline
+- `.map()`, `.filter()`, `.flatMap()`, `.take()`, `.drop()` — pipeline operations
+- `.toArray()`, `.reduce()`, `.find()`, `.some()`, `.every()` — terminal operations
+- `range()`, `iterate()`, `repeat()`, `generate()` — source generators
+- `vec()`, `add()`, `sub()`, `mul()`, `dot()` — element-wise vector operations
+
+[Guide](/guides/fusion) · [README](https://github.com/dpovey/typesugar/tree/main/packages/fusion)
+
+### @typesugar/graph {#graph}
+
+Graph algorithms and state machine verification. Inspired by Boost.Graph.
+
+```bash
+npm install @typesugar/graph
+```
+
+**Key exports:**
+- `createDigraph()`, `createGraph()` — construction
+- `` digraph`...` `` — DSL construction
+- `topoSort()`, `bfs()`, `dfs()`, `reachable()`, `shortestPath()`, `dijkstra()` — algorithms
+- `stronglyConnectedComponents()`, `detectCycles()`, `isDAG()` — structural analysis
+- `defineStateMachine()`, `verify()`, `createInstance()` — state machines
+
+[Guide](/guides/graph) · [README](https://github.com/dpovey/typesugar/tree/main/packages/graph)
+
+### @typesugar/erased {#erased}
+
+Typeclass-based type erasure for heterogeneous collections. Inspired by Rust's `dyn Trait`.
+
+```bash
+npm install @typesugar/erased
+```
+
+**Key exports:**
+- `eraseWith()` — create an erased value with explicit vtable
+- `showable()`, `equatable()`, `showableEq()` — convenience constructors
+- `show()`, `equals()`, `compare()`, `hash()`, `clone()` — dispatch functions
+- `widen()`, `narrow()`, `hasCapability()` — capability management
+- `mapErased()`, `sortErased()`, `dedup()`, `groupByHash()` — collection ops
+
+[Guide](/guides/erased) · [README](https://github.com/dpovey/typesugar/tree/main/packages/erased)
+
+### @typesugar/codec {#codec}
+
+Versioned codec generation with schema evolution. Inspired by serde, Boost.Serialization, Protocol Buffers.
+
+```bash
+npm install @typesugar/codec
+```
+
+**Key exports:**
+- `schema()` — fluent schema builder with version annotations
+- `createJsonCodec()` — JSON codec with version migration
+- `createBinaryCodec()` — binary codec with explicit field layouts
+- `defineSchema()`, `validateSchema()` — schema definition and validation
+- `generateMigrations()` — auto-generate migration chain
+
+[Guide](/guides/codec) · [README](https://github.com/dpovey/typesugar/tree/main/packages/codec)
+
+### @typesugar/named-args {#named-args}
+
+Named function arguments with compile-time validation. Inspired by Kotlin, Swift, Boost.Parameter.
+
+```bash
+npm install @typesugar/named-args
+```
+
+**Key exports:**
+- `namedArgs()` — wrap a function for named argument calling
+- `callWithNamedArgs()` — call with an object of named arguments
+- `createBuilder()` — builder pattern for many-param functions
+- `NamedArgsError` — structured error type
+
+[Guide](/guides/named-args) · [README](https://github.com/dpovey/typesugar/tree/main/packages/named-args)
+
+### @typesugar/geometry {#geometry}
+
+Type-safe geometry with coordinate system and dimension safety. Inspired by Boost.Geometry.
+
+```bash
+npm install @typesugar/geometry
+```
+
+**Key exports:**
+- `point2d()`, `point3d()`, `vec2()`, `vec3()` — Cartesian constructors
+- `polar()`, `spherical()`, `cylindrical()` — other coordinate systems
+- `translate()`, `distance()`, `dot()`, `cross()`, `normalize()` — operations
+- `cartesianToPolar()`, `sphericalToCartesian()`, etc. — conversions
+- `rotation2d()`, `translation3d()`, `compose()`, `applyToPoint()` — transforms
+
+[Guide](/guides/geometry) · [README](https://github.com/dpovey/typesugar/tree/main/packages/geometry)
 
 ## Peer Dependencies
 
