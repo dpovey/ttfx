@@ -44,60 +44,84 @@ alice.toJson(); // JSON serialization
 
 ## Packages
 
-### Core
+### Build Infrastructure
 
-| Package                                        | Description                  |
-| ---------------------------------------------- | ---------------------------- |
-| [typesugar](packages/typesugar)                | Umbrella package             |
-| [@typesugar/transformer](packages/transformer) | Core TypeScript transformer  |
-| [@typesugar/core](packages/core)               | Macro registration and types |
-| [@typesugar/comptime](packages/comptime)       | Compile-time evaluation      |
-| [@typesugar/derive](packages/derive)           | Auto-derive implementations  |
-| [@typesugar/reflect](packages/reflect)         | Type reflection              |
-| [@typesugar/operators](packages/operators)     | Operator overloading         |
+| Package                                           | Description                                      |
+| ------------------------------------------------- | ------------------------------------------------ |
+| [typesugar](packages/typesugar)                   | Umbrella package                                 |
+| [@typesugar/core](packages/core)                  | Macro registration and types                     |
+| [@typesugar/transformer](packages/transformer)    | TypeScript transformer (ts-patch)                |
+| [@typesugar/preprocessor](packages/preprocessor)  | Lexical preprocessor for custom syntax           |
+| [unplugin-typesugar](packages/unplugin-typesugar) | Bundler plugins (Vite, esbuild, Rollup, Webpack) |
 
-### Typeclasses & FP
+### Standard Library
 
-| Package                                      | Description                         |
-| -------------------------------------------- | ----------------------------------- |
-| [@typesugar/typeclass](packages/typeclass)   | Scala 3-style typeclasses           |
-| [@typesugar/specialize](packages/specialize) | Zero-cost specialization            |
-| [@typesugar/fp](packages/fp)                 | Functional programming library      |
-| [@typesugar/std](packages/std)               | Standard typeclasses and extensions |
+| Package                        | Description                                                            |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| [@typesugar/std](packages/std) | Extension methods, pattern matching, do-notation, standard typeclasses |
 
-### Contracts
+### Typeclasses & Derivation
 
-| Package                                                    | Description               |
-| ---------------------------------------------------------- | ------------------------- |
-| [@typesugar/contracts](packages/contracts)                 | Design by contract        |
-| [@typesugar/contracts-refined](packages/contracts-refined) | Refinement types          |
-| [@typesugar/contracts-z3](packages/contracts-z3)           | Z3 SMT solver integration |
+| Package                                      | Description                                          |
+| -------------------------------------------- | ---------------------------------------------------- |
+| [@typesugar/typeclass](packages/typeclass)   | `@typeclass`, `@instance`, `summon()`                |
+| [@typesugar/derive](packages/derive)         | `@derive(Eq, Clone, Debug, Json, ...)`               |
+| [@typesugar/specialize](packages/specialize) | Zero-cost typeclass specialization                   |
+| [@typesugar/reflect](packages/reflect)       | `typeInfo<T>()`, `fieldNames<T>()`, `validator<T>()` |
 
-### Domain-Specific
+### Syntax Sugar
 
-| Package                                        | Description                         |
-| ---------------------------------------------- | ----------------------------------- |
-| [@typesugar/sql](packages/sql)                 | Type-safe SQL                       |
-| [@typesugar/react](packages/react)             | React macros                        |
-| [@typesugar/strings](packages/strings)         | String validation macros            |
-| [@typesugar/units](packages/units)             | Physical units                      |
-| [@typesugar/type-system](packages/type-system) | Advanced types (HKT, Newtype, etc.) |
+| Package                                      | Description                              |
+| -------------------------------------------- | ---------------------------------------- |
+| [@typesugar/operators](packages/operators)   | `@operators()`, `ops()`, `pipe()`        |
+| [@typesugar/strings](packages/strings)       | `regex`, `html`, `json` tagged templates |
+| [@typesugar/named-args](packages/named-args) | Kotlin-style named function arguments    |
+| [@typesugar/comptime](packages/comptime)     | `comptime()` compile-time evaluation     |
 
-### Integrations
+### Type Safety & Contracts
 
-| Package                              | Description                                                           |
-| ------------------------------------ | --------------------------------------------------------------------- |
-| [@typesugar/effect](packages/effect) | Effect-TS integration (`@service`, `@layer`, `resolveLayer`, derives) |
-| [@typesugar/kysely-adapter](packages/kysely) | Kysely integration                                                    |
+| Package                                                    | Description                                |
+| ---------------------------------------------------------- | ------------------------------------------ |
+| [@typesugar/type-system](packages/type-system)             | Refined types, newtype, HKT, phantom types |
+| [@typesugar/contracts](packages/contracts)                 | `requires:`, `ensures:`, `@invariant`      |
+| [@typesugar/contracts-refined](packages/contracts-refined) | Refinement type integration                |
+| [@typesugar/contracts-z3](packages/contracts-z3)           | Z3 SMT solver proofs                       |
+| [@typesugar/validate](packages/validate)                   | Schema validation macros                   |
+| [@typesugar/units](packages/units)                         | Type-safe physical units                   |
 
-### Tooling
+### Data Structures & Algorithms
 
-| Package                                            | Description                                      |
-| -------------------------------------------------- | ------------------------------------------------ |
-| [unplugin-typesugar](packages/unplugin-typesugar)  | Bundler plugins (Vite, Webpack, esbuild, Rollup) |
-| [@typesugar/eslint-plugin](packages/eslint-plugin) | ESLint plugin                                    |
-| [@typesugar/vscode](packages/vscode)               | VSCode/Cursor extension                          |
-| [@typesugar/testing](packages/testing)             | Testing macros                                   |
+| Package                                  | Description                                     |
+| ---------------------------------------- | ----------------------------------------------- |
+| [@typesugar/fp](packages/fp)             | Option, Either, IO, Result, List                |
+| [@typesugar/hlist](packages/hlist)       | Heterogeneous lists (Boost.Fusion)              |
+| [@typesugar/fusion](packages/fusion)     | Iterator fusion, expression templates (Blitz++) |
+| [@typesugar/parser](packages/parser)     | PEG parser generation (Boost.Spirit)            |
+| [@typesugar/graph](packages/graph)       | Graph algorithms, state machines (Boost.Graph)  |
+| [@typesugar/erased](packages/erased)     | Type erasure / dyn Trait                        |
+| [@typesugar/codec](packages/codec)       | Versioned codecs, schema evolution              |
+| [@typesugar/geometry](packages/geometry) | Type-safe geometry (Boost.Geometry)             |
+| [@typesugar/math](packages/math)         | Math types and typeclasses                      |
+| [@typesugar/mapper](packages/mapper)     | Zero-cost object mapping                        |
+
+### Ecosystem Integrations
+
+| Package                                        | Description                 |
+| ---------------------------------------------- | --------------------------- |
+| [@typesugar/effect](packages/effect)           | Effect-TS adapter           |
+| [@typesugar/react](packages/react)             | Vue/Svelte-style reactivity |
+| [@typesugar/sql](packages/sql)                 | Doobie-like SQL DSL         |
+| [@typesugar/kysely-adapter](packages/kysely)   | Kysely integration          |
+| [@typesugar/drizzle-adapter](packages/drizzle) | Drizzle integration         |
+
+### Developer Experience
+
+| Package                                                | Description                        |
+| ------------------------------------------------------ | ---------------------------------- |
+| [@typesugar/vscode](packages/vscode)                   | VS Code/Cursor extension           |
+| [@typesugar/eslint-plugin](packages/eslint-plugin)     | ESLint processor and rules         |
+| [@typesugar/prettier-plugin](packages/prettier-plugin) | Prettier formatting                |
+| [@typesugar/testing](packages/testing)                 | Power assertions, property testing |
 
 ## Getting Started
 

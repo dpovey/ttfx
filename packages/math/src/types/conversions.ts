@@ -35,16 +35,8 @@ import {
   toNumber as bigDecimalToNumber,
   round as bigDecimalRound,
 } from "./bigdecimal.js";
-import {
-  fixed,
-  fixedToNumber,
-  fixedRound,
-} from "./fixed-decimal.js";
-import {
-  money,
-  moneyFromMajor,
-  moneyToMajor,
-} from "./money.js";
+import { fixed, fixedToNumber, fixedRound } from "./fixed-decimal.js";
+import { money, moneyFromMajor, moneyToMajor } from "./money.js";
 import { currencyScaleFactor } from "./currencies.js";
 import { type RoundingMode, DEFAULT_ROUNDING_MODE } from "./rounding.js";
 
@@ -167,10 +159,7 @@ export function bigDecimalToMoney<C extends CurrencyDef>(
 /**
  * Convert FixedDecimal to Rational (exact).
  */
-export function fixedToRational<N extends number>(
-  fd: FixedDecimal<N>,
-  scale: N
-): Rational {
+export function fixedToRational<N extends number>(fd: FixedDecimal<N>, scale: N): Rational {
   const den = 10n ** BigInt(scale);
   return rational(fd as bigint, den);
 }
@@ -178,10 +167,7 @@ export function fixedToRational<N extends number>(
 /**
  * Convert FixedDecimal to BigDecimal.
  */
-export function fixedToBigDecimal<N extends number>(
-  fd: FixedDecimal<N>,
-  scale: N
-): BigDecimal {
+export function fixedToBigDecimal<N extends number>(fd: FixedDecimal<N>, scale: N): BigDecimal {
   return bigDecimal(fd as bigint, scale);
 }
 
@@ -219,10 +205,7 @@ export function fixedToMoney<N extends number, C extends CurrencyDef>(
  * moneyToRational(money(1299, USD), USD);  // rational(1299n, 100n) = 12.99
  * ```
  */
-export function moneyToRational<C extends CurrencyDef>(
-  m: Money<C>,
-  currency: C
-): Rational {
+export function moneyToRational<C extends CurrencyDef>(m: Money<C>, currency: C): Rational {
   const den = currencyScaleFactor(currency);
   return rational(m as bigint, den);
 }
@@ -230,10 +213,7 @@ export function moneyToRational<C extends CurrencyDef>(
 /**
  * Convert Money to BigDecimal.
  */
-export function moneyToBigDecimal<C extends CurrencyDef>(
-  m: Money<C>,
-  currency: C
-): BigDecimal {
+export function moneyToBigDecimal<C extends CurrencyDef>(m: Money<C>, currency: C): BigDecimal {
   return bigDecimal(m as bigint, currency.minorUnits);
 }
 

@@ -4,7 +4,11 @@
   "description": "TypeScript language service plugin for typesugar",
   "main": "./index.js",
   "types": "./index.d.ts",
-  "files": ["index.js", "index.d.ts", "language-service.cjs"],
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "language-service.cjs"
+  ],
   "peerDependencies": {
     "typescript": ">=5.0.0"
   }

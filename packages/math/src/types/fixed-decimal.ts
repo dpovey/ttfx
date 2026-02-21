@@ -256,20 +256,14 @@ export function fixedRescale<N extends number, M extends number>(
 /**
  * Compare two FixedDecimals of the same scale.
  */
-export function fixedCompare<N extends number>(
-  a: FixedDecimal<N>,
-  b: FixedDecimal<N>
-): -1 | 0 | 1 {
+export function fixedCompare<N extends number>(a: FixedDecimal<N>, b: FixedDecimal<N>): -1 | 0 | 1 {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
 /**
  * Check if two FixedDecimals are equal.
  */
-export function fixedEquals<N extends number>(
-  a: FixedDecimal<N>,
-  b: FixedDecimal<N>
-): boolean {
+export function fixedEquals<N extends number>(a: FixedDecimal<N>, b: FixedDecimal<N>): boolean {
   return a === b;
 }
 
@@ -284,7 +278,7 @@ export function fixedAbs<N extends number>(fd: FixedDecimal<N>): FixedDecimal<N>
  * Negate a FixedDecimal.
  */
 export function fixedNegate<N extends number>(fd: FixedDecimal<N>): FixedDecimal<N> {
-  return (-fd) as FixedDecimal<N>;
+  return -fd as FixedDecimal<N>;
 }
 
 /**
@@ -373,7 +367,7 @@ export function fixedDiv<N extends number>(
     return quotient as FixedDecimal<N>;
   }
 
-  const negative = (a < 0n) !== (b < 0n);
+  const negative = a < 0n !== b < 0n;
   const absRemainder = remainder < 0n ? -remainder : remainder;
   const absB = b < 0n ? -b : b;
   const halfB = absB / 2n;

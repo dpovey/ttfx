@@ -217,13 +217,52 @@ export const ETH = currency("ETH", 8, "Ξ", "Ether");
  * All predefined currency definitions.
  */
 export const ALL_CURRENCIES = [
-  USD, EUR, GBP, JPY, CNY, CHF, CAD, AUD, NZD, HKD, SGD,
-  SEK, NOK, DKK, PLN, CZK, HUF, RUB,
-  KRW, INR, THB, MYR, IDR, PHP, VND, TWD,
-  MXN, BRL, ARS, CLP, COP,
-  AED, SAR, ILS, TRY, ZAR, EGP, KWD, BHD, OMR,
-  XAU, XAG, XPT, XPD,
-  BTC, ETH,
+  USD,
+  EUR,
+  GBP,
+  JPY,
+  CNY,
+  CHF,
+  CAD,
+  AUD,
+  NZD,
+  HKD,
+  SGD,
+  SEK,
+  NOK,
+  DKK,
+  PLN,
+  CZK,
+  HUF,
+  RUB,
+  KRW,
+  INR,
+  THB,
+  MYR,
+  IDR,
+  PHP,
+  VND,
+  TWD,
+  MXN,
+  BRL,
+  ARS,
+  CLP,
+  COP,
+  AED,
+  SAR,
+  ILS,
+  TRY,
+  ZAR,
+  EGP,
+  KWD,
+  BHD,
+  OMR,
+  XAU,
+  XAG,
+  XPT,
+  XPD,
+  BTC,
+  ETH,
 ] as const;
 
 /**
@@ -250,6 +289,4 @@ export function currencyScaleFactor(currency: CurrencyDef): bigint {
 /**
  * Type helper to extract the code type from a currency definition.
  */
-export type CurrencyCode<C extends CurrencyDef> = C extends CurrencyDef<infer Code>
-  ? Code
-  : never;
+export type CurrencyCode<C extends CurrencyDef> = C extends CurrencyDef<infer Code> ? Code : never;

@@ -29,14 +29,7 @@ import {
   moneyNumeric,
   type Money,
 } from "../types/money.js";
-import {
-  USD,
-  EUR,
-  JPY,
-  GBP,
-  KWD,
-  BTC,
-} from "../types/currencies.js";
+import { USD, EUR, JPY, GBP, KWD, BTC } from "../types/currencies.js";
 
 describe("Money", () => {
   describe("construction", () => {

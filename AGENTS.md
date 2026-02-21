@@ -591,10 +591,10 @@ const guard = validator<User>();   // runtime type guard function
 
 **Two operator systems exist — use the right one for your case:**
 
-| System | Operators | When to Use | Registration |
-| ------ | --------- | ----------- | ------------ |
-| **Op\<\> Typeclass** | `+`, `-`, `*`, `/`, `===`, etc. (standard JS) | Types with typeclass instances (Numeric, Eq, Ord) | `Op<"+">` on typeclass method return type |
-| **@operators / ops()** | Any operator | Class-specific method mapping (legacy pattern) | `@operators` decorator on class |
+| System                 | Operators                                     | When to Use                                       | Registration                              |
+| ---------------------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------- |
+| **Op\<\> Typeclass**   | `+`, `-`, `*`, `/`, `===`, etc. (standard JS) | Types with typeclass instances (Numeric, Eq, Ord) | `Op<"+">` on typeclass method return type |
+| **@operators / ops()** | Any operator                                  | Class-specific method mapping (legacy pattern)    | `@operators` decorator on class           |
 
 #### Primary: Op\<\> on Typeclass Returns (Zero-Cost)
 
@@ -606,12 +606,12 @@ Standard JS operators work **automatically** on types with typeclass instances. 
 
 const a: Rational = rational(1, 2);
 const b: Rational = rational(1, 3);
-const c = a + b;        // Compiles to: rationalNumeric.add(a, b)
-const d = a * b;        // Compiles to: rationalNumeric.mul(a, b)
+const c = a + b; // Compiles to: rationalNumeric.add(a, b)
+const d = a * b; // Compiles to: rationalNumeric.mul(a, b)
 
 // Same for Eq (===), Ord (<, >, <=, >=), etc.
-a === b;                // Compiles to: rationalEq.equals(a, b)
-a < b;                  // Compiles to: rationalOrd.compare(a, b) < 0
+a === b; // Compiles to: rationalEq.equals(a, b)
+a < b; // Compiles to: rationalOrd.compare(a, b) < 0
 ```
 
 #### Secondary: @operators + ops() (Class-Specific)

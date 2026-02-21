@@ -71,10 +71,7 @@ export type Money<C extends CurrencyDef> = bigint & { readonly __currency: C };
  * money(1000, JPY);  // ¥1000 (JPY has 0 minor units)
  * ```
  */
-export function money<C extends CurrencyDef>(
-  minorUnits: bigint | number,
-  _currency: C
-): Money<C> {
+export function money<C extends CurrencyDef>(minorUnits: bigint | number, _currency: C): Money<C> {
   const value = typeof minorUnits === "number" ? BigInt(Math.round(minorUnits)) : minorUnits;
   return value as Money<C>;
 }
@@ -110,12 +107,7 @@ export function moneyFromMajor<C extends CurrencyDef>(
 
   // Scale and round
   const scaled = majorUnits * Number(scaleFactor);
-  const rounded = roundBigInt(
-    BigInt(Math.trunc(scaled * 1e10)),
-    0,
-    10,
-    mode
-  );
+  const rounded = roundBigInt(BigInt(Math.trunc(scaled * 1e10)), 0, 10, mode);
 
   return rounded as Money<C>;
 }
@@ -152,10 +144,7 @@ export function moneyMinorUnits<C extends CurrencyDef>(m: Money<C>): bigint {
  * moneyToMajor(money(1299, USD), USD);  // 12.99
  * ```
  */
-export function moneyToMajor<C extends CurrencyDef>(
-  m: Money<C>,
-  currency: C
-): number {
+export function moneyToMajor<C extends CurrencyDef>(m: Money<C>, currency: C): number {
   return Number(m) / Number(currencyScaleFactor(currency));
 }
 
@@ -194,10 +183,7 @@ export function moneyFormat<C extends CurrencyDef>(
  * moneyToString(money(-500, USD), USD);  // "-5.00"
  * ```
  */
-export function moneyToString<C extends CurrencyDef>(
-  m: Money<C>,
-  currency: C
-): string {
+export function moneyToString<C extends CurrencyDef>(m: Money<C>, currency: C): string {
   const scaleFactor = currencyScaleFactor(currency);
   const minorUnits = currency.minorUnits;
 
@@ -218,20 +204,14 @@ export function moneyToString<C extends CurrencyDef>(
 /**
  * Add two Money values of the same currency.
  */
-export function moneyAdd<C extends CurrencyDef>(
-  a: Money<C>,
-  b: Money<C>
-): Money<C> {
+export function moneyAdd<C extends CurrencyDef>(a: Money<C>, b: Money<C>): Money<C> {
   return ((a as bigint) + (b as bigint)) as Money<C>;
 }
 
 /**
  * Subtract two Money values of the same currency.
  */
-export function moneySub<C extends CurrencyDef>(
-  a: Money<C>,
-  b: Money<C>
-): Money<C> {
+export function moneySub<C extends CurrencyDef>(a: Money<C>, b: Money<C>): Money<C> {
   return ((a as bigint) - (b as bigint)) as Money<C>;
 }
 
@@ -239,7 +219,7 @@ export function moneySub<C extends CurrencyDef>(
  * Negate a Money value.
  */
 export function moneyNegate<C extends CurrencyDef>(m: Money<C>): Money<C> {
-  return (-m) as Money<C>;
+  return -m as Money<C>;
 }
 
 /**
@@ -297,7 +277,7 @@ export function moneyDivide<C extends CurrencyDef>(
       return quotient as Money<C>;
     }
 
-    const negative = (m < 0n) !== (divisor < 0n);
+    const negative = m < 0n !== divisor < 0n;
     const absDivisor = divisor < 0n ? -divisor : divisor;
     const absRemainder = remainder < 0n ? -remainder : remainder;
     const halfDivisor = absDivisor / 2n;
@@ -351,20 +331,14 @@ export function moneyDivide<C extends CurrencyDef>(
 /**
  * Compare two Money values of the same currency.
  */
-export function moneyCompare<C extends CurrencyDef>(
-  a: Money<C>,
-  b: Money<C>
-): -1 | 0 | 1 {
+export function moneyCompare<C extends CurrencyDef>(a: Money<C>, b: Money<C>): -1 | 0 | 1 {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
 /**
  * Check if two Money values are equal.
  */
-export function moneyEquals<C extends CurrencyDef>(
-  a: Money<C>,
-  b: Money<C>
-): boolean {
+export function moneyEquals<C extends CurrencyDef>(a: Money<C>, b: Money<C>): boolean {
   return a === b;
 }
 
@@ -392,20 +366,14 @@ export function moneyIsNegative<C extends CurrencyDef>(m: Money<C>): boolean {
 /**
  * Get the minimum of two Money values.
  */
-export function moneyMin<C extends CurrencyDef>(
-  a: Money<C>,
-  b: Money<C>
-): Money<C> {
+export function moneyMin<C extends CurrencyDef>(a: Money<C>, b: Money<C>): Money<C> {
   return a < b ? a : b;
 }
 
 /**
  * Get the maximum of two Money values.
  */
-export function moneyMax<C extends CurrencyDef>(
-  a: Money<C>,
-  b: Money<C>
-): Money<C> {
+export function moneyMax<C extends CurrencyDef>(a: Money<C>, b: Money<C>): Money<C> {
   return a > b ? a : b;
 }
 
@@ -481,11 +449,7 @@ export function moneyAllocate<C extends CurrencyDef>(
  * // Returns [334, 333, 333] (cents)
  * ```
  */
-export function moneySplit<C extends CurrencyDef>(
-  m: Money<C>,
-  n: number,
-  currency: C
-): Money<C>[] {
+export function moneySplit<C extends CurrencyDef>(m: Money<C>, n: number, currency: C): Money<C>[] {
   if (n <= 0 || !Number.isInteger(n)) {
     throw new RangeError("Money.split: n must be a positive integer");
   }
@@ -531,15 +495,14 @@ export function moneyConvert<From extends CurrencyDef, To extends CurrencyDef>(
  * The mul operation is included for typeclass compatibility but represents
  * scaling by the minor unit value (treating the right operand as a scalar).
  */
-export function moneyNumeric<C extends CurrencyDef>(
-  currency: C
-): Numeric<Money<C>> {
+export function moneyNumeric<C extends CurrencyDef>(currency: C): Numeric<Money<C>> {
   return {
     add: (a, b) => moneyAdd(a, b) as Money<C> & Op<"+">,
     sub: (a, b) => moneySub(a, b) as Money<C> & Op<"-">,
     mul: (a, b) => {
       // Treat as scaling by b's minor unit count (unusual but type-safe)
-      return ((a as bigint) * (b as bigint) / currencyScaleFactor(currency)) as Money<C> & Op<"*">;
+      return (((a as bigint) * (b as bigint)) / currencyScaleFactor(currency)) as Money<C> &
+        Op<"*">;
     },
     negate: moneyNegate,
     abs: moneyAbs,

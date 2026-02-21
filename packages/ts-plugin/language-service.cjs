@@ -4,14 +4,16 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
+  for (var name in all) __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
+  if ((from && typeof from === "object") || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
       if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+        __defProp(to, key, {
+          get: () => from[key],
+          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+        });
   }
   return to;
 };
@@ -20,7 +22,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/language-service.ts
 var language_service_exports = {};
 __export(language_service_exports, {
-  default: () => language_service_default
+  default: () => language_service_default,
 });
 module.exports = __toCommonJS(language_service_exports);
 var EXPRESSION_MACROS = /* @__PURE__ */ new Set([
@@ -32,90 +34,90 @@ var EXPRESSION_MACROS = /* @__PURE__ */ new Set([
   "extend",
   "typeInfo",
   "fieldNames",
-  "validator"
+  "validator",
 ]);
 var TYPECLASS_EXTENSION_METHODS = {
   show: {
     typeclass: "Show",
     description: "Convert to a human-readable string representation",
-    returnType: "string"
+    returnType: "string",
   },
   eq: {
     typeclass: "Eq",
     description: "Check equality with another value",
-    returnType: "boolean"
+    returnType: "boolean",
   },
   neq: {
     typeclass: "Eq",
     description: "Check inequality with another value",
-    returnType: "boolean"
+    returnType: "boolean",
   },
   compare: {
     typeclass: "Ord",
     description: "Compare ordering with another value (-1, 0, or 1)",
-    returnType: "-1 | 0 | 1"
+    returnType: "-1 | 0 | 1",
   },
   hash: {
     typeclass: "Hash",
     description: "Compute a hash code for this value",
-    returnType: "number"
+    returnType: "number",
   },
   combine: {
     typeclass: "Semigroup",
     description: "Combine with another value using the Semigroup operation",
-    returnType: "self"
+    returnType: "self",
   },
   empty: {
     typeclass: "Monoid",
     description: "Get the identity element for this type",
-    returnType: "self"
+    returnType: "self",
   },
   map: {
     typeclass: "Functor",
     description: "Apply a function to the contained value(s)",
-    returnType: "self"
+    returnType: "self",
   },
   // Derived methods from @derive() macros
   equals: {
     typeclass: "Eq",
     description: "Check equality with another value (derived)",
-    returnType: "boolean"
+    returnType: "boolean",
   },
   clone: {
     typeclass: "Clone",
     description: "Create a deep copy of this value (derived)",
-    returnType: "self"
+    returnType: "self",
   },
   debug: {
     typeclass: "Debug",
     description: "Get debug string representation (derived)",
-    returnType: "string"
+    returnType: "string",
   },
   toJson: {
     typeclass: "Json",
     description: "Serialize to JSON (derived)",
-    returnType: "unknown"
+    returnType: "unknown",
   },
   fromJson: {
     typeclass: "Json",
     description: "Deserialize from JSON (derived, static)",
-    returnType: "self"
+    returnType: "self",
   },
   default: {
     typeclass: "Default",
     description: "Get default instance (derived, static)",
-    returnType: "self"
+    returnType: "self",
   },
   builder: {
     typeclass: "Builder",
     description: "Get builder instance (derived, static)",
-    returnType: "Builder<self>"
+    returnType: "Builder<self>",
   },
   build: {
     typeclass: "Builder",
     description: "Build the final instance (derived)",
-    returnType: "self"
-  }
+    returnType: "self",
+  },
 };
 var DERIVE_MACRO_NAMES = /* @__PURE__ */ new Set([
   "Eq",
@@ -127,7 +129,7 @@ var DERIVE_MACRO_NAMES = /* @__PURE__ */ new Set([
   "Json",
   "Builder",
   "TypeGuard",
-  "Show"
+  "Show",
 ]);
 var EXTENSION_METHOD_NAMES = new Set(Object.keys(TYPECLASS_EXTENSION_METHODS));
 var DECORATOR_MACROS = /* @__PURE__ */ new Set([
@@ -137,7 +139,7 @@ var DECORATOR_MACROS = /* @__PURE__ */ new Set([
   "typeclass",
   "instance",
   "deriving",
-  "inline"
+  "inline",
 ]);
 var DERIVE_MACROS = [
   { name: "Eq", description: "Generate equality comparison function" },
@@ -147,9 +149,17 @@ var DERIVE_MACROS = [
   { name: "Hash", description: "Generate hash function" },
   { name: "Default", description: "Generate default value factory" },
   { name: "Json", description: "Generate JSON serialization/deserialization" },
-  { name: "Builder", description: "Generate builder pattern class" }
+  { name: "Builder", description: "Generate builder pattern class" },
 ];
-var TAGGED_TEMPLATE_MACROS = /* @__PURE__ */ new Set(["sql", "regex", "html", "fmt", "json", "raw", "units"]);
+var TAGGED_TEMPLATE_MACROS = /* @__PURE__ */ new Set([
+  "sql",
+  "regex",
+  "html",
+  "fmt",
+  "json",
+  "raw",
+  "units",
+]);
 var SUPPRESSED_SEMANTIC_CODES = /* @__PURE__ */ new Set([
   1206,
   // Decorators are not valid here
@@ -157,7 +167,7 @@ var SUPPRESSED_SEMANTIC_CODES = /* @__PURE__ */ new Set([
   // Expression of type void cannot be tested
   2304,
   // Cannot find name
-  2339
+  2339,
   // Property does not exist
 ]);
 var UNUSED_IMPORT_CODE = 6133;
@@ -170,7 +180,7 @@ var TYPESUGAR_PACKAGE_PREFIXES = [
   // legacy name
   "ttfx",
   // legacy name
-  "@ttfx/"
+  "@ttfx/",
   // legacy name
 ];
 var HKT_PARSE_ERROR_CODES = /* @__PURE__ */ new Set([
@@ -182,7 +192,7 @@ var HKT_PARSE_ERROR_CODES = /* @__PURE__ */ new Set([
   // Expression expected
   1128,
   // Declaration or statement expected
-  1434
+  1434,
   // Unexpected keyword or identifier
 ]);
 function init(modules) {
@@ -293,20 +303,20 @@ function init(modules) {
           kindModifiers: "",
           sortText: `0${macro.name}`,
           labelDetails: {
-            description: macro.description
-          }
+            description: macro.description,
+          },
         }));
         if (prior) {
           return {
             ...prior,
-            entries: [...deriveEntries, ...prior.entries]
+            entries: [...deriveEntries, ...prior.entries],
           };
         }
         return {
           isGlobalCompletion: false,
           isMemberCompletion: false,
           isNewIdentifierLocation: false,
-          entries: deriveEntries
+          entries: deriveEntries,
         };
       }
       const extensionEntries = getExtensionMethodCompletions(tsModule, sourceFile, node, program);
@@ -314,14 +324,14 @@ function init(modules) {
         if (prior) {
           return {
             ...prior,
-            entries: [...extensionEntries, ...prior.entries]
+            entries: [...extensionEntries, ...prior.entries],
           };
         }
         return {
           isGlobalCompletion: false,
           isMemberCompletion: true,
           isNewIdentifierLocation: false,
-          entries: extensionEntries
+          entries: extensionEntries,
         };
       }
       return prior;
@@ -342,20 +352,20 @@ function init(modules) {
             kindModifiers: "typesugar",
             textSpan: {
               start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile)
+              length: node.getWidth(sourceFile),
             },
             displayParts: [
               {
                 text: `(typesugar expression macro) ${name}`,
-                kind: "text"
-              }
+                kind: "text",
+              },
             ],
             documentation: [
               {
                 text: "This call is expanded at compile time by the typesugar transformer.",
-                kind: "text"
-              }
-            ]
+                kind: "text",
+              },
+            ],
           };
         }
         if (DECORATOR_MACROS.has(name)) {
@@ -364,20 +374,20 @@ function init(modules) {
             kindModifiers: "typesugar",
             textSpan: {
               start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile)
+              length: node.getWidth(sourceFile),
             },
             displayParts: [
               {
                 text: `(typesugar decorator macro) @${name}`,
-                kind: "text"
-              }
+                kind: "text",
+              },
             ],
             documentation: [
               {
                 text: "This decorator is processed at compile time by the typesugar transformer.",
-                kind: "text"
-              }
-            ]
+                kind: "text",
+              },
+            ],
           };
         }
         if (TAGGED_TEMPLATE_MACROS.has(name)) {
@@ -386,20 +396,20 @@ function init(modules) {
             kindModifiers: "typesugar",
             textSpan: {
               start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile)
+              length: node.getWidth(sourceFile),
             },
             displayParts: [
               {
                 text: `(typesugar tagged template macro) ${name}\`...\``,
-                kind: "text"
-              }
+                kind: "text",
+              },
             ],
             documentation: [
               {
                 text: "This tagged template is processed at compile time by the typesugar transformer.",
-                kind: "text"
-              }
-            ]
+                kind: "text",
+              },
+            ],
           };
         }
         const extInfo = getExtensionMethodHoverInfo(tsModule, sourceFile, node, program);
@@ -409,20 +419,20 @@ function init(modules) {
             kindModifiers: "typesugar extension",
             textSpan: {
               start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile)
+              length: node.getWidth(sourceFile),
             },
             displayParts: [
               {
                 text: extInfo.displayText,
-                kind: "text"
-              }
+                kind: "text",
+              },
             ],
             documentation: [
               {
                 text: extInfo.documentation,
-                kind: "text"
-              }
-            ]
+                kind: "text",
+              },
+            ],
           };
         }
       }
@@ -560,15 +570,16 @@ function getExtensionMethodCompletions(ts, sourceFile, node, program) {
   for (const [methodName, info] of Object.entries(TYPECLASS_EXTENSION_METHODS)) {
     const existingProp = receiverType.getProperty(methodName);
     if (existingProp) continue;
-    const returnType = info.returnType === "self" ? checker.typeToString(receiverType) : info.returnType;
+    const returnType =
+      info.returnType === "self" ? checker.typeToString(receiverType) : info.returnType;
     entries.push({
       name: methodName,
       kind: ts.ScriptElementKind.memberFunctionElement,
       kindModifiers: "typesugar",
       sortText: `1_ext_${methodName}`,
       labelDetails: {
-        description: `(extension via ${info.typeclass}) \u2192 ${returnType}`
-      }
+        description: `(extension via ${info.typeclass}) \u2192 ${returnType}`,
+      },
     });
   }
   return entries;
@@ -591,7 +602,7 @@ function getExtensionMethodHoverInfo(ts, sourceFile, node, program) {
     documentation: `${info.description}
 
 Provided by the ${info.typeclass} typeclass. At compile time, this is rewritten to:
-  ${info.typeclass}.summon<${typeName}>("${typeName}").${methodName}(...)`
+  ${info.typeclass}.summon<${typeName}>("${typeName}").${methodName}(...)`,
   };
 }
 var language_service_default = init;
