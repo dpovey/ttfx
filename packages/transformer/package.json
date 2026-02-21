@@ -83,6 +83,7 @@
     "@typesugar/operators": "workspace:*",
     "@typesugar/typeclass": "workspace:*",
     "@typesugar/specialize": "workspace:*",
+    "@typesugar/mapper": "workspace:*",
     "@typesugar/preprocessor": "workspace:*",
     "@ampproject/remapping": "^2.3.0",
     "esbuild": "^0.20.0"
