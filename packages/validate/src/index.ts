@@ -25,6 +25,7 @@ export function validate<T>(): (
 }
 
 export * from "./types";
+export * from "./schema";
 
 // Register macros if this file is imported in a compiler context
 import { globalRegistry } from "@typesugar/core";
