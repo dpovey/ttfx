@@ -40,6 +40,7 @@
     "@types/node": "^22.15.30",
     "@types/react": "^19.2.14",
     "@typesugar/contracts": "workspace:*",
+    "@typesugar/mapper": "workspace:*",
     "@typesugar/contracts-refined": "workspace:*",
     "@typesugar/prettier-plugin": "workspace:*",
     "@typesugar/testing": "workspace:*",
