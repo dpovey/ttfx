@@ -57,3 +57,7 @@ Option uses null, not wrapper objects:
 - `None` = `null`
 
 This is a zero-cost design choice — no wrapper allocation.
+
+## Output Formatting
+
+- **Escape closing backticks in nested code blocks** — When showing markdown that contains code fences (` ``` `), escape the inner closing fence to prevent premature block termination. Use `\`\`\`` or indent/quote the inner block.

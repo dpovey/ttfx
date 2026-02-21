@@ -221,8 +221,8 @@ export function decodeSourceMap(map: RawSourceMap): DecodedSourceMap {
  * Position in a source file
  */
 export interface SourcePosition {
-  line: number;    // 0-based
-  column: number;  // 0-based
+  line: number; // 0-based
+  column: number; // 0-based
 }
 
 /**
@@ -286,10 +286,7 @@ export function findGeneratedPosition(
     const line = decoded.mappings[genLine];
 
     for (const segment of line) {
-      if (
-        segment.sourceIndex === sourceIndex &&
-        segment.sourceLine === sourceLine
-      ) {
+      if (segment.sourceIndex === sourceIndex && segment.sourceLine === sourceLine) {
         // Found the line, check if column matches
         if (segment.sourceColumn !== undefined && segment.sourceColumn <= sourceColumn) {
           const columnOffset = sourceColumn - segment.sourceColumn;

@@ -97,14 +97,10 @@ describe("TransformationPipeline", () => {
       const files = new Map<string, string>();
       files.set("/test/index.ts", `export const x = 1;`);
 
-      const p = new TransformationPipeline(
-        { target: ts.ScriptTarget.Latest },
-        ["/test/index.ts"],
-        {
-          readFile: (f) => files.get(f),
-          fileExists: (f) => files.has(f),
-        }
-      );
+      const p = new TransformationPipeline({ target: ts.ScriptTarget.Latest }, ["/test/index.ts"], {
+        readFile: (f) => files.get(f),
+        fileExists: (f) => files.has(f),
+      });
 
       // First transform
       p.transform("/test/index.ts");
@@ -134,13 +130,19 @@ describe("TransformationPipeline", () => {
   describe("dependency tracking", () => {
     it("extracts dependencies from imports", () => {
       const files = new Map<string, string>();
-      files.set("/test/index.ts", `
+      files.set(
+        "/test/index.ts",
+        `
         import { double } from "./util";
         export const x = double(1);
-      `);
-      files.set("/test/util.ts", `
+      `
+      );
+      files.set(
+        "/test/util.ts",
+        `
         export function double(n: number) { return n * 2; }
-      `);
+      `
+      );
 
       const pipeline = new TransformationPipeline(
         { target: ts.ScriptTarget.Latest },

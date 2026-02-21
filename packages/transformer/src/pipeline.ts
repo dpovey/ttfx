@@ -158,10 +158,11 @@ export class TransformationPipeline {
     const dependencies = this.extractDependencies(sourceFile, normalizedFileName);
 
     // Run macro transformer
-    const { code: transformed, map: transformMap, diagnostics } = this.runMacroTransformer(
-      sourceFile,
-      codeForTransform
-    );
+    const {
+      code: transformed,
+      map: transformMap,
+      diagnostics,
+    } = this.runMacroTransformer(sourceFile, codeForTransform);
 
     // Compose source maps
     const composedMap = composeSourceMaps(preprocessMap, transformMap);
@@ -222,7 +223,9 @@ export class TransformationPipeline {
     if (this.verbose) {
       const dependents = this.cache.getTransitiveDependents(normalizedFileName);
       if (dependents.size > 0) {
-        console.log(`[typesugar] Invalidated ${normalizedFileName} and ${dependents.size} dependents`);
+        console.log(
+          `[typesugar] Invalidated ${normalizedFileName} and ${dependents.size} dependents`
+        );
       }
     }
   }
@@ -240,7 +243,11 @@ export class TransformationPipeline {
   /**
    * Get cache statistics for debugging
    */
-  getCacheStats(): { preprocessedCount: number; transformedCount: number; accessOrderLength: number } {
+  getCacheStats(): {
+    preprocessedCount: number;
+    transformedCount: number;
+    accessOrderLength: number;
+  } {
     return this.cache.getStats();
   }
 
@@ -357,23 +364,23 @@ export class TransformationPipeline {
       return {
         code: originalCode,
         map: null,
-        diagnostics: [{
-          file: sourceFile.fileName,
-          start: 0,
-          length: 0,
-          message: `Transform failed: ${error}`,
-          severity: "error",
-        }],
+        diagnostics: [
+          {
+            file: sourceFile.fileName,
+            start: 0,
+            length: 0,
+            message: `Transform failed: ${error}`,
+            severity: "error",
+          },
+        ],
       };
     }
   }
 
   private checkCache(fileName: string, contentHash: string): TransformResult | null {
     // Check if cache is valid with dependency validation
-    const isValid = this.cache.isTransformedValid(
-      fileName,
-      contentHash,
-      (dep) => this.getContentHash(dep)
+    const isValid = this.cache.isTransformedValid(fileName, contentHash, (dep) =>
+      this.getContentHash(dep)
     );
 
     if (!isValid) return null;
@@ -482,11 +489,7 @@ export class TransformationPipeline {
   /**
    * Collect dynamic imports from an expression
    */
-  private collectDynamicImports(
-    node: ts.Node,
-    baseDir: string,
-    dependencies: Set<string>
-  ): void {
+  private collectDynamicImports(node: ts.Node, baseDir: string, dependencies: Set<string>): void {
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
       const arg = node.arguments[0];
       if (arg && ts.isStringLiteral(arg)) {
@@ -512,13 +515,15 @@ export class TransformationPipeline {
       sourceMap: null,
       mapper: new IdentityPositionMapper(),
       changed: false,
-      diagnostics: [{
-        file: fileName,
-        start: 0,
-        length: 0,
-        message: `File not found: ${fileName}`,
-        severity: "error",
-      }],
+      diagnostics: [
+        {
+          file: fileName,
+          start: 0,
+          length: 0,
+          message: `File not found: ${fileName}`,
+          severity: "error",
+        },
+      ],
     };
   }
 }
@@ -526,7 +531,10 @@ export class TransformationPipeline {
 /**
  * Create a pipeline from a tsconfig.json path
  */
-export function createPipeline(tsconfigPath: string, options?: PipelineOptions): TransformationPipeline {
+export function createPipeline(
+  tsconfigPath: string,
+  options?: PipelineOptions
+): TransformationPipeline {
   const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
   if (configFile.error) {
     throw new Error(
@@ -553,14 +561,10 @@ export function transformCode(
   options?: { fileName?: string } & PipelineOptions
 ): TransformResult {
   const fileName = options?.fileName ?? "input.ts";
-  const pipeline = new TransformationPipeline(
-    { target: ts.ScriptTarget.Latest },
-    [fileName],
-    {
-      ...options,
-      readFile: (f) => f === fileName ? code : undefined,
-      fileExists: (f) => f === fileName,
-    }
-  );
+  const pipeline = new TransformationPipeline({ target: ts.ScriptTarget.Latest }, [fileName], {
+    ...options,
+    readFile: (f) => (f === fileName ? code : undefined),
+    fileExists: (f) => f === fileName,
+  });
   return pipeline.transform(fileName);
 }

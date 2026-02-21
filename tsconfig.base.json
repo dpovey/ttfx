@@ -19,6 +19,9 @@
       {
         "transform": "@typesugar/transformer",
         "type": "program"
+      },
+      {
+        "name": "@typesugar/ts-plugin"
       }
     ]
   }

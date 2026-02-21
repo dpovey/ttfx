@@ -5,7 +5,7 @@
  * expands to. For comptime, shows the computed value. For derive, shows the
  * number of generated functions. For tagged templates, shows validation status.
  *
- * The expansion is computed lazily (on resolve) by running the actual typemacro
+ * The expansion is computed lazily (on resolve) by running the actual typesugar
  * transformer on the file in a background worker.
  */
 
@@ -29,7 +29,7 @@ export class MacroCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): vscode.CodeLens[] {
-    const config = vscode.workspace.getConfiguration("typemacro");
+    const config = vscode.workspace.getConfiguration("typesugar");
     if (!config.get<boolean>("enableCodeLens", true)) return [];
 
     const lenses: vscode.CodeLens[] = [];
@@ -60,7 +60,7 @@ export class MacroCodeLensProvider implements vscode.CodeLensProvider {
         lenses.push(
           new vscode.CodeLens(range, {
             title: `$(zap) ${node.expression.text}(...)`,
-            command: "typemacro.expandMacro",
+            command: "typesugar.expandMacro",
             arguments: [document.uri, node.getStart(sourceFile)],
             tooltip: "Click to see macro expansion",
           })
@@ -83,7 +83,7 @@ export class MacroCodeLensProvider implements vscode.CodeLensProvider {
           lenses.push(
             new vscode.CodeLens(range, {
               title,
-              command: "typemacro.expandMacro",
+              command: "typesugar.expandMacro",
               arguments: [document.uri, node.getStart(sourceFile)],
               tooltip: "Click to see macro expansion",
             })
@@ -102,7 +102,7 @@ export class MacroCodeLensProvider implements vscode.CodeLensProvider {
         lenses.push(
           new vscode.CodeLens(range, {
             title: `$(zap) ${node.tag.text}\`...\``,
-            command: "typemacro.expandMacro",
+            command: "typesugar.expandMacro",
             arguments: [document.uri, node.getStart(sourceFile)],
             tooltip: "Click to see macro expansion",
           })
@@ -121,7 +121,7 @@ export class MacroCodeLensProvider implements vscode.CodeLensProvider {
           lenses.push(
             new vscode.CodeLens(range, {
               title: `$(zap) ${node.label.text}: comprehension`,
-              command: "typemacro.expandMacro",
+              command: "typesugar.expandMacro",
               arguments: [document.uri, node.getStart(sourceFile)],
               tooltip: "Click to see flatMap chain expansion",
             })

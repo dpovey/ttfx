@@ -37,11 +37,11 @@ Add the plugin to your `tsconfig.json`:
 
 ### Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `verbose` | `boolean` | `false` | Enable verbose logging for debugging |
-| `extensions` | `string[]` | `["hkt", "pipeline", "cons"]` | Syntax extensions to enable |
-| `legacyMode` | `boolean` | `false` | Use legacy error-suppression mode instead of full transformation |
+| Option       | Type       | Default                       | Description                                                      |
+| ------------ | ---------- | ----------------------------- | ---------------------------------------------------------------- |
+| `verbose`    | `boolean`  | `false`                       | Enable verbose logging for debugging                             |
+| `extensions` | `string[]` | `["hkt", "pipeline", "cons"]` | Syntax extensions to enable                                      |
+| `legacyMode` | `boolean`  | `false`                       | Use legacy error-suppression mode instead of full transformation |
 
 ### Extensions
 
@@ -102,6 +102,7 @@ This plugin uses a transform-first architecture:
 4. **Position mapping** — IDE features map positions back to original source
 
 The same transformation pipeline is used by:
+
 - Build tools (via `unplugin-typesugar`)
 - CLI (via `@typesugar/transformer`)
 - This language service plugin

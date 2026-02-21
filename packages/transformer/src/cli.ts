@@ -8,6 +8,7 @@
  *   typesugar watch [--project tsconfig.json] [--verbose]
  *   typesugar check [--project tsconfig.json] [--verbose]
  *   typesugar expand <file> [--diff] [--ast]
+ *   typesugar run <file> [--verbose]
  *   typesugar init [--verbose]
  *   typesugar doctor [--verbose]
  *   typesugar create <template> [name]
@@ -15,7 +16,9 @@
 
 import * as ts from "typescript";
 import * as path from "path";
+import * as fs from "fs";
 import macroTransformerFactory from "./index.js";
+import { preprocess } from "@typesugar/preprocessor";
 
 // Register built-in macros (auto-registers on import)
 import "@typesugar/derive";
@@ -25,7 +28,7 @@ import "@typesugar/operators";
 import "@typesugar/typeclass";
 import "@typesugar/specialize";
 
-type Command = "build" | "watch" | "check" | "expand" | "init" | "doctor" | "create";
+type Command = "build" | "watch" | "check" | "expand" | "run" | "init" | "doctor" | "create";
 
 interface CliOptions {
   command: Command;
@@ -44,6 +47,7 @@ function parseArgs(args: string[]): CliOptions {
     "watch",
     "check",
     "expand",
+    "run",
     "init",
     "doctor",
     "create",
@@ -101,6 +105,7 @@ COMMANDS:
   watch              Watch mode -- recompile on file changes
   check              Type-check with macro expansion, but don't emit files
   expand <file>      Show macro-expanded output for a file
+  run <file>         Compile and execute a file with macro expansion
   init               Interactive setup wizard for existing projects
   doctor             Diagnose configuration issues
   create [template]  Create a new project from a template
@@ -126,6 +131,7 @@ EXAMPLES:
   typesugar check
   typesugar expand src/main.ts
   typesugar expand src/main.ts --diff
+  typesugar run examples/showcase.ts
   typesugar init
   typesugar doctor
   typesugar create app my-app
@@ -196,7 +202,43 @@ function build(options: CliOptions): void {
     ...(noEmit ? { noEmit: true } : {}),
   };
 
-  const program = ts.createProgram(config.fileNames, compilerOptions);
+  // Stage 1: Preprocess all files (custom syntax like HKT F<_>, |>, ::)
+  const preprocessedFiles = new Map<string, string>();
+  let preprocessCount = 0;
+
+  for (const fileName of config.fileNames) {
+    if (/\.[jt]sx?$/.test(fileName) && !/node_modules/.test(fileName)) {
+      try {
+        const source = fs.readFileSync(fileName, "utf-8");
+        const result = preprocess(source, { fileName });
+        if (result.changed) {
+          preprocessedFiles.set(path.resolve(fileName), result.code);
+          preprocessCount++;
+        }
+      } catch {
+        // File read error - let TS handle it
+      }
+    }
+  }
+
+  if (options.verbose && preprocessCount > 0) {
+    console.log(`🧊 Preprocessed custom syntax in ${preprocessCount} files`);
+  }
+
+  // Create compiler host that serves preprocessed content
+  const host = ts.createCompilerHost(compilerOptions);
+  const originalReadFile = host.readFile.bind(host);
+  host.readFile = (fileName) => {
+    const resolved = path.resolve(fileName);
+    const preprocessed = preprocessedFiles.get(resolved);
+    if (preprocessed !== undefined) {
+      return preprocessed;
+    }
+    return originalReadFile(fileName);
+  };
+
+  // Stage 2: Create program with preprocessed content and run macro transformer
+  const program = ts.createProgram(config.fileNames, compilerOptions, host);
 
   const transformerFactory = macroTransformerFactory(program, {
     verbose: options.verbose,
@@ -380,6 +422,148 @@ function expand(options: CliOptions): void {
   result.dispose();
 }
 
+/**
+ * Transform a single file using the unplugin-style two-stage pipeline:
+ * 1. Preprocess custom syntax (HKT F<_>, |>, ::)
+ * 2. Run macro transformer
+ */
+function transformFile(
+  filePath: string,
+  config: ts.ParsedCommandLine,
+  options: { verbose?: boolean }
+): string {
+  const originalSource = fs.readFileSync(filePath, "utf-8");
+
+  // Stage 1: Preprocess custom syntax
+  const preprocessed = preprocess(originalSource, { fileName: filePath });
+  const sourceCode = preprocessed.changed ? preprocessed.code : originalSource;
+
+  if (options.verbose && preprocessed.changed) {
+    console.log(`🧊 Preprocessed custom syntax in ${filePath}`);
+  }
+
+  // Stage 2: Create program and run macro transformer
+  // Create a virtual compiler host that serves preprocessed content
+  const host = ts.createCompilerHost(config.options);
+  const originalReadFile = host.readFile.bind(host);
+  host.readFile = (fileName) => {
+    if (path.resolve(fileName) === path.resolve(filePath)) {
+      return sourceCode;
+    }
+    return originalReadFile(fileName);
+  };
+
+  const allFiles = [...config.fileNames];
+  if (!allFiles.includes(filePath)) {
+    allFiles.push(filePath);
+  }
+
+  const program = ts.createProgram(allFiles, config.options, host);
+  const sourceFile = program.getSourceFile(filePath);
+
+  if (!sourceFile) {
+    throw new Error(`Could not load source file: ${filePath}`);
+  }
+
+  const transformerFactory = macroTransformerFactory(program, {
+    verbose: options.verbose,
+  });
+
+  const result = ts.transform(sourceFile, [transformerFactory]);
+  const transformedSourceFile = result.transformed[0];
+
+  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+  const transformedCode = printer.printFile(transformedSourceFile as ts.SourceFile);
+
+  result.dispose();
+
+  return transformedCode;
+}
+
+async function run(options: CliOptions): Promise<void> {
+  if (!options.file) {
+    console.error("Error: run command requires a file argument");
+    console.error("Usage: typesugar run <file>");
+    process.exit(1);
+  }
+
+  const config = readTsConfig(options.project);
+  const filePath = path.resolve(options.file);
+
+  if (!ts.sys.fileExists(filePath)) {
+    console.error(`File not found: ${filePath}`);
+    process.exit(1);
+  }
+
+  if (options.verbose) {
+    console.log(`🧊 Running ${filePath}...`);
+  }
+
+  // Transform using the two-stage pipeline
+  const transformedCode = transformFile(filePath, config, { verbose: options.verbose });
+
+  // Bundle with esbuild (handles TS transpilation and dependency resolution)
+  const esbuild = await import("esbuild");
+  const os = await import("os");
+  const crypto = await import("crypto");
+  const { spawn } = await import("child_process");
+
+  const fileDir = path.dirname(filePath);
+  const hash = crypto.createHash("md5").update(filePath).digest("hex").slice(0, 8);
+  const tempInputFile = path.join(fileDir, `.typesugar-${hash}-input.ts`);
+  const tempDir = os.tmpdir();
+  const tempFile = path.join(tempDir, `typesugar-${hash}.mjs`);
+
+  // Write transformed TypeScript to temp file next to original (for import resolution)
+  fs.writeFileSync(tempInputFile, transformedCode);
+
+  try {
+    // Bundle with esbuild (resolves all imports relative to source location)
+    await esbuild.build({
+      entryPoints: [tempInputFile],
+      bundle: true,
+      format: "esm",
+      platform: "node",
+      target: "es2020",
+      outfile: tempFile,
+      logLevel: options.verbose ? "info" : "silent",
+      absWorkingDir: fileDir,
+    });
+  } finally {
+    // Clean up input file
+    try {
+      fs.unlinkSync(tempInputFile);
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
+  if (options.verbose) {
+    console.log(`🧊 Wrote transpiled code to ${tempFile}`);
+  }
+
+  // Execute with node (ESM)
+  const child = spawn("node", [tempFile], {
+    stdio: "inherit",
+    cwd: path.dirname(filePath),
+  });
+
+  child.on("close", (code) => {
+    // Clean up temp file
+    try {
+      fs.unlinkSync(tempFile);
+    } catch {
+      // Ignore cleanup errors
+    }
+    process.exit(code ?? 0);
+  });
+
+  child.on("error", (err) => {
+    console.error("Failed to execute:", err);
+    process.exit(1);
+  });
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
@@ -400,6 +584,9 @@ async function main(): Promise<void> {
       break;
     case "expand":
       expand(options);
+      break;
+    case "run":
+      await run(options);
       break;
     case "init": {
       const { runInit } = await import("./init.js");

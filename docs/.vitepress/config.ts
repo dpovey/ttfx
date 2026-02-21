@@ -29,66 +29,75 @@ export default defineConfig({
         text: "Packages",
         items: [
           {
-            text: "Core",
+            text: "Build Infrastructure",
             items: [
-              {
-                text: "@typesugar/transformer",
-                link: "/reference/packages#transformer",
-              },
+              { text: "typesugar", link: "/reference/packages#typesugar" },
+              { text: "@typesugar/transformer", link: "/reference/packages#transformer" },
               { text: "@typesugar/core", link: "/reference/packages#core" },
-              {
-                text: "unplugin-typesugar",
-                link: "/reference/packages#unplugin",
-              },
+              { text: "unplugin-typesugar", link: "/reference/packages#unplugin" },
             ],
           },
           {
-            text: "Features",
+            text: "Standard Library",
+            items: [{ text: "@typesugar/std", link: "/reference/packages#std" }],
+          },
+          {
+            text: "Typeclasses & Derivation",
             items: [
-              {
-                text: "@typesugar/typeclass",
-                link: "/reference/packages#typeclass",
-              },
+              { text: "@typesugar/typeclass", link: "/reference/packages#typeclass" },
               { text: "@typesugar/derive", link: "/reference/packages#derive" },
-              { text: "@typesugar/fp", link: "/reference/packages#fp" },
+              { text: "@typesugar/specialize", link: "/reference/packages#specialize" },
+              { text: "@typesugar/reflect", link: "/reference/packages#reflect" },
             ],
           },
           {
-            text: "C++ / Boost Inspired",
+            text: "Syntax Sugar",
             items: [
-              {
-                text: "@typesugar/hlist",
-                link: "/reference/packages#hlist",
-              },
-              {
-                text: "@typesugar/parser",
-                link: "/reference/packages#parser",
-              },
-              {
-                text: "@typesugar/fusion",
-                link: "/reference/packages#fusion",
-              },
-              {
-                text: "@typesugar/graph",
-                link: "/reference/packages#graph",
-              },
-              {
-                text: "@typesugar/erased",
-                link: "/reference/packages#erased",
-              },
-              {
-                text: "@typesugar/codec",
-                link: "/reference/packages#codec",
-              },
-              {
-                text: "@typesugar/named-args",
-                link: "/reference/packages#named-args",
-              },
-              {
-                text: "@typesugar/geometry",
-                link: "/reference/packages#geometry",
-              },
+              { text: "@typesugar/operators", link: "/reference/packages#operators" },
+              { text: "@typesugar/strings", link: "/reference/packages#strings" },
+              { text: "@typesugar/named-args", link: "/reference/packages#named-args" },
+              { text: "@typesugar/comptime", link: "/reference/packages#comptime" },
             ],
+          },
+          {
+            text: "Type Safety & Contracts",
+            items: [
+              { text: "@typesugar/type-system", link: "/reference/packages#type-system" },
+              { text: "@typesugar/contracts", link: "/reference/packages#contracts" },
+              { text: "@typesugar/validate", link: "/reference/packages#validate" },
+              { text: "@typesugar/units", link: "/reference/packages#units" },
+            ],
+          },
+          {
+            text: "Data Structures & Algorithms",
+            items: [
+              { text: "@typesugar/fp", link: "/reference/packages#fp" },
+              { text: "@typesugar/hlist", link: "/reference/packages#hlist" },
+              { text: "@typesugar/parser", link: "/reference/packages#parser" },
+              { text: "@typesugar/fusion", link: "/reference/packages#fusion" },
+              { text: "@typesugar/graph", link: "/reference/packages#graph" },
+            ],
+          },
+          {
+            text: "Ecosystem Integrations",
+            items: [
+              { text: "@typesugar/effect", link: "/reference/packages#effect" },
+              { text: "@typesugar/react", link: "/reference/packages#react" },
+              { text: "@typesugar/kysely-adapter", link: "/reference/packages#kysely" },
+              { text: "@typesugar/drizzle-adapter", link: "/reference/packages#drizzle" },
+            ],
+          },
+          {
+            text: "Developer Experience",
+            items: [
+              { text: "@typesugar/vscode", link: "/reference/packages#vscode" },
+              { text: "@typesugar/eslint-plugin", link: "/reference/packages#eslint-plugin" },
+              { text: "@typesugar/testing", link: "/reference/packages#testing" },
+            ],
+          },
+          {
+            text: "",
+            items: [{ text: "View all packages →", link: "/reference/packages" }],
           },
         ],
       },
@@ -152,39 +161,86 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: "Overview", link: "/guides/" },
-            { text: "Typeclasses", link: "/guides/typeclasses" },
-            { text: "Derive Macros", link: "/guides/derive" },
-            { text: "Compile-Time Eval", link: "/guides/comptime" },
-            { text: "Operators", link: "/guides/operators" },
-            { text: "Extension Methods", link: "/guides/extension-methods" },
-            { text: "Tagged Templates", link: "/guides/tagged-templates" },
-            { text: "Do-Notation", link: "/guides/do-notation" },
-            { text: "Contracts", link: "/guides/contracts" },
             {
-              text: "Conditional Compilation",
-              link: "/guides/conditional-compilation",
+              text: "Standard Library",
+              collapsed: false,
+              items: [
+                { text: "Extension Methods", link: "/guides/extension-methods" },
+                { text: "Pattern Matching", link: "/guides/match" },
+                { text: "Do-Notation", link: "/guides/do-notation" },
+                { text: "Standard Typeclasses", link: "/guides/std-typeclasses" },
+              ],
             },
-            { text: "Functional Programming", link: "/guides/fp" },
-            { text: "HList", link: "/guides/hlist" },
-            { text: "Parser Combinators", link: "/guides/parser" },
-            { text: "Loop Fusion", link: "/guides/fusion" },
-            { text: "Graph Algorithms", link: "/guides/graph" },
-            { text: "Type Erasure", link: "/guides/erased" },
-            { text: "Versioned Codecs", link: "/guides/codec" },
-            { text: "Named Arguments", link: "/guides/named-args" },
-            { text: "Geometry", link: "/guides/geometry" },
+            {
+              text: "Typeclasses & Derivation",
+              collapsed: false,
+              items: [
+                { text: "Typeclasses", link: "/guides/typeclasses" },
+                { text: "Derive Macros", link: "/guides/derive" },
+                { text: "Specialization", link: "/guides/specialize" },
+                { text: "Reflection", link: "/guides/reflect" },
+              ],
+            },
+            {
+              text: "Syntax Sugar",
+              collapsed: false,
+              items: [
+                { text: "Operators", link: "/guides/operators" },
+                { text: "Tagged Templates", link: "/guides/tagged-templates" },
+                { text: "String Macros", link: "/guides/strings" },
+                { text: "Compile-Time Eval", link: "/guides/comptime" },
+                { text: "Conditional Compilation", link: "/guides/conditional-compilation" },
+                { text: "Named Arguments", link: "/guides/named-args" },
+              ],
+            },
+            {
+              text: "Type Safety & Contracts",
+              collapsed: true,
+              items: [
+                { text: "Contracts", link: "/guides/contracts" },
+                { text: "Refined Types", link: "/guides/contracts-refined" },
+                { text: "Z3 Proofs", link: "/guides/contracts-z3" },
+                { text: "Type System", link: "/guides/type-system" },
+                { text: "Validation", link: "/guides/validate" },
+                { text: "Units of Measure", link: "/guides/units" },
+              ],
+            },
+            {
+              text: "Data Structures & Algorithms",
+              collapsed: true,
+              items: [
+                { text: "Functional Programming", link: "/guides/fp" },
+                { text: "HList", link: "/guides/hlist" },
+                { text: "Type Erasure", link: "/guides/erased" },
+                { text: "Loop Fusion", link: "/guides/fusion" },
+                { text: "Parser Combinators", link: "/guides/parser" },
+                { text: "Graph Algorithms", link: "/guides/graph" },
+                { text: "Versioned Codecs", link: "/guides/codec" },
+                { text: "Geometry", link: "/guides/geometry" },
+                { text: "Math", link: "/guides/math" },
+                { text: "Object Mapping", link: "/guides/mapper" },
+              ],
+            },
+            {
+              text: "Ecosystem Integrations",
+              collapsed: true,
+              items: [
+                { text: "Effect-TS", link: "/guides/effect" },
+                { text: "React", link: "/guides/react" },
+                { text: "SQL", link: "/guides/sql" },
+                { text: "Kysely", link: "/guides/kysely" },
+                { text: "Drizzle", link: "/guides/drizzle" },
+              ],
+            },
             {
               text: "Developer Experience",
+              collapsed: true,
               items: [
-                {
-                  text: "Overview",
-                  link: "/guides/developer-experience",
-                },
-                {
-                  text: "Error Messages",
-                  link: "/guides/error-messages",
-                },
+                { text: "Overview", link: "/guides/developer-experience" },
+                { text: "Error Messages", link: "/guides/error-messages" },
                 { text: "Opt-Out Directives", link: "/guides/opt-out" },
+                { text: "Testing", link: "/guides/testing" },
+                { text: "Library Manifest", link: "/guides/library-manifest" },
               ],
             },
           ],

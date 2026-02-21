@@ -1,0 +1,9 @@
+# Source files (compiled to dist/)
+src/
+tsconfig.json
+tsup.config.ts
+
+# Dev files
+.vscode/
+*.log
+*.vsix

@@ -85,7 +85,9 @@ export function registerCommands(
 
       // Check if it's a TypeScript file
       if (!fileName.match(/\.[tj]sx?$/)) {
-        vscode.window.showWarningMessage("typesugar.showTransformed only works on TypeScript/JavaScript files");
+        vscode.window.showWarningMessage(
+          "typesugar.showTransformed only works on TypeScript/JavaScript files"
+        );
         return;
       }
 

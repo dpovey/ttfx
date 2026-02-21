@@ -1,7 +1,7 @@
 /**
- * typemacro VSCode Extension — entry point.
+ * typesugar VSCode Extension — entry point.
  *
- * Activates when a workspace contains typemacro.manifest.json or has typemacro
+ * Activates when a workspace contains typesugar.manifest.json or has typesugar
  * installed. Registers all providers:
  *
  * - Semantic tokens (manifest-driven macro highlighting)
@@ -31,8 +31,8 @@ const TS_SELECTOR: vscode.DocumentSelector = [
 ];
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  const outputChannel = vscode.window.createOutputChannel("typemacro");
-  outputChannel.appendLine("typemacro extension activating...");
+  const outputChannel = vscode.window.createOutputChannel("typesugar");
+  outputChannel.appendLine("typesugar extension activating...");
 
   // --- Core services ---
   const manifest = new ManifestLoader();
@@ -89,9 +89,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // --- Status bar ---
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBar.text = "$(zap) typemacro";
-  statusBar.tooltip = "typemacro macro system active";
-  statusBar.command = "typemacro.refreshManifest";
+  statusBar.text = "$(zap) typesugar";
+  statusBar.tooltip = "typesugar macro system active";
+  statusBar.command = "typesugar.refreshManifest";
   statusBar.show();
   context.subscriptions.push(statusBar);
 
@@ -102,10 +102,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       Object.keys(m.macros.decorator).length +
       Object.keys(m.macros.taggedTemplate).length +
       Object.keys(m.macros.labeledBlock).length;
-    statusBar.text = `$(zap) typemacro (${total} macros)`;
+    statusBar.text = `$(zap) typesugar (${total} macros)`;
   });
 
-  outputChannel.appendLine("typemacro extension activated");
+  outputChannel.appendLine("typesugar extension activated");
 }
 
 export function deactivate(): void {

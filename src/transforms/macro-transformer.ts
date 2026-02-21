@@ -1224,6 +1224,16 @@ class MacroTransformer {
         const autoSpecResult = this.tryAutoSpecialize(callNode);
         if (autoSpecResult !== undefined) return autoSpecResult;
 
+        // TODO(result): Return-type-driven auto-specialization.
+        // When a function returning Result<E, T> is called in a context expecting
+        // Option<T>, Either<E, T>, or bare T, automatically specialize the function
+        // body by replacing ok()/err() with the target type's constructors.
+        // This requires:
+        //   1. Detecting the expected type from the assignment/variable declaration
+        //   2. Looking up the Result algebra instance for that target type
+        //   3. Cloning + specializing the function body (with dedup/hoisting)
+        // See TODO.md "Polymorphic Result" → "Return-type-driven auto-specialization".
+
         return undefined;
       }
 
@@ -1541,10 +1551,7 @@ class MacroTransformer {
       if (summonInfo) {
         // Compute the expected instance variable name: tcName + TypeName
         // e.g., Show.summon<Point>("Point") -> "showPoint"
-        const instanceName = this.computeInstanceName(
-          summonInfo.typeclassName,
-          summonInfo.forType
-        );
+        const instanceName = this.computeInstanceName(summonInfo.typeclassName, summonInfo.forType);
         return instanceName;
       }
     }
@@ -1595,10 +1602,8 @@ class MacroTransformer {
    *       ("Monad", "Option") -> "monadOption"
    */
   private computeInstanceName(typeclassName: string, typeName: string): string {
-    const tcLower =
-      typeclassName.charAt(0).toLowerCase() + typeclassName.slice(1);
-    const typeCapitalized =
-      typeName.charAt(0).toUpperCase() + typeName.slice(1);
+    const tcLower = typeclassName.charAt(0).toLowerCase() + typeclassName.slice(1);
+    const typeCapitalized = typeName.charAt(0).toUpperCase() + typeName.slice(1);
     return `${tcLower}${typeCapitalized}`;
   }
 
@@ -2664,9 +2669,7 @@ class MacroTransformer {
 
     if (this.verbose) {
       const fnName = ts.isIdentifier(fnExpr) ? fnExpr.text : "<expr>";
-      const dictNames = dictArgs
-        .map((d) => (ts.isIdentifier(d) ? d.text : "<expr>"))
-        .join(", ");
+      const dictNames = dictArgs.map((d) => (ts.isIdentifier(d) ? d.text : "<expr>")).join(", ");
       console.log(`[typemacro] Rewriting ${fnName}.specialize(${dictNames})`);
     }
 

@@ -68,7 +68,7 @@ export { reflectNs as reflect };
 
 // Derive macros (@derive(Eq, Ord, Debug, ...))
 import * as deriveNs from "@typesugar/derive";
-export { deriveNs as derive };
+export { deriveNs as deriveMacros };
 
 // Operator overloading (@operators, ops, pipe, compose)
 import * as operatorsNs from "@typesugar/operators";
@@ -91,6 +91,30 @@ export { comptime as comptimeEval } from "@typesugar/comptime";
 
 // Re-export operator functions directly
 export { ops, pipe, compose } from "@typesugar/operators";
+
+// ============================================================================
+// Decorator placeholder functions
+// These are processed by the transformer at compile time
+// ============================================================================
+
+/**
+ * Decorator to derive implementations automatically.
+ *
+ * @param derives - Names of derive macros to apply (Eq, Ord, Clone, Debug, Hash, Default, Json, Builder, TypeGuard)
+ *
+ * @example
+ * ```typescript
+ * @deriveDecorator(Eq, Clone, Debug)
+ * interface Point { x: number; y: number; }
+ * // Generates: pointEquals(), clonePoint(), debugPoint()
+ * ```
+ */
+export function deriveDecorator(..._derives: unknown[]): ClassDecorator & PropertyDecorator {
+  return () => {};
+}
+
+// Also export as "derive" for decorator usage: @derive(Eq, Clone)
+export { deriveDecorator as derive };
 
 // ============================================================================
 // Register all macros function

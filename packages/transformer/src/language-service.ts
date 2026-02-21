@@ -1,7 +1,7 @@
 /**
- * typemacro TypeScript Language Service Plugin
+ * typesugar TypeScript Language Service Plugin
  *
- * Provides IDE integration for typemacro:
+ * Provides IDE integration for typesugar:
  * - Suppresses false-positive diagnostics from macro invocations
  * - Adds custom diagnostics for macro errors
  * - Provides completions inside @derive() decorators
@@ -17,7 +17,7 @@
 
 import type * as ts from "typescript";
 
-/** Known expression macro names from the typemacro core */
+/** Known expression macro names from the typesugar core */
 const EXPRESSION_MACROS = new Set([
   "comptime",
   "ops",
@@ -77,7 +77,62 @@ const TYPECLASS_EXTENSION_METHODS: Record<
     description: "Apply a function to the contained value(s)",
     returnType: "self",
   },
+  // Derived methods from @derive() macros
+  equals: {
+    typeclass: "Eq",
+    description: "Check equality with another value (derived)",
+    returnType: "boolean",
+  },
+  clone: {
+    typeclass: "Clone",
+    description: "Create a deep copy of this value (derived)",
+    returnType: "self",
+  },
+  debug: {
+    typeclass: "Debug",
+    description: "Get debug string representation (derived)",
+    returnType: "string",
+  },
+  toJson: {
+    typeclass: "Json",
+    description: "Serialize to JSON (derived)",
+    returnType: "unknown",
+  },
+  fromJson: {
+    typeclass: "Json",
+    description: "Deserialize from JSON (derived, static)",
+    returnType: "self",
+  },
+  default: {
+    typeclass: "Default",
+    description: "Get default instance (derived, static)",
+    returnType: "self",
+  },
+  builder: {
+    typeclass: "Builder",
+    description: "Get builder instance (derived, static)",
+    returnType: "Builder<self>",
+  },
+  build: {
+    typeclass: "Builder",
+    description: "Build the final instance (derived)",
+    returnType: "self",
+  },
 };
+
+/** Names of all known derive macros for suppression */
+const DERIVE_MACRO_NAMES = new Set([
+  "Eq",
+  "Ord",
+  "Clone",
+  "Debug",
+  "Hash",
+  "Default",
+  "Json",
+  "Builder",
+  "TypeGuard",
+  "Show",
+]);
 
 const EXTENSION_METHOD_NAMES = new Set(Object.keys(TYPECLASS_EXTENSION_METHODS));
 
@@ -135,14 +190,19 @@ const HKT_PARSE_ERROR_CODES = new Set([
 ]);
 
 function init(modules: { typescript: typeof ts }) {
+  console.log("[typesugar] Language service plugin initializing...");
   const tsModule = modules.typescript;
 
   function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
+    console.log(
+      "[typesugar] Creating language service proxy for project:",
+      info.project.getProjectName()
+    );
     const log = (msg: string) => {
-      info.project.projectService.logger.info(`[typemacro] ${msg}`);
+      info.project.projectService.logger.info(`[typesugar] ${msg}`);
     };
 
-    log("Language service plugin initialized");
+    log("typesugar language service plugin initialized");
 
     const proxy = Object.create(null) as ts.LanguageService;
     const oldLS = info.languageService;
@@ -245,6 +305,13 @@ function init(modules: { typescript: typeof ts }) {
             log(`Suppressed diagnostic ${diag.code} near macro invocation`);
             return false;
           }
+          // Suppress "Cannot find name" for derive macro arguments like Eq, Clone, Debug
+          if (tsModule.isIdentifier(node) && DERIVE_MACRO_NAMES.has(node.text)) {
+            if (isInDeriveDecorator(tsModule, node)) {
+              log(`Suppressed diagnostic ${diag.code} for derive macro arg: ${node.text}`);
+              return false;
+            }
+          }
         }
 
         if (diag.code === 2339) {
@@ -342,20 +409,20 @@ function init(modules: { typescript: typeof ts }) {
         if (EXPRESSION_MACROS.has(name)) {
           return {
             kind: tsModule.ScriptElementKind.functionElement,
-            kindModifiers: "typemacro",
+            kindModifiers: "typesugar",
             textSpan: {
               start: node.getStart(sourceFile),
               length: node.getWidth(sourceFile),
             },
             displayParts: [
               {
-                text: `(typemacro expression macro) ${name}`,
+                text: `(typesugar expression macro) ${name}`,
                 kind: "text",
               },
             ],
             documentation: [
               {
-                text: "This call is expanded at compile time by the typemacro transformer.",
+                text: "This call is expanded at compile time by the typesugar transformer.",
                 kind: "text",
               },
             ],
@@ -365,20 +432,20 @@ function init(modules: { typescript: typeof ts }) {
         if (DECORATOR_MACROS.has(name)) {
           return {
             kind: tsModule.ScriptElementKind.functionElement,
-            kindModifiers: "typemacro",
+            kindModifiers: "typesugar",
             textSpan: {
               start: node.getStart(sourceFile),
               length: node.getWidth(sourceFile),
             },
             displayParts: [
               {
-                text: `(typemacro decorator macro) @${name}`,
+                text: `(typesugar decorator macro) @${name}`,
                 kind: "text",
               },
             ],
             documentation: [
               {
-                text: "This decorator is processed at compile time by the typemacro transformer.",
+                text: "This decorator is processed at compile time by the typesugar transformer.",
                 kind: "text",
               },
             ],
@@ -388,20 +455,20 @@ function init(modules: { typescript: typeof ts }) {
         if (TAGGED_TEMPLATE_MACROS.has(name)) {
           return {
             kind: tsModule.ScriptElementKind.functionElement,
-            kindModifiers: "typemacro",
+            kindModifiers: "typesugar",
             textSpan: {
               start: node.getStart(sourceFile),
               length: node.getWidth(sourceFile),
             },
             displayParts: [
               {
-                text: `(typemacro tagged template macro) ${name}\`...\``,
+                text: `(typesugar tagged template macro) ${name}\`...\``,
                 kind: "text",
               },
             ],
             documentation: [
               {
-                text: "This tagged template is processed at compile time by the typemacro transformer.",
+                text: "This tagged template is processed at compile time by the typesugar transformer.",
                 kind: "text",
               },
             ],
@@ -412,7 +479,7 @@ function init(modules: { typescript: typeof ts }) {
         if (extInfo) {
           return {
             kind: tsModule.ScriptElementKind.memberFunctionElement,
-            kindModifiers: "typemacro extension",
+            kindModifiers: "typesugar extension",
             textSpan: {
               start: node.getStart(sourceFile),
               length: node.getWidth(sourceFile),
@@ -525,6 +592,22 @@ function findDeriveContext(ts: typeof import("typescript"), node: ts.Node): bool
   return false;
 }
 
+/**
+ * Check if a node is inside a @derive() decorator.
+ * Used to suppress "Cannot find name" for derive macro arguments like Eq, Clone, Debug.
+ */
+function isInDeriveDecorator(ts: typeof import("typescript"), node: ts.Node): boolean {
+  let current: ts.Node | undefined = node;
+  while (current) {
+    if (ts.isDecorator(current)) {
+      const name = getDecoratorName(ts, current);
+      return name === "derive";
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
 function isNearMacroInvocation(
   ts: typeof import("typescript"),
   sourceFile: ts.SourceFile,
@@ -614,7 +697,7 @@ function getExtensionMethodCompletions(
     entries.push({
       name: methodName,
       kind: ts.ScriptElementKind.memberFunctionElement,
-      kindModifiers: "typemacro",
+      kindModifiers: "typesugar",
       sortText: `1_ext_${methodName}`,
       labelDetails: {
         description: `(extension via ${info.typeclass}) → ${returnType}`,

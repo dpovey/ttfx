@@ -28,7 +28,7 @@ export class MacroInlayHintsProvider implements vscode.InlayHintsProvider {
     range: vscode.Range,
     token: vscode.CancellationToken
   ): Promise<vscode.InlayHint[]> {
-    const config = vscode.workspace.getConfiguration("typemacro");
+    const config = vscode.workspace.getConfiguration("typesugar");
     if (!config.get<boolean>("enableInlayHints", true)) return [];
 
     const hints: vscode.InlayHint[] = [];

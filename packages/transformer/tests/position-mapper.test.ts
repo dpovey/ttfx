@@ -159,11 +159,7 @@ describe("PositionMapper", () => {
         mappings: "AAAA",
       };
 
-      const mapper = new SourceMapPositionMapper(
-        sourceMap,
-        "const x = 1;",
-        "const x = 1;"
-      );
+      const mapper = new SourceMapPositionMapper(sourceMap, "const x = 1;", "const x = 1;");
 
       const range = { pos: 0, end: 5 };
 
@@ -201,11 +197,7 @@ describe("PositionMapper", () => {
         mappings: "AAAA",
       };
 
-      const mapper = new SourceMapPositionMapper(
-        sourceMap,
-        "const x = 1;",
-        "const x = 1;"
-      );
+      const mapper = new SourceMapPositionMapper(sourceMap, "const x = 1;", "const x = 1;");
 
       const diag = {
         start: 0,

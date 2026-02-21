@@ -109,11 +109,7 @@ export class SourceMapPositionMapper implements PositionMapper {
 
   toOriginal(transformedPos: number): number | null {
     const transformedLC = offsetToLineColumn(transformedPos, this.transformedIndex);
-    const originalLC = findOriginalPosition(
-      this.decoded,
-      transformedLC.line,
-      transformedLC.column
-    );
+    const originalLC = findOriginalPosition(this.decoded, transformedLC.line, transformedLC.column);
 
     if (!originalLC) return null;
 
@@ -122,11 +118,7 @@ export class SourceMapPositionMapper implements PositionMapper {
 
   toTransformed(originalPos: number): number | null {
     const originalLC = offsetToLineColumn(originalPos, this.originalIndex);
-    const transformedLC = findGeneratedPosition(
-      this.decoded,
-      originalLC.line,
-      originalLC.column
-    );
+    const transformedLC = findGeneratedPosition(this.decoded, originalLC.line, originalLC.column);
 
     if (!transformedLC) return null;
 
@@ -134,7 +126,8 @@ export class SourceMapPositionMapper implements PositionMapper {
   }
 
   mapRange(range: TextRange, direction: "toTransformed" | "toOriginal"): TextRange | null {
-    const mapFn = direction === "toTransformed" ? this.toTransformed.bind(this) : this.toOriginal.bind(this);
+    const mapFn =
+      direction === "toTransformed" ? this.toTransformed.bind(this) : this.toOriginal.bind(this);
 
     const mappedStart = mapFn(range.start);
     if (mappedStart === null) return null;

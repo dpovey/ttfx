@@ -1,0 +1,64 @@
+{
+  "name": "@typesugar/transformer",
+  "version": "0.1.0",
+  "description": "TypeScript transformer for typesugar macro expansion",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/transformer"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/transformer#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "typesugar": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js",
+      "require": "./dist/cli.cjs"
+    },
+    "./language-service": {
+      "types": "./dist/language-service.d.ts",
+      "import": "./dist/language-service.js",
+      "require": "./dist/language-service.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "typescript",
+    "macros",
+    "transformer",
+    "ts-patch"
+  ],
+  "dependencies": {
+    "@typesugar/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "files": [
+    "dist",
+    "src",
+    "language-service"
+  ],
+  "sideEffects": false
+}

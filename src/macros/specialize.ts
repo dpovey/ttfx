@@ -54,6 +54,12 @@ import { HygieneContext } from "../core/hygiene.js";
 // Specialization Registry
 // ============================================================================
 
+// TODO(result): Add specialization deduplication cache.
+// Currently each specialize() call site generates a fresh inlined copy.
+// Need a Map<string, ts.Identifier> keyed by (fnName × dictName) that hoists
+// the first specialization to module scope and reuses it at subsequent sites.
+// See TODO.md "Polymorphic Result" → "Deduplication / hoisting".
+
 /**
  * Maps dictionary variable names to their known method implementations.
  * Populated by registerInstance() or by analyzing const declarations.
@@ -1626,6 +1632,20 @@ export type InlineFailureReason =
   | "throw statement"
   | "no return statement"
   | null;
+
+// TODO(result): Support early-return inlining.
+// This function rejects functions with multiple returns, but that's the most
+// common Result pattern (guard clauses returning err()). To enable whole-function
+// specialization for Result, we need to transform multi-return functions into
+// a single expression: nested ternaries, or a match/switch expression.
+// Example:
+//   if (isNaN(n)) return err("bad");
+//   if (n < 0) return err("negative");
+//   return ok(n);
+// Becomes:
+//   isNaN(n) ? err("bad") : n < 0 ? err("negative") : ok(n)
+// This is also needed for the ? operator compilation.
+// See TODO.md "Polymorphic Result" → "Early-return inlining".
 
 /**
  * Classify why a block body cannot be inlined.

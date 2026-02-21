@@ -1,7 +1,7 @@
 /**
  * Diagnostics Bridge — surface macro expansion errors in the editor.
  *
- * Runs the typemacro transformer in a background worker on file save,
+ * Runs the typesugar transformer in a background worker on file save,
  * collects macro-specific diagnostics (code 90000), and publishes them
  * to a VSCode DiagnosticCollection. This provides richer error messages
  * than the TS language service plugin alone.
@@ -15,7 +15,7 @@ export class MacroDiagnosticsManager {
   private readonly disposables: vscode.Disposable[] = [];
 
   constructor(private readonly expansion: ExpansionService) {
-    this.collection = vscode.languages.createDiagnosticCollection("typemacro");
+    this.collection = vscode.languages.createDiagnosticCollection("typesugar");
 
     // Re-run diagnostics on save
     this.disposables.push(
@@ -42,7 +42,7 @@ export class MacroDiagnosticsManager {
   }
 
   private async updateDiagnostics(document: vscode.TextDocument): Promise<void> {
-    const config = vscode.workspace.getConfiguration("typemacro");
+    const config = vscode.workspace.getConfiguration("typesugar");
     if (!config.get<boolean>("enableDiagnostics", true)) {
       this.collection.delete(document.uri);
       return;
@@ -69,7 +69,7 @@ export class MacroDiagnosticsManager {
             : vscode.DiagnosticSeverity.Warning;
 
         const diag = new vscode.Diagnostic(range, d.message, severity);
-        diag.source = "typemacro";
+        diag.source = "typesugar";
         diag.code = d.code;
 
         if (d.expansion) {

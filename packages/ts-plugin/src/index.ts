@@ -96,7 +96,9 @@ function createTransformProxy(
 
       const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
       if (configFile.error) {
-        log(`Error reading tsconfig: ${ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n")}`);
+        log(
+          `Error reading tsconfig: ${ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n")}`
+        );
         return null;
       }
 
@@ -274,9 +276,10 @@ function createTransformProxy(
     if (result) {
       // Map the text span back to original
       const originalStart = mapper.toOriginal(result.textSpan.start);
-      const mappedSpan = originalStart !== null
-        ? { start: originalStart, length: result.textSpan.length }
-        : result.textSpan;
+      const mappedSpan =
+        originalStart !== null
+          ? { start: originalStart, length: result.textSpan.length }
+          : result.textSpan;
 
       // Map definitions
       const definitions = result.definitions?.map((def) => {

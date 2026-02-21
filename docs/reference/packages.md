@@ -1,23 +1,22 @@
 # Package Reference
 
-All typesugar packages with their exports.
+All typesugar packages organized by category.
 
-## Core
+## Build Infrastructure
 
-### @typesugar/transformer
+### typesugar {#typesugar}
 
-The TypeScript transformer that expands macros.
+Umbrella package including all common packages.
 
 ```bash
-npm install --save-dev @typesugar/transformer
+npm install typesugar
 ```
 
-**Exports:**
+Includes: core, comptime, derive, reflect, operators, typeclass, specialize.
 
-- Default export: transformer factory
-- CLI: `typesugar` command
+**Inspired by:** Umbrella packages (Lodash, Effect)
 
-### @typesugar/core
+### @typesugar/core {#core}
 
 Macro registration and types.
 
@@ -47,33 +46,51 @@ config;
 cfg;
 cfgAttr;
 
-// Diagnostics (Rust/Elm-style error messages)
+// Diagnostics
 DiagnosticBuilder;
-DiagnosticCategory;
 DiagnosticDescriptor;
-RichDiagnostic;
 renderDiagnosticCLI;
-DIAGNOSTIC_CATALOG;
-TS9001 - TS9999; // Error descriptors
 
 // Resolution Scope
 globalResolutionScope;
-ResolutionScopeTracker;
-scanImportsForScope;
 isInOptedOutScope;
 hasInlineOptOut;
 
 // Import Suggestions
-getExportIndex;
 getSuggestionsForSymbol;
 getSuggestionsForMethod;
-getSuggestionsForTypeclass;
-getSuggestionsForMacro;
-formatSuggestionsMessage;
-generateImportFix;
 ```
 
-### unplugin-typesugar
+### @typesugar/transformer {#transformer}
+
+The TypeScript transformer that expands macros.
+
+```bash
+npm install --save-dev @typesugar/transformer
+```
+
+**Exports:**
+
+- Default export: transformer factory
+- CLI: `typesugar` command
+
+### @typesugar/preprocessor {#preprocessor}
+
+Lexical preprocessor for custom syntax (`F<_>`, `|>`).
+
+```bash
+npm install --save-dev @typesugar/preprocessor
+```
+
+**Exports:**
+
+```typescript
+preprocess();
+```
+
+**Inspired by:** Zig comptime
+
+### unplugin-typesugar {#unplugin}
 
 Bundler plugins for Vite, Webpack, esbuild, Rollup.
 
@@ -90,35 +107,133 @@ import typesugar from "unplugin-typesugar/esbuild";
 import typesugar from "unplugin-typesugar/rollup";
 ```
 
-### typesugar
+---
 
-Umbrella package including all common packages.
+## Developer Experience
+
+### @typesugar/vscode {#vscode}
+
+VSCode/Cursor extension (install from marketplace).
+
+- Syntax highlighting for custom syntax
+- Inline expansion previews
+- Go-to-definition for macro-generated code
+- Error lens integration
+
+### @typesugar/eslint-plugin {#eslint-plugin}
+
+ESLint plugin with processor for typesugar files.
 
 ```bash
-npm install typesugar
-```
-
-Includes: core, comptime, derive, reflect, operators, typeclass, specialize.
-
-## Macros
-
-### @typesugar/comptime
-
-Compile-time evaluation.
-
-```bash
-npm install @typesugar/comptime
+npm install --save-dev @typesugar/eslint-plugin
 ```
 
 **Exports:**
 
 ```typescript
-comptime;
+configs.recommended;
+configs.full;
+configs.strict;
+processor;
 ```
 
-### @typesugar/derive
+### @typesugar/prettier-plugin {#prettier-plugin}
 
-Auto-derive implementations.
+Prettier formatting for custom syntax.
+
+```bash
+npm install --save-dev @typesugar/prettier-plugin
+```
+
+### @typesugar/testing {#testing}
+
+Power assertions, property-based testing, macro testing.
+
+```bash
+npm install --save-dev @typesugar/testing
+```
+
+**Exports:**
+
+```typescript
+assert(); // Power assertion with sub-expression capture
+staticAssert(); // Compile-time assertion
+typeAssert<T>(); // Type-level assertion
+testCases(); // Parameterized tests
+forAll(); // Property-based testing
+assertSnapshot(); // Source-capturing snapshots
+```
+
+**Inspired by:** Power Assert (JS), QuickCheck (Haskell), proptest (Rust)
+
+[Guide](/guides/testing)
+
+---
+
+## Standard Library
+
+### @typesugar/std {#std}
+
+Standard library extensions: typeclasses, extension methods, pattern matching, do-notation.
+
+```bash
+npm install @typesugar/std
+```
+
+**Exports:**
+
+```typescript
+// Extension methods
+(NumberExt, StringExt, ArrayExt, ObjectExt, DateExt);
+extend();
+registerExtensions();
+
+// Pattern matching
+match();
+
+// FlatMap for do-notation
+FlatMap;
+registerFlatMap();
+
+// Standard typeclasses
+(Eq, Ord, Show, Semigroup, Monoid);
+```
+
+**Inspired by:** Scala 3 extension methods, Rust derives, Kotlin stdlib
+
+[Extension Methods Guide](/guides/extension-methods) · [Pattern Matching Guide](/guides/match) · [Do-Notation Guide](/guides/do-notation) · [Standard Typeclasses Guide](/guides/std-typeclasses)
+
+---
+
+## Typeclasses & Derivation
+
+### @typesugar/typeclass {#typeclass}
+
+Scala 3-style typeclasses with implicit resolution.
+
+```bash
+npm install @typesugar/typeclass
+```
+
+**Exports:**
+
+```typescript
+typeclass();  // decorator
+instance();   // decorator
+deriving();   // decorator
+summon<T>();
+summonAll<...>();
+extend();
+implicits();  // decorator
+```
+
+**Inspired by:** Scala 3 typeclasses, Haskell typeclasses
+
+[Guide](/guides/typeclasses)
+
+### @typesugar/derive {#derive}
+
+Auto-derive implementations from type structure.
 
 ```bash
 npm install @typesugar/derive
@@ -127,14 +242,39 @@ npm install @typesugar/derive
 **Exports:**
 
 ```typescript
-derive;
+derive(); // decorator
 (Eq, Ord, Clone, Debug, Hash, Default, Json, Builder, TypeGuard);
 (deriveIgnore, deriveWith);
 ```
 
-### @typesugar/reflect
+**Inspired by:** Rust derive macros
 
-Type reflection.
+[Guide](/guides/derive)
+
+### @typesugar/specialize {#specialize}
+
+Zero-cost typeclass specialization.
+
+```bash
+npm install @typesugar/specialize
+```
+
+**Exports:**
+
+```typescript
+specialize();
+specialize$();
+mono<T>();
+inlineCall();
+```
+
+**Inspired by:** GHC SPECIALIZE pragma, Rust monomorphization
+
+[Guide](/guides/specialize)
+
+### @typesugar/reflect {#reflect}
+
+Compile-time type reflection.
 
 ```bash
 npm install @typesugar/reflect
@@ -143,13 +283,21 @@ npm install @typesugar/reflect
 **Exports:**
 
 ```typescript
-reflect(decorator);
+reflect(); // decorator
 typeInfo<T>();
 fieldNames<T>();
 validator<T>();
 ```
 
-### @typesugar/operators
+**Inspired by:** Zig @typeInfo, Rust proc_macro
+
+[Guide](/guides/reflect)
+
+---
+
+## Syntax Sugar
+
+### @typesugar/operators {#operators}
 
 Operator overloading.
 
@@ -160,66 +308,19 @@ npm install @typesugar/operators
 **Exports:**
 
 ```typescript
-operators(decorator);
+operators(); // decorator
 ops();
 pipe();
 compose();
 ```
 
-### @typesugar/typeclass
+**Inspired by:** Scala operators, Rust operator traits
 
-Scala 3-style typeclasses.
+[Guide](/guides/operators)
 
-```bash
-npm install @typesugar/typeclass
-```
+### @typesugar/strings {#strings}
 
-**Exports:**
-
-```typescript
-typeclass (decorator)
-instance (decorator)
-deriving (decorator)
-summon<T>()
-summonAll<...>()
-extend()
-implicits (decorator)
-```
-
-### @typesugar/specialize
-
-Zero-cost specialization.
-
-```bash
-npm install @typesugar/specialize
-```
-
-**Exports:**
-
-```typescript
-specialize();
-```
-
-## Domain-Specific
-
-### @typesugar/sql
-
-Type-safe SQL.
-
-```bash
-npm install @typesugar/sql
-```
-
-**Exports:**
-
-```typescript
-sql (tagged template)
-raw()
-```
-
-### @typesugar/strings
-
-String validation macros.
+String validation macros with compile-time checking.
 
 ```bash
 npm install @typesugar/strings
@@ -228,28 +329,97 @@ npm install @typesugar/strings
 **Exports:**
 
 ```typescript
-regex (tagged template)
-html (tagged template)
-json (tagged template)
+regex`...`; // tagged template
+html`...`; // tagged template
+json`...`; // tagged template
+raw`...`; // tagged template
+fmt`...`; // tagged template
 ```
 
-### @typesugar/units
+[Guide](/guides/strings)
 
-Physical units.
+### @typesugar/comptime {#comptime}
+
+Compile-time evaluation.
 
 ```bash
-npm install @typesugar/units
+npm install @typesugar/comptime
 ```
 
 **Exports:**
 
 ```typescript
-units (tagged template)
+comptime();
+includeStr();
+includeJson();
+includeBytes();
+static_assert();
 ```
 
-### @typesugar/contracts
+**Inspired by:** Zig comptime
 
-Design by contract.
+[Guide](/guides/comptime)
+
+### @typesugar/named-args {#named-args}
+
+Named function arguments with compile-time validation.
+
+```bash
+npm install @typesugar/named-args
+```
+
+**Exports:**
+
+```typescript
+namedArgs();
+callWithNamedArgs();
+createBuilder();
+```
+
+**Inspired by:** Kotlin, Swift, Boost.Parameter
+
+[Guide](/guides/named-args)
+
+---
+
+## Type Safety & Contracts
+
+### @typesugar/type-system {#type-system}
+
+Advanced type system extensions.
+
+```bash
+npm install @typesugar/type-system
+```
+
+**Exports:**
+
+```typescript
+// HKT
+($, Kind, ArrayF, PromiseF);
+
+// Newtype
+(Newtype, wrap, unwrap, newtypeCtor);
+
+// Refinement
+(Refined, refine);
+(Positive, NonNegative, Int, Byte, Port);
+(NonEmpty, Email, Url, Uuid);
+
+// Vec
+Vec;
+
+// Type-level arithmetic
+(Add, Sub, Mul, Div, Pow);
+```
+
+**Inspired by:** Haskell/ML type systems, Scala 3 opaque types
+
+[Guide](/guides/type-system)
+
+### @typesugar/contracts {#contracts}
+
+Design by contract with compile-time verification.
 
 ```bash
 npm install @typesugar/contracts
@@ -258,31 +428,21 @@ npm install @typesugar/contracts
 **Exports:**
 
 ```typescript
-requires (labeled block)
-ensures (labeled block)
-invariant (decorator)
-old()
-assert()
-configure()
+requires:; // labeled block
+ensures:; // labeled block
+invariant(); // decorator
+old();
+assert();
+configure();
 ```
 
-### @typesugar/contracts-z3
+**Inspired by:** Eiffel contracts, Coq proofs
 
-Z3 SMT solver integration.
+[Guide](/guides/contracts)
 
-```bash
-npm install @typesugar/contracts-z3
-```
+### @typesugar/contracts-refined {#contracts-refined}
 
-**Exports:**
-
-```typescript
-prove();
-```
-
-### @typesugar/contracts-refined
-
-Refinement types.
+Refinement type integration for contracts.
 
 ```bash
 npm install @typesugar/contracts-refined
@@ -291,17 +451,81 @@ npm install @typesugar/contracts-refined
 **Exports:**
 
 ```typescript
-Refined<T, P>;
-(Positive, Negative, NonZero);
-(NonEmpty, MaxLength, MinLength);
-// ... more predicates
+registerRefinementPredicate();
+getRegisteredPredicates();
 ```
 
-## Functional Programming
+[Guide](/guides/contracts-refined)
 
-### @typesugar/fp
+### @typesugar/contracts-z3 {#contracts-z3}
 
-FP utilities.
+Z3 SMT solver integration for complex proofs.
+
+```bash
+npm install @typesugar/contracts-z3
+```
+
+**Exports:**
+
+```typescript
+z3ProverPlugin();
+proveWithZ3Async();
+```
+
+**Inspired by:** Dafny, F\*
+
+[Guide](/guides/contracts-z3)
+
+### @typesugar/validate {#validate}
+
+Zero-cost validation and schema macros.
+
+```bash
+npm install @typesugar/validate
+```
+
+**Exports:**
+
+```typescript
+is<T>(); // type guard
+assert<T>(); // assertion
+validate<T>(); // validation with error accumulation
+Schema; // schema DSL
+```
+
+**Inspired by:** Zod, io-ts
+
+[Guide](/guides/validate)
+
+### @typesugar/units {#units}
+
+Type-safe physical units with dimensional analysis.
+
+```bash
+npm install @typesugar/units
+```
+
+**Exports:**
+
+```typescript
+(meters, kilometers, feet);
+(seconds, minutes, hours);
+(kilograms, grams);
+(newtons, joules, watts);
+units`...`; // tagged template
+```
+
+**Inspired by:** Boost.Units, F# Units of Measure
+
+[Guide](/guides/units)
+
+---
+
+## Data Structures & Algorithms
+
+### @typesugar/fp {#fp}
+
+Functional programming data types.
 
 ```bash
 npm install @typesugar/fp
@@ -310,7 +534,7 @@ npm install @typesugar/fp
 **Exports:**
 
 ```typescript
-// Option
+// Option (null-based, zero-cost)
 (Option, Some, None);
 
 // Result
@@ -328,295 +552,311 @@ IO;
 // List
 (List, Cons, Nil);
 
-// Pattern matching
-match;
-
 // Typeclasses
 (Functor, Applicative, Monad);
 (Semigroup, Monoid);
 (Eq, Ord, Show);
 ```
 
-### @typesugar/std
+**Inspired by:** Scala fp-ts, Haskell Prelude
 
-Standard library extensions.
-
-```bash
-npm install @typesugar/std
-```
-
-**Exports:**
-
-```typescript
-// Extension methods
-(NumberExt, StringExt, ArrayExt);
-extend();
-registerExtensions();
-
-// FlatMap for do-notation
-FlatMap;
-registerFlatMap();
-```
-
-### @typesugar/type-system
-
-Advanced types.
-
-```bash
-npm install @typesugar/type-system
-```
-
-**Exports:**
-
-```typescript
-// HKT
-($, Kind);
-
-// Newtype
-(Newtype, newtype);
-
-// Phantom types
-Phantom;
-
-// Refinement
-Refined;
-```
-
-## Adapters
-
-### @typesugar/effect
-
-Effect-TS integration.
-
-```bash
-npm install @typesugar/effect
-```
-
-### @typesugar/kysely-adapter
-
-Kysely integration.
-
-```bash
-npm install @typesugar/kysely-adapter
-```
-
-**Exports:**
-
-```typescript
-kyselySql;
-```
-
-### @typesugar/react
-
-React macros.
-
-```bash
-npm install @typesugar/react
-```
-
-## Tooling
-
-### @typesugar/testing
-
-Testing utilities.
-
-```bash
-npm install --save-dev @typesugar/testing
-```
-
-**Exports:**
-
-```typescript
-expandCode();
-expandMacro();
-assertExpands();
-```
-
-### @typesugar/eslint-plugin
-
-ESLint plugin with processor for typesugar files.
-
-```bash
-npm install --save-dev @typesugar/eslint-plugin
-```
-
-**Exports:**
-
-```typescript
-configs.recommended;
-configs.full;
-configs.strict;
-processor; // Transforms typesugar syntax before linting
-```
-
-**Features:**
-
-- Transforms macro syntax before ESLint sees it (prevents false positives)
-- Automatically filters "unused import" errors for typesugar packages
-- Maps error locations back to original source
-
-### @typesugar/vscode
-
-VSCode extension (install from marketplace).
-
-### @typesugar/preprocessor
-
-Lexical preprocessor for custom syntax.
-
-```bash
-npm install --save-dev @typesugar/preprocessor
-```
-
-**Exports:**
-
-```typescript
-preprocess();
-```
-
-## C++ / Boost Inspired {#cpp-inspired}
+[Guide](/guides/fp)
 
 ### @typesugar/hlist {#hlist}
 
-Heterogeneous lists with compile-time type tracking. Inspired by Boost.Fusion/Hana.
+Heterogeneous lists with compile-time type tracking.
 
 ```bash
 npm install @typesugar/hlist
 ```
 
-**Key exports:**
+**Exports:**
 
-- `hlist()` — construct an HList
-- `head()`, `tail()`, `last()`, `init()`, `at()` — element access
-- `append()`, `prepend()`, `concat()`, `reverse()`, `zip()`, `splitAt()` — operations
-- `labeled()`, `get()`, `set()`, `project()`, `merge()` — labeled HList
-- `map()`, `foldLeft()`, `forEach()` — higher-order operations
-
-[Guide](/guides/hlist) · [README](https://github.com/dpovey/typesugar/tree/main/packages/hlist)
-
-### @typesugar/parser {#parser}
-
-Compile-time parser generation from PEG grammars and programmatic combinators. Inspired by Boost.Spirit.
-
-```bash
-npm install @typesugar/parser
+```typescript
+hlist();
+(head(), tail(), last(), at());
+(append(), prepend(), concat(), reverse(), zip());
+(labeled(), get(), set(), project(), merge());
+(map(), foldLeft(), forEach());
 ```
 
-**Key exports:**
+**Inspired by:** Boost.Fusion, Boost.Hana
 
-- `` grammar`...` `` — PEG grammar tagged template
-- `literal()`, `char()`, `charRange()`, `regex()` — primitive parsers
-- `seq()`, `alt()`, `many()`, `many1()`, `optional()`, `not()` — combinators
-- `map()`, `sepBy()`, `between()`, `lazy()` — composition
-- `digit()`, `integer()`, `float()`, `quotedString()` — convenience
-
-[Guide](/guides/parser) · [README](https://github.com/dpovey/typesugar/tree/main/packages/parser)
+[Guide](/guides/hlist)
 
 ### @typesugar/fusion {#fusion}
 
-Single-pass iterator fusion and array expression templates. Inspired by Blitz++ and Rust iterators.
+Single-pass iterator fusion and expression templates.
 
 ```bash
 npm install @typesugar/fusion
 ```
 
-**Key exports:**
+**Exports:**
 
-- `lazy()` — create a fused iterator pipeline
-- `.map()`, `.filter()`, `.flatMap()`, `.take()`, `.drop()` — pipeline operations
-- `.toArray()`, `.reduce()`, `.find()`, `.some()`, `.every()` — terminal operations
-- `range()`, `iterate()`, `repeat()`, `generate()` — source generators
-- `vec()`, `add()`, `sub()`, `mul()`, `dot()` — element-wise vector operations
+```typescript
+lazy();
+(range(), iterate(), repeat(), generate());
+(vec(), add(), sub(), mul(), dot());
+```
 
-[Guide](/guides/fusion) · [README](https://github.com/dpovey/typesugar/tree/main/packages/fusion)
+**Inspired by:** Blitz++, Rust iterators
+
+[Guide](/guides/fusion)
+
+### @typesugar/parser {#parser}
+
+Compile-time parser generation from PEG grammars.
+
+```bash
+npm install @typesugar/parser
+```
+
+**Exports:**
+
+```typescript
+grammar`...`; // tagged template
+(literal(), char(), charRange(), regex());
+(seq(), alt(), many(), many1(), optional());
+(map(), sepBy(), between(), lazy());
+```
+
+**Inspired by:** Boost.Spirit, PEG.js
+
+[Guide](/guides/parser)
 
 ### @typesugar/graph {#graph}
 
-Graph algorithms and state machine verification. Inspired by Boost.Graph.
+Graph algorithms and state machine verification.
 
 ```bash
 npm install @typesugar/graph
 ```
 
-**Key exports:**
+**Exports:**
 
-- `createDigraph()`, `createGraph()` — construction
-- `` digraph`...` `` — DSL construction
-- `topoSort()`, `bfs()`, `dfs()`, `reachable()`, `shortestPath()`, `dijkstra()` — algorithms
-- `stronglyConnectedComponents()`, `detectCycles()`, `isDAG()` — structural analysis
-- `defineStateMachine()`, `verify()`, `createInstance()` — state machines
+```typescript
+(createDigraph(), createGraph());
+digraph`...`; // tagged template
+(topoSort(), bfs(), dfs(), dijkstra());
+(stronglyConnectedComponents(), detectCycles());
+(defineStateMachine(), verify());
+```
 
-[Guide](/guides/graph) · [README](https://github.com/dpovey/typesugar/tree/main/packages/graph)
+**Inspired by:** Boost.Graph
+
+[Guide](/guides/graph)
 
 ### @typesugar/erased {#erased}
 
-Typeclass-based type erasure for heterogeneous collections. Inspired by Rust's `dyn Trait`.
+Typeclass-based type erasure for heterogeneous collections.
 
 ```bash
 npm install @typesugar/erased
 ```
 
-**Key exports:**
+**Exports:**
 
-- `eraseWith()` — create an erased value with explicit vtable
-- `showable()`, `equatable()`, `showableEq()` — convenience constructors
-- `show()`, `equals()`, `compare()`, `hash()`, `clone()` — dispatch functions
-- `widen()`, `narrow()`, `hasCapability()` — capability management
-- `mapErased()`, `sortErased()`, `dedup()`, `groupByHash()` — collection ops
+```typescript
+eraseWith();
+(showable(), equatable(), showableEq());
+(show(), equals(), compare(), hash(), clone());
+(widen(), narrow(), hasCapability());
+```
 
-[Guide](/guides/erased) · [README](https://github.com/dpovey/typesugar/tree/main/packages/erased)
+**Inspired by:** Rust dyn Trait
+
+[Guide](/guides/erased)
 
 ### @typesugar/codec {#codec}
 
-Versioned codec generation with schema evolution. Inspired by serde, Boost.Serialization, Protocol Buffers.
+Versioned codecs with schema evolution.
 
 ```bash
 npm install @typesugar/codec
 ```
 
-**Key exports:**
+**Exports:**
 
-- `schema()` — fluent schema builder with version annotations
-- `createJsonCodec()` — JSON codec with version migration
-- `createBinaryCodec()` — binary codec with explicit field layouts
-- `defineSchema()`, `validateSchema()` — schema definition and validation
-- `generateMigrations()` — auto-generate migration chain
-
-[Guide](/guides/codec) · [README](https://github.com/dpovey/typesugar/tree/main/packages/codec)
-
-### @typesugar/named-args {#named-args}
-
-Named function arguments with compile-time validation. Inspired by Kotlin, Swift, Boost.Parameter.
-
-```bash
-npm install @typesugar/named-args
+```typescript
+schema();
+createJsonCodec();
+createBinaryCodec();
+generateMigrations();
 ```
 
-**Key exports:**
+**Inspired by:** serde, Boost.Serialization, Protocol Buffers
 
-- `namedArgs()` — wrap a function for named argument calling
-- `callWithNamedArgs()` — call with an object of named arguments
-- `createBuilder()` — builder pattern for many-param functions
-- `NamedArgsError` — structured error type
-
-[Guide](/guides/named-args) · [README](https://github.com/dpovey/typesugar/tree/main/packages/named-args)
+[Guide](/guides/codec)
 
 ### @typesugar/geometry {#geometry}
 
-Type-safe geometry with coordinate system and dimension safety. Inspired by Boost.Geometry.
+Type-safe geometry with coordinate system safety.
 
 ```bash
 npm install @typesugar/geometry
 ```
 
-**Key exports:**
+**Exports:**
 
-- `point2d()`, `point3d()`, `vec2()`, `vec3()` — Cartesian constructors
-- `polar()`, `spherical()`, `cylindrical()` — other coordinate systems
-- `translate()`, `distance()`, `dot()`, `cross()`, `normalize()` — operations
-- `cartesianToPolar()`, `sphericalToCartesian()`, etc. — conversions
-- `rotation2d()`, `translation3d()`, `compose()`, `applyToPoint()` — transforms
+```typescript
+(point2d(), point3d(), vec2(), vec3());
+(polar(), spherical(), cylindrical());
+(translate(), distance(), dot(), cross(), normalize());
+(rotation2d(), translation3d(), compose());
+```
 
-[Guide](/guides/geometry) · [README](https://github.com/dpovey/typesugar/tree/main/packages/geometry)
+**Inspired by:** Boost.Geometry
+
+[Guide](/guides/geometry)
+
+### @typesugar/math {#math}
+
+Math types and typeclasses.
+
+```bash
+npm install @typesugar/math
+```
+
+**Exports:**
+
+```typescript
+(rational(), complex(), bigDecimal());
+(matrix(), det(), matMul(), transpose());
+(interval(), mod(), polynomial());
+(VectorSpace, InnerProduct, Normed);
+```
+
+**Inspired by:** Haskell Numeric, Boost.Multiprecision
+
+[Guide](/guides/math)
+
+### @typesugar/mapper {#mapper}
+
+Zero-cost object mapping.
+
+```bash
+npm install @typesugar/mapper
+```
+
+**Exports:**
+
+```typescript
+transformInto<S, T>();
+```
+
+**Inspired by:** Scala Chimney
+
+[Guide](/guides/mapper)
+
+---
+
+## Ecosystem Integrations
+
+### @typesugar/effect {#effect}
+
+Effect-TS integration.
+
+```bash
+npm install @typesugar/effect effect
+```
+
+**Exports:**
+
+```typescript
+service(); // decorator
+layer(); // decorator
+resolveLayer<R>();
+(EffectSchema, EffectEqual, EffectHash); // derives
+(EffectExt, OptionExt, EitherExt); // extensions
+(effectFunctor, effectMonad); // typeclass instances
+```
+
+**Inspired by:** Scala ZIO
+
+[Guide](/guides/effect)
+
+### @typesugar/react {#react}
+
+Vue/Svelte-style reactivity for React.
+
+```bash
+npm install @typesugar/react
+```
+
+**Exports:**
+
+```typescript
+state();
+derived();
+effect();
+watch();
+component();
+each();
+match();
+```
+
+**Inspired by:** Vue 3 Composition API, Solid.js
+
+[Guide](/guides/react)
+
+### @typesugar/sql {#sql}
+
+Type-safe SQL tagged templates with ConnectionIO.
+
+```bash
+npm install @typesugar/sql
+```
+
+**Exports:**
+
+```typescript
+sql`...`; // tagged template
+(Query, Update, Fragment);
+ConnectionIO;
+Transactor;
+```
+
+**Inspired by:** Scala Doobie
+
+[Guide](/guides/sql)
+
+### @typesugar/kysely-adapter {#kysely}
+
+Kysely integration.
+
+```bash
+npm install @typesugar/kysely-adapter kysely
+```
+
+**Exports:**
+
+```typescript
+ksql`...`;
+(ref$(), table$(), id$(), lit$(), join$(), raw$());
+```
+
+[Guide](/guides/kysely)
+
+### @typesugar/drizzle-adapter {#drizzle}
+
+Drizzle ORM integration.
+
+```bash
+npm install @typesugar/drizzle-adapter drizzle-orm
+```
+
+**Exports:**
+
+```typescript
+dsql`...`;
+(ref$(), id$(), join$(), raw$());
+DrizzleQueryable;
+```
+
+[Guide](/guides/drizzle)
+
+---
 
 ## Peer Dependencies
 

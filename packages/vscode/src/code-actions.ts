@@ -60,7 +60,7 @@ export class MacroCodeActionsProvider implements vscode.CodeActionProvider {
         vscode.CodeActionKind.Refactor
       );
       action.command = {
-        command: "typemacro.expandMacro",
+        command: "typesugar.expandMacro",
         title: "Expand macro",
         arguments: [document.uri, callExpr.getStart(sourceFile)],
       };
@@ -74,7 +74,7 @@ export class MacroCodeActionsProvider implements vscode.CodeActionProvider {
       if (name && decoratorNames.has(name)) {
         const action = new vscode.CodeAction(`Expand @${name}`, vscode.CodeActionKind.Refactor);
         action.command = {
-          command: "typemacro.expandMacro",
+          command: "typesugar.expandMacro",
           title: "Expand macro",
           arguments: [document.uri, decorator.getStart(sourceFile)],
         };
@@ -95,7 +95,7 @@ export class MacroCodeActionsProvider implements vscode.CodeActionProvider {
         vscode.CodeActionKind.Refactor
       );
       action.command = {
-        command: "typemacro.expandMacro",
+        command: "typesugar.expandMacro",
         title: "Expand macro",
         arguments: [document.uri, taggedTemplate.getStart(sourceFile)],
       };
@@ -132,7 +132,7 @@ export class MacroCodeActionsProvider implements vscode.CodeActionProvider {
       if (!hasDerive && decoratorNames.has("derive")) {
         const action = new vscode.CodeAction("Add @derive(...)", vscode.CodeActionKind.Refactor);
         action.command = {
-          command: "typemacro.addDerive",
+          command: "typesugar.addDerive",
           title: "Add derive",
           arguments: [document.uri, classOrInterface.getStart(sourceFile)],
         };

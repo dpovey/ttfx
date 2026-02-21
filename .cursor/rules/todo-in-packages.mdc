@@ -1,0 +1,33 @@
+# TODO Files in Packages
+
+**This rule overrides the user's global TODO.md rule for this workspace.**
+
+For typesugar, track TODO items in `TODO.md` files within individual packages:
+
+- `packages/type-system/TODO.md` — refined types, newtypes, HKT, Vec, etc.
+- `packages/units/TODO.md` — dimensional analysis, unit conversions
+- `packages/testing/TODO.md` — assertions, property-based testing, Arbitrary
+- `packages/fp/TODO.md` — Option, Either, IO, typeclasses
+- `packages/std/TODO.md` — extension methods, match, do-notation
+- etc.
+
+**Do NOT use:**
+
+- `~/src/TODO.md` (global personal TODO)
+- `~/src/typesugar/TODO.md` (repo-level TODO)
+
+**Format:**
+
+```markdown
+# TODO
+
+## Roadmap
+
+- [ ] [date] Feature description — context/inspiration
+
+## Bugs
+
+- [ ] [date] Bug description
+```
+
+When adding items, include the date and source of inspiration (e.g., "inspired by Iron", "from Squants").

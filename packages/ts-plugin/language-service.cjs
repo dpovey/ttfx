@@ -196,8 +196,13 @@ var HKT_PARSE_ERROR_CODES = /* @__PURE__ */ new Set([
   // Unexpected keyword or identifier
 ]);
 function init(modules) {
+  console.log("[typesugar] Language service plugin initializing...");
   const tsModule = modules.typescript;
   function create(info) {
+    console.log(
+      "[typesugar] Creating language service proxy for project:",
+      info.project.getProjectName()
+    );
     const log = (msg) => {
       info.project.projectService.logger.info(`[typesugar] ${msg}`);
     };

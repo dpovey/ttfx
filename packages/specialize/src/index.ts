@@ -69,20 +69,20 @@ type RemoveLastN<T extends readonly unknown[], N extends number> = T extends [
 type Prev<N extends number> = N extends 2
   ? 1
   : N extends 3
-  ? 2
-  : N extends 4
-  ? 3
-  : N extends 5
-  ? 4
-  : N extends 6
-  ? 5
-  : N extends 7
-  ? 6
-  : N extends 8
-  ? 7
-  : N extends 9
-  ? 8
-  : 0;
+    ? 2
+    : N extends 4
+      ? 3
+      : N extends 5
+        ? 4
+        : N extends 6
+          ? 5
+          : N extends 7
+            ? 6
+            : N extends 8
+              ? 7
+              : N extends 9
+                ? 8
+                : 0;
 
 /**
  * Specialized function type - removes dictionary parameters from the signature.
@@ -93,9 +93,7 @@ type Prev<N extends number> = N extends 2
 export type Specialized<
   F extends (...args: readonly unknown[]) => unknown,
   N extends number,
-> = F extends (...args: infer Args) => infer R
-  ? (...args: RemoveLastN<Args, N>) => R
-  : never;
+> = F extends (...args: infer Args) => infer R ? (...args: RemoveLastN<Args, N>) => R : never;
 
 declare global {
   interface Function {
@@ -123,7 +121,9 @@ declare global {
      * @param instances - Typeclass instance dictionaries to pre-apply
      * @returns A specialized function without the dictionary parameters
      */
-    specialize<I1>(instance1: I1): Specialized<this & ((...args: readonly unknown[]) => unknown), 1>;
+    specialize<I1>(
+      instance1: I1
+    ): Specialized<this & ((...args: readonly unknown[]) => unknown), 1>;
     specialize<I1, I2>(
       instance1: I1,
       instance2: I2

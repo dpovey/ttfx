@@ -364,17 +364,17 @@ p1.clone(); // Clone typeclass → compiles to: { x: p1.x, y: p1.y }
 
 **Macros reference:**
 
-| Macro                | Kind       | Purpose                                                         |
-| -------------------- | ---------- | --------------------------------------------------------------- |
-| `@typeclass`         | Attribute  | Declares a typeclass interface (for library authors)            |
-| `@instance`          | Attribute  | Provides custom typeclass instance, overrides auto-derivation   |
-| `@derive(...)`       | Attribute  | Documents capabilities (optional, same operations work without) |
-| `summon<TC<T>>()`    | Expression | Explicit resolution for generic code                            |
-| `fn.specialize(dict)`| Extension  | Create specialized function (preferred explicit syntax)         |
-| `specialize(fn,dict)`| Expression | Legacy explicit specialization (array syntax)                   |
-| `@implicits`         | Attribute  | Auto-fills instance params + auto-specializes at call sites     |
-| `@hkt`               | Attribute  | Higher-kinded type parameter support (`F<_>` → `$<F, A>`)       |
-| `summonHKT<TC<F>>()` | Expression | Resolves HKT typeclass instances                                |
+| Macro                 | Kind       | Purpose                                                         |
+| --------------------- | ---------- | --------------------------------------------------------------- |
+| `@typeclass`          | Attribute  | Declares a typeclass interface (for library authors)            |
+| `@instance`           | Attribute  | Provides custom typeclass instance, overrides auto-derivation   |
+| `@derive(...)`        | Attribute  | Documents capabilities (optional, same operations work without) |
+| `summon<TC<T>>()`     | Expression | Explicit resolution for generic code                            |
+| `fn.specialize(dict)` | Extension  | Create specialized function (preferred explicit syntax)         |
+| `specialize(fn,dict)` | Expression | Legacy explicit specialization (array syntax)                   |
+| `@implicits`          | Attribute  | Auto-fills instance params + auto-specializes at call sites     |
+| `@hkt`                | Attribute  | Higher-kinded type parameter support (`F<_>` → `$<F, A>`)       |
+| `summonHKT<TC<F>>()`  | Expression | Resolves HKT typeclass instances                                |
 
 **Key registries:**
 

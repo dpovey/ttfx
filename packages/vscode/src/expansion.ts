@@ -190,11 +190,7 @@ export class ExpansionService {
       const root = workspaceFolders[0].uri.fsPath;
 
       // Find tsconfig.json
-      const configPath = ts.findConfigFile(
-        root,
-        ts.sys.fileExists,
-        "tsconfig.json"
-      );
+      const configPath = ts.findConfigFile(root, ts.sys.fileExists, "tsconfig.json");
       if (!configPath) return undefined;
 
       // Try to load the TransformationPipeline

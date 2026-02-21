@@ -182,14 +182,10 @@ describe("TransformCache", () => {
       ).toBe(true);
 
       // Invalid when content hash differs
-      expect(
-        cache.isTransformedValid("test.ts", "different", () => "dephash")
-      ).toBe(false);
+      expect(cache.isTransformedValid("test.ts", "different", () => "dephash")).toBe(false);
 
       // Invalid when dependency hash differs
-      expect(
-        cache.isTransformedValid("test.ts", "hash123", () => "different")
-      ).toBe(false);
+      expect(cache.isTransformedValid("test.ts", "hash123", () => "different")).toBe(false);
     });
   });
 

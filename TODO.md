@@ -39,6 +39,80 @@
    - **What:** Add recursive deep-type compatibility checking to the `transformInto` macro.
    - **Why:** To ensure nested objects and complex mappings strictly adhere to the target type without runtime mapping errors.
 
+## Polymorphic Result (`@typesugar/result`)
+
+Inspired by [~/src/experiments/result](~/src/experiments/result) — a Scala 3 experiment where
+`Result[E, T, F[_]]` is a typeclass algebra that lets functions return into any error-handling
+type (Option, Either, Try, Future, bare value) driven by the call-site's expected type.
+
+### Design: Invisible Whole-Function Specialization (Design B)
+
+The user writes a normal function returning `Result<E, T>`. The macro system treats
+`Result<E, T>` in return position as a signal that the function is specializable. At call
+sites where the target type differs (e.g., `const x: Option<number> = parseAge("42")`),
+the compiler monomorphizes the function body, replacing `ok()`/`err()` with the target
+type's constructors. No intermediate Result object is ever created.
+
+```typescript
+// User writes:
+function parseAge(input: string): Result<string, number> {
+  const n = Number(input);
+  if (isNaN(n)) return err("not a number");
+  if (n < 0 || n > 150) return err("out of range");
+  return ok(n);
+}
+
+// Call site drives specialization:
+const opt: Option<number> = parseAge("42");
+// Monomorphized to: const n = Number("42"); isNaN(n) ? null : n < 0 || n > 150 ? null : n
+
+const either: Either<string, number> = parseAge("-1");
+// Monomorphized to: const n = Number("-1"); isNaN(n) ? Left("not a number") : ...
+```
+
+### Prerequisite: `specialize()` improvements
+
+These are general improvements to the specialization infrastructure that benefit all of
+typesugar, not just Result. Tracked inline in `src/macros/specialize.ts`.
+
+- [ ] **Deduplication / hoisting** — Currently each call site generates a fresh inlined copy.
+      If 50 call sites specialize `parseAge → Option`, we get 50 identical functions. Need to
+      hoist specialized functions to module scope with a cache key (`fnName × targetAlgebra`),
+      generating one `const __parseAge_Option = ...` and reusing it. (C++ COMDAT folding model.)
+
+- [ ] **Early-return inlining** — `classifyInlineFailure()` rejects functions with early
+      returns, but that's the most common pattern for Result-returning functions. Need to handle
+      multi-return functions by rewriting as nested ternaries or a single match expression.
+      This is the same transformation the `?` operator compilation would need.
+
+- [ ] **Return-type-driven auto-specialization** — The transformer needs to detect when a
+      function returning `Result<E, T>` is assigned to a different type (Option, Either, bare T)
+      and automatically trigger specialization without an explicit `specialize()` call.
+
+### Package implementation
+
+- [ ] **`@typesugar/result` package** — New package with:
+  - `Result<E, T>` type (compatible with existing `ZeroCostResult`, param order: error first)
+  - `ok(value)` / `err(error)` constructors (expression macros, inline to target constructors)
+  - Result algebra instances: Option, Either, ZeroCostResult, Unsafe (bare T), Promise
+  - Extension methods: `.map()`, `.flatMap()`, `.unwrapOr()`, `.toOption()`, `.toEither()`, etc.
+  - FlatMap registration for `let:/yield:` do-notation
+  - `match()` integration (discriminant: `ok`)
+
+- [ ] **`?` operator** — Preprocessor syntax for early return on error:
+  - `expr?` rewrites to `__resultTry__(expr)` at text level
+  - `__resultTry__` expression macro expands to: `const _t = expr; if (!_t.ok) return _t; _t.value`
+  - Must respect function boundary (only early-returns from enclosing function)
+
+### Progressive disclosure
+
+| Level     | What the user writes                     | What happens                           |
+| --------- | ---------------------------------------- | -------------------------------------- |
+| Basic     | `ok()`, `err()`, `.map()`, `.unwrapOr()` | Macro inlines checks (concrete Result) |
+| Ergonomic | `?` operator, `match()`, `let:/yield:`   | Compile-time rewrite                   |
+| Interop   | Assign `Result` to `Option`/`Either`/`T` | Auto-specializes whole function        |
+| Explicit  | `specialize(fn, optionResult)`           | Manual monomorphization                |
+
 ## Soundness & Type Safety
 
 - [ ] **Post-expansion type checking** — Macro expansions are not re-type-checked after the transformer runs. Explore running a second `tsc` pass on expanded output, or integrating with TypeScript's incremental checker to validate generated code. (Analysis §4.1)
