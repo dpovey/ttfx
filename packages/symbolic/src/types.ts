@@ -9,21 +9,13 @@
  * Type-level multiplication result.
  * For plain numbers, returns number. Can be specialized for unit types.
  */
-export type Mul<A, B> = A extends number
-  ? B extends number
-    ? number
-    : B
-  : A;
+export type Mul<A, B> = A extends number ? (B extends number ? number : B) : A;
 
 /**
  * Type-level division result.
  * For plain numbers, returns number. Can be specialized for unit types.
  */
-export type Div<A, B> = A extends number
-  ? B extends number
-    ? number
-    : never
-  : A;
+export type Div<A, B> = A extends number ? (B extends number ? number : never) : A;
 
 /**
  * Type-level addition result.

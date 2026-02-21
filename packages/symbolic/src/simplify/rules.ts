@@ -7,24 +7,8 @@
  */
 
 import type { Expression } from "../expression.js";
-import {
-  const_,
-  add,
-  mul,
-  pow,
-  neg,
-  ZERO,
-  ONE,
-  TWO,
-} from "../builders.js";
-import {
-  isConstant,
-  isZero,
-  isOne,
-  isNegativeOne,
-  isBinaryOp,
-  isUnaryOp,
-} from "../expression.js";
+import { const_, add, mul, pow, neg, ZERO, ONE, TWO } from "../builders.js";
+import { isConstant, isZero, isOne, isNegativeOne, isBinaryOp, isUnaryOp } from "../expression.js";
 
 // Helper type for casting
 type Expr = Expression<number>;
@@ -32,9 +16,7 @@ type Expr = Expression<number>;
 /**
  * A simplification rule.
  */
-export type SimplificationRule = (
-  expr: Expression<unknown>
-) => Expression<unknown> | null;
+export type SimplificationRule = (expr: Expression<unknown>) => Expression<unknown> | null;
 
 /**
  * All built-in simplification rules.
@@ -159,9 +141,7 @@ export function powZeroRule(expr: Expression<unknown>): Expression<unknown> | nu
 /**
  * Evaluate operations on constants.
  */
-export function constantFoldingRule(
-  expr: Expression<unknown>
-): Expression<unknown> | null {
+export function constantFoldingRule(expr: Expression<unknown>): Expression<unknown> | null {
   if (!isBinaryOp(expr)) return null;
 
   if (!isConstant(expr.left) || !isConstant(expr.right)) return null;
@@ -191,9 +171,7 @@ export function constantFoldingRule(
 /**
  * --x = x
  */
-export function doubleNegationRule(
-  expr: Expression<unknown>
-): Expression<unknown> | null {
+export function doubleNegationRule(expr: Expression<unknown>): Expression<unknown> | null {
   if (!isUnaryOp(expr) || expr.op !== "-") return null;
 
   if (isUnaryOp(expr.arg) && expr.arg.op === "-") {
@@ -248,9 +226,7 @@ export function mulNegOneRule(expr: Expression<unknown>): Expression<unknown> | 
 /**
  * Combine constants in addition: (a + x) + b = (a+b) + x
  */
-export function combineConstantsAddRule(
-  expr: Expression<unknown>
-): Expression<unknown> | null {
+export function combineConstantsAddRule(expr: Expression<unknown>): Expression<unknown> | null {
   if (!isBinaryOp(expr) || expr.op !== "+") return null;
 
   // (a + x) + b => (a+b) + x
@@ -283,9 +259,7 @@ export function combineConstantsAddRule(
 /**
  * Combine constants in multiplication: (a * x) * b = (a*b) * x
  */
-export function combineConstantsMulRule(
-  expr: Expression<unknown>
-): Expression<unknown> | null {
+export function combineConstantsMulRule(expr: Expression<unknown>): Expression<unknown> | null {
   if (!isBinaryOp(expr) || expr.op !== "*") return null;
 
   // (a * x) * b => (a*b) * x
@@ -324,9 +298,7 @@ export function combineConstantsMulRule(
 /**
  * (x^a)^b = x^(a*b)
  */
-export function powerOfPowerRule(
-  expr: Expression<unknown>
-): Expression<unknown> | null {
+export function powerOfPowerRule(expr: Expression<unknown>): Expression<unknown> | null {
   if (!isBinaryOp(expr) || expr.op !== "^") return null;
 
   if (isBinaryOp(expr.left) && expr.left.op === "^") {
@@ -334,10 +306,7 @@ export function powerOfPowerRule(
     const base = expr.left.left;
     const innerExp = expr.left.right;
     const outerExp = expr.right;
-    return pow(
-      base as Expr,
-      mul(innerExp as Expr, outerExp as Expr)
-    );
+    return pow(base as Expr, mul(innerExp as Expr, outerExp as Expr));
   }
 
   return null;
@@ -346,9 +315,7 @@ export function powerOfPowerRule(
 /**
  * x^a * x^b = x^(a+b)
  */
-export function productOfPowersRule(
-  expr: Expression<unknown>
-): Expression<unknown> | null {
+export function productOfPowersRule(expr: Expression<unknown>): Expression<unknown> | null {
   if (!isBinaryOp(expr) || expr.op !== "*") return null;
 
   // x * x = x^2
@@ -364,10 +331,7 @@ export function productOfPowersRule(
     expr.right.op === "^" &&
     expressionsEqual(expr.left.left, expr.right.left)
   ) {
-    return pow(
-      expr.left.left as Expr,
-      add(expr.left.right as Expr, expr.right.right as Expr)
-    );
+    return pow(expr.left.left as Expr, add(expr.left.right as Expr, expr.right.right as Expr));
   }
 
   // x * x^a = x^(a+1)
@@ -394,10 +358,7 @@ export function productOfPowersRule(
 /**
  * Structural equality check for expressions.
  */
-export function expressionsEqual(
-  a: Expression<unknown>,
-  b: Expression<unknown>
-): boolean {
+export function expressionsEqual(a: Expression<unknown>, b: Expression<unknown>): boolean {
   if (a.kind !== b.kind) return false;
 
   switch (a.kind) {
@@ -410,9 +371,7 @@ export function expressionsEqual(
     case "binary": {
       const bb = b as typeof a;
       return (
-        a.op === bb.op &&
-        expressionsEqual(a.left, bb.left) &&
-        expressionsEqual(a.right, bb.right)
+        a.op === bb.op && expressionsEqual(a.left, bb.left) && expressionsEqual(a.right, bb.right)
       );
     }
 

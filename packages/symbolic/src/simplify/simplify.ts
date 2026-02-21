@@ -39,14 +39,9 @@ const defaultOptions: Required<SimplifyOptions> = {
  * @param options - Simplification options
  * @returns The simplified expression
  */
-export function simplify<T>(
-  expr: Expression<T>,
-  options: SimplifyOptions = {}
-): Expression<T> {
+export function simplify<T>(expr: Expression<T>, options: SimplifyOptions = {}): Expression<T> {
   const opts = { ...defaultOptions, ...options };
-  const rules = opts.customOnly
-    ? opts.customRules
-    : [...simplificationRules, ...opts.customRules];
+  const rules = opts.customOnly ? opts.customRules : [...simplificationRules, ...opts.customRules];
 
   let current = expr;
   let iterations = 0;
@@ -68,10 +63,7 @@ export function simplify<T>(
 /**
  * Apply one round of simplification (bottom-up).
  */
-function simplifyOnce<T>(
-  expr: Expression<T>,
-  rules: SimplificationRule[]
-): Expression<T> {
+function simplifyOnce<T>(expr: Expression<T>, rules: SimplificationRule[]): Expression<T> {
   // First, recursively simplify children
   const simplified = simplifyChildren(expr, rules);
 
@@ -82,10 +74,7 @@ function simplifyOnce<T>(
 /**
  * Recursively simplify child expressions.
  */
-function simplifyChildren<T>(
-  expr: Expression<T>,
-  rules: SimplificationRule[]
-): Expression<T> {
+function simplifyChildren<T>(expr: Expression<T>, rules: SimplificationRule[]): Expression<T> {
   switch (expr.kind) {
     case "constant":
     case "variable":
@@ -144,10 +133,7 @@ function simplifyChildren<T>(
 /**
  * Apply all rules to an expression until none apply.
  */
-function applyRules<T>(
-  expr: Expression<T>,
-  rules: SimplificationRule[]
-): Expression<T> {
+function applyRules<T>(expr: Expression<T>, rules: SimplificationRule[]): Expression<T> {
   let current = expr as Expression<unknown>;
 
   for (const rule of rules) {
@@ -195,9 +181,7 @@ function expandNode(expr: Expression<unknown>): Expression<unknown> {
   }
 }
 
-function expandBinary(
-  expr: Expression<unknown> & { kind: "binary" }
-): Expression<unknown> {
+function expandBinary(expr: Expression<unknown> & { kind: "binary" }): Expression<unknown> {
   const left = expandNode(expr.left);
   const right = expandNode(expr.right);
 
@@ -228,10 +212,7 @@ function expandBinary(
 /**
  * Collect like terms in a polynomial expression.
  */
-export function collectTerms<T>(
-  expr: Expression<T>,
-  variable: string
-): Expression<T> {
+export function collectTerms<T>(expr: Expression<T>, variable: string): Expression<T> {
   // This is a simplified implementation that works for basic cases
   const terms = extractTerms(expr, variable);
   return buildPolynomial(terms, variable) as Expression<T>;
@@ -242,10 +223,7 @@ interface PolynomialTerm {
   power: number;
 }
 
-function extractTerms(
-  expr: Expression<unknown>,
-  v: string
-): Map<number, number> {
+function extractTerms(expr: Expression<unknown>, v: string): Map<number, number> {
   const terms = new Map<number, number>();
 
   function addTerm(coeff: number, power: number) {

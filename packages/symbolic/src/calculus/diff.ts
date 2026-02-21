@@ -107,9 +107,7 @@ function diffNode(expr: Expression<unknown>, v: string): Expression<unknown> {
 
     case "sum":
       if (expr.variable === v) {
-        throw new Error(
-          `Cannot differentiate sum with respect to its index variable '${v}'`
-        );
+        throw new Error(`Cannot differentiate sum with respect to its index variable '${v}'`);
       }
       return {
         kind: "sum",
@@ -121,9 +119,7 @@ function diffNode(expr: Expression<unknown>, v: string): Expression<unknown> {
 
     case "product":
       if (expr.variable === v) {
-        throw new Error(
-          `Cannot differentiate product with respect to its index variable '${v}'`
-        );
+        throw new Error(`Cannot differentiate product with respect to its index variable '${v}'`);
       }
       return {
         kind: "product",
@@ -152,10 +148,7 @@ function diffBinary(
       return simplifySub(dLeft, dRight);
 
     case "*":
-      return simplifyAdd(
-        simplifyMul(dLeft, right),
-        simplifyMul(left, dRight)
-      );
+      return simplifyAdd(simplifyMul(dLeft, right), simplifyMul(left, dRight));
 
     case "/":
       return simplifyDiv(
@@ -186,7 +179,10 @@ function diffPower(
     // f(x)^n: power rule
     // d/dx[f^n] = n * f^(n-1) * f'
     return simplifyMul(
-      simplifyMul(exponent, pow(base as Expression<number>, sub(exponent as Expression<number>, ONE))),
+      simplifyMul(
+        exponent,
+        pow(base as Expression<number>, sub(exponent as Expression<number>, ONE))
+      ),
       dBase
     );
   }
@@ -214,10 +210,7 @@ function diffPower(
   );
 }
 
-function diffUnary(
-  expr: Expression<unknown> & { kind: "unary" },
-  v: string
-): Expression<unknown> {
+function diffUnary(expr: Expression<unknown> & { kind: "unary" }, v: string): Expression<unknown> {
   const arg = expr.arg;
   const dArg = diffNode(arg, v);
 
@@ -252,25 +245,23 @@ function diffFunction(
       break;
 
     case "tan":
-      innerDerivative = simplifyDiv(ONE, simplifyMul(
-        cos(arg as Expression<number>),
-        cos(arg as Expression<number>)
-      ));
+      innerDerivative = simplifyDiv(
+        ONE,
+        simplifyMul(cos(arg as Expression<number>), cos(arg as Expression<number>))
+      );
       break;
 
     case "asin":
-      innerDerivative = simplifyDiv(
-        ONE,
-        { kind: "unary", op: "sqrt", arg: sub(ONE, simplifyMul(arg, arg)) }
-      );
+      innerDerivative = simplifyDiv(ONE, {
+        kind: "unary",
+        op: "sqrt",
+        arg: sub(ONE, simplifyMul(arg, arg)),
+      });
       break;
 
     case "acos":
       innerDerivative = simplifyNeg(
-        simplifyDiv(
-          ONE,
-          { kind: "unary", op: "sqrt", arg: sub(ONE, simplifyMul(arg, arg)) }
-        )
+        simplifyDiv(ONE, { kind: "unary", op: "sqrt", arg: sub(ONE, simplifyMul(arg, arg)) })
       );
       break;
 

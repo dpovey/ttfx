@@ -88,40 +88,28 @@ export const HALF: Constant<number> = const_(0.5, "½");
 /**
  * Addition: a + b
  */
-export function add<A, B>(
-  left: Expression<A>,
-  right: Expression<B>
-): BinaryOp<A, B, Add<A, B>> {
+export function add<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Add<A, B>> {
   return { kind: "binary", op: "+", left, right };
 }
 
 /**
  * Subtraction: a - b
  */
-export function sub<A, B>(
-  left: Expression<A>,
-  right: Expression<B>
-): BinaryOp<A, B, Sub<A, B>> {
+export function sub<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Sub<A, B>> {
   return { kind: "binary", op: "-", left, right };
 }
 
 /**
  * Multiplication: a * b
  */
-export function mul<A, B>(
-  left: Expression<A>,
-  right: Expression<B>
-): BinaryOp<A, B, Mul<A, B>> {
+export function mul<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Mul<A, B>> {
   return { kind: "binary", op: "*", left, right };
 }
 
 /**
  * Division: a / b
  */
-export function div<A, B>(
-  left: Expression<A>,
-  right: Expression<B>
-): BinaryOp<A, B, Div<A, B>> {
+export function div<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Div<A, B>> {
   return { kind: "binary", op: "/", left, right };
 }
 

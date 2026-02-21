@@ -75,12 +75,16 @@ function render<T>(expr: Expression<T>, opts: Required<MathMLOptions>): string {
   }
 }
 
-function renderConstant(value: number, name: string | undefined, opts: Required<MathMLOptions>): string {
+function renderConstant(
+  value: number,
+  name: string | undefined,
+  opts: Required<MathMLOptions>
+): string {
   if (name) {
     const knownEntities: Record<string, string> = {
-      "π": "<mi>&pi;</mi>",
-      "e": "<mi>e</mi>",
-      "φ": "<mi>&phi;</mi>",
+      π: "<mi>&pi;</mi>",
+      e: "<mi>e</mi>",
+      φ: "<mi>&phi;</mi>",
       "∞": "<mi>&infin;</mi>",
       "½": "<mfrac><mn>1</mn><mn>2</mn></mfrac>",
     };
@@ -102,7 +106,10 @@ function renderVariable(name: string): string {
   return `<mi>${name}</mi>`;
 }
 
-function renderBinary<T>(expr: Expression<T> & { kind: "binary" }, opts: Required<MathMLOptions>): string {
+function renderBinary<T>(
+  expr: Expression<T> & { kind: "binary" },
+  opts: Required<MathMLOptions>
+): string {
   switch (expr.op) {
     case "+":
       return `<mrow>${render(expr.left, opts)}<mo>+</mo>${render(expr.right, opts)}</mrow>`;
@@ -121,7 +128,10 @@ function renderBinary<T>(expr: Expression<T> & { kind: "binary" }, opts: Require
   }
 }
 
-function renderUnary<T>(expr: Expression<T> & { kind: "unary" }, opts: Required<MathMLOptions>): string {
+function renderUnary<T>(
+  expr: Expression<T> & { kind: "unary" },
+  opts: Required<MathMLOptions>
+): string {
   switch (expr.op) {
     case "-":
       return `<mrow><mo>-</mo>${render(expr.arg, opts)}</mrow>`;
@@ -134,7 +144,10 @@ function renderUnary<T>(expr: Expression<T> & { kind: "unary" }, opts: Required<
   }
 }
 
-function renderFunction<T>(expr: Expression<T> & { kind: "function" }, opts: Required<MathMLOptions>): string {
+function renderFunction<T>(
+  expr: Expression<T> & { kind: "function" },
+  opts: Required<MathMLOptions>
+): string {
   const argContent = render(expr.arg, opts);
 
   // Special handling for floor and ceil
@@ -177,7 +190,10 @@ function renderFunction<T>(expr: Expression<T> & { kind: "function" }, opts: Req
   return `<mrow><mo>${fnName}</mo><mo>&ApplyFunction;</mo><mfenced>${argContent}</mfenced></mrow>`;
 }
 
-function renderDerivative<T>(expr: Expression<T> & { kind: "derivative" }, opts: Required<MathMLOptions>): string {
+function renderDerivative<T>(
+  expr: Expression<T> & { kind: "derivative" },
+  opts: Required<MathMLOptions>
+): string {
   const innerContent = render(expr.expr, opts);
   const v = expr.variable;
 
@@ -187,12 +203,18 @@ function renderDerivative<T>(expr: Expression<T> & { kind: "derivative" }, opts:
   return `<mrow><mfrac><msup><mi>d</mi><mn>${expr.order}</mn></msup><mrow><mi>d</mi><msup><mi>${v}</mi><mn>${expr.order}</mn></msup></mrow></mfrac><mfenced>${innerContent}</mfenced></mrow>`;
 }
 
-function renderIntegral<T>(expr: Expression<T> & { kind: "integral" }, opts: Required<MathMLOptions>): string {
+function renderIntegral<T>(
+  expr: Expression<T> & { kind: "integral" },
+  opts: Required<MathMLOptions>
+): string {
   const innerContent = render(expr.expr, opts);
   return `<mrow><mo>&int;</mo>${innerContent}<mi>d</mi><mi>${expr.variable}</mi></mrow>`;
 }
 
-function renderLimit<T>(expr: Expression<T> & { kind: "limit" }, opts: Required<MathMLOptions>): string {
+function renderLimit<T>(
+  expr: Expression<T> & { kind: "limit" },
+  opts: Required<MathMLOptions>
+): string {
   const innerContent = render(expr.expr, opts);
   let underContent = `<mi>${expr.variable}</mi><mo>&rarr;</mo><mn>${expr.approaching}</mn>`;
 
@@ -205,7 +227,10 @@ function renderLimit<T>(expr: Expression<T> & { kind: "limit" }, opts: Required<
   return `<mrow><munder><mo>lim</mo><mrow>${underContent}</mrow></munder>${innerContent}</mrow>`;
 }
 
-function renderSum<T>(expr: Expression<T> & { kind: "sum" }, opts: Required<MathMLOptions>): string {
+function renderSum<T>(
+  expr: Expression<T> & { kind: "sum" },
+  opts: Required<MathMLOptions>
+): string {
   const innerContent = render(expr.expr, opts);
   const fromContent = render(expr.from, opts);
   const toContent = render(expr.to, opts);
@@ -213,7 +238,10 @@ function renderSum<T>(expr: Expression<T> & { kind: "sum" }, opts: Required<Math
   return `<mrow><munderover><mo>&Sum;</mo><mrow><mi>${expr.variable}</mi><mo>=</mo>${fromContent}</mrow>${toContent}</munderover>${innerContent}</mrow>`;
 }
 
-function renderProduct<T>(expr: Expression<T> & { kind: "product" }, opts: Required<MathMLOptions>): string {
+function renderProduct<T>(
+  expr: Expression<T> & { kind: "product" },
+  opts: Required<MathMLOptions>
+): string {
   const innerContent = render(expr.expr, opts);
   const fromContent = render(expr.from, opts);
   const toContent = render(expr.to, opts);

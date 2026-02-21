@@ -5,19 +5,8 @@
  */
 
 import type { Expression } from "./expression.js";
-import {
-  const_,
-  add,
-  sub,
-  ZERO,
-} from "./builders.js";
-import {
-  isConstant,
-  isVariable,
-  isBinaryOp,
-  hasVariable,
-  isEquation,
-} from "./expression.js";
+import { const_, add, sub, ZERO } from "./builders.js";
+import { isConstant, isVariable, isBinaryOp, hasVariable, isEquation } from "./expression.js";
 import { simplify } from "./simplify/simplify.js";
 import { evaluate } from "./eval.js";
 
@@ -30,14 +19,9 @@ export type SolveResult<T> =
 /**
  * Solve an equation for a variable.
  */
-export function solve<T>(
-  eq: Expression<T>,
-  variable: string
-): SolveResult<T> {
+export function solve<T>(eq: Expression<T>, variable: string): SolveResult<T> {
   try {
-    const equation = isEquation(eq)
-      ? eq
-      : { kind: "equation" as const, left: eq, right: ZERO };
+    const equation = isEquation(eq) ? eq : { kind: "equation" as const, left: eq, right: ZERO };
 
     const expr = simplify(sub(equation.left as Expr, equation.right as Expr));
 
@@ -66,10 +50,7 @@ export function solve<T>(
   }
 }
 
-function solveInternal(
-  expr: Expression<unknown>,
-  v: string
-): Expression<unknown>[] {
+function solveInternal(expr: Expression<unknown>, v: string): Expression<unknown>[] {
   const degree = getPolynomialDegree(expr, v);
 
   if (degree === 1) {
@@ -95,10 +76,7 @@ function getPolynomialDegree(expr: Expression<unknown>, v: string): number {
       switch (expr.op) {
         case "+":
         case "-":
-          return Math.max(
-            getPolynomialDegree(expr.left, v),
-            getPolynomialDegree(expr.right, v)
-          );
+          return Math.max(getPolynomialDegree(expr.left, v), getPolynomialDegree(expr.right, v));
         case "*": {
           const leftDeg = getPolynomialDegree(expr.left, v);
           const rightDeg = getPolynomialDegree(expr.right, v);
@@ -147,10 +125,7 @@ function solveLinear(expr: Expression<unknown>, v: string): Expression<unknown>[
   return [const_(-b / a)];
 }
 
-function extractLinearCoefficients(
-  expr: Expression<unknown>,
-  v: string
-): { a: number; b: number } {
+function extractLinearCoefficients(expr: Expression<unknown>, v: string): { a: number; b: number } {
   let a = 0;
   let b = 0;
 
@@ -207,10 +182,7 @@ function extractLinearCoefficients(
   return { a, b };
 }
 
-function solveQuadratic(
-  expr: Expression<unknown>,
-  v: string
-): Expression<unknown>[] {
+function solveQuadratic(expr: Expression<unknown>, v: string): Expression<unknown>[] {
   const { a, b, c } = extractQuadraticCoefficients(expr, v);
 
   if (a === 0) {
@@ -351,10 +323,7 @@ function extractQuadraticCoefficients(
   return { a, b, c };
 }
 
-function solveByIsolation(
-  expr: Expression<unknown>,
-  v: string
-): Expression<unknown>[] {
+function solveByIsolation(expr: Expression<unknown>, v: string): Expression<unknown>[] {
   const simplified = simplify(expr);
 
   if (isVariable(simplified) && simplified.name === v) {
@@ -366,9 +335,7 @@ function solveByIsolation(
     return solutions;
   }
 
-  throw new Error(
-    "Cannot solve this equation. Try simplifying or using numerical methods."
-  );
+  throw new Error("Cannot solve this equation. Try simplifying or using numerical methods.");
 }
 
 function numericalSolve(
@@ -523,11 +490,7 @@ function extractTwoVarLinear(
   return { a, b };
 }
 
-function extractConstant(
-  expr: Expression<unknown>,
-  _v1: string,
-  _v2: string
-): number {
+function extractConstant(expr: Expression<unknown>, _v1: string, _v2: string): number {
   let c = 0;
 
   function extract(e: Expression<unknown>, sign: number): void {

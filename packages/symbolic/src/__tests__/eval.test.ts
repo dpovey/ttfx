@@ -1,5 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { var_, const_, add, sub, mul, div, pow, sin, cos, exp, ln, sqrt, sum, product } from "../builders.js";
+import {
+  var_,
+  const_,
+  add,
+  sub,
+  mul,
+  div,
+  pow,
+  sin,
+  cos,
+  exp,
+  ln,
+  sqrt,
+  sum,
+  product,
+} from "../builders.js";
 import { evaluate, partialEvaluate, canEvaluate } from "../eval.js";
 
 describe("Evaluation", () => {

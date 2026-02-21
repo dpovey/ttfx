@@ -11,27 +11,8 @@
  */
 
 import type { Expression } from "../expression.js";
-import {
-  const_,
-  var_,
-  add,
-  sub,
-  mul,
-  div,
-  pow,
-  neg,
-  sin,
-  cos,
-  exp,
-  ln,
-  ONE,
-} from "../builders.js";
-import {
-  isConstant,
-  isVariable,
-  hasVariable,
-  isBinaryOp,
-} from "../expression.js";
+import { const_, var_, add, sub, mul, div, pow, neg, sin, cos, exp, ln, ONE } from "../builders.js";
+import { isConstant, isVariable, hasVariable, isBinaryOp } from "../expression.js";
 
 // Helper type alias for casting
 type Expr = Expression<number>;
@@ -46,10 +27,7 @@ export type IntegrationResult<T> =
 /**
  * Attempt to compute the indefinite integral of an expression.
  */
-export function tryIntegrate<T>(
-  expr: Expression<T>,
-  variable: string
-): IntegrationResult<T> {
+export function tryIntegrate<T>(expr: Expression<T>, variable: string): IntegrationResult<T> {
   try {
     const result = integrateNode(expr, variable);
     return { success: true, result: result as Expression<T> };
@@ -72,10 +50,7 @@ export function integrate<T>(expr: Expression<T>, variable: string): Expression<
   return result.result;
 }
 
-function integrateNode(
-  expr: Expression<unknown>,
-  v: string
-): Expression<unknown> {
+function integrateNode(expr: Expression<unknown>, v: string): Expression<unknown> {
   if (!hasVariable(expr, v)) {
     return mul(expr as Expr, var_(v));
   }
@@ -115,16 +90,10 @@ function integrateBinary(
 ): Expression<unknown> {
   switch (expr.op) {
     case "+":
-      return add(
-        integrateNode(expr.left, v) as Expr,
-        integrateNode(expr.right, v) as Expr
-      );
+      return add(integrateNode(expr.left, v) as Expr, integrateNode(expr.right, v) as Expr);
 
     case "-":
-      return sub(
-        integrateNode(expr.left, v) as Expr,
-        integrateNode(expr.right, v) as Expr
-      );
+      return sub(integrateNode(expr.left, v) as Expr, integrateNode(expr.right, v) as Expr);
 
     case "*":
       return integrateProduct(expr.left, expr.right, v);
@@ -242,9 +211,7 @@ function integratePower(
     }
   }
 
-  throw new Error(
-    "Cannot integrate this power expression. Substitution may be required."
-  );
+  throw new Error("Cannot integrate this power expression. Substitution may be required.");
 }
 
 function integrateUnary(
@@ -281,18 +248,13 @@ function integrateFunction(
       }
     }
 
-    throw new Error(
-      `Cannot integrate ${expr.fn}() with complex argument. Substitution required.`
-    );
+    throw new Error(`Cannot integrate ${expr.fn}() with complex argument. Substitution required.`);
   }
 
   return integrateBasicFunction(expr.fn, var_(v));
 }
 
-function integrateBasicFunction(
-  fn: string,
-  arg: Expression<unknown>
-): Expression<unknown> {
+function integrateBasicFunction(fn: string, arg: Expression<unknown>): Expression<unknown> {
   switch (fn) {
     case "sin":
       return neg(cos(arg as Expr));

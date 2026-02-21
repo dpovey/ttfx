@@ -63,10 +63,7 @@ export type MatchBindings = Map<string, Expression<unknown>>;
 /**
  * Create a pattern variable.
  */
-export function patternVar(
-  name: string,
-  constraint: PatternConstraint = "any"
-): PatternVariable {
+export function patternVar(name: string, constraint: PatternConstraint = "any"): PatternVariable {
   return { kind: "pattern-variable", name, constraint };
 }
 
@@ -80,10 +77,7 @@ export const $n = patternVar("n", "constant");
 /**
  * Match an expression against a pattern.
  */
-export function match(
-  expr: Expression<unknown>,
-  pattern: Pattern
-): MatchBindings | null {
+export function match(expr: Expression<unknown>, pattern: Pattern): MatchBindings | null {
   const bindings = new Map<string, Expression<unknown>>();
 
   if (matchInternal(expr, pattern, bindings)) {
@@ -166,10 +160,7 @@ function matchPatternVariable(
   return true;
 }
 
-function expressionsEqualForMatch(
-  a: Expression<unknown>,
-  b: Expression<unknown>
-): boolean {
+function expressionsEqualForMatch(a: Expression<unknown>, b: Expression<unknown>): boolean {
   if (a.kind !== b.kind) return false;
 
   switch (a.kind) {
@@ -221,10 +212,7 @@ export function rule(
 /**
  * Apply a rewrite rule to an expression.
  */
-export function applyRule(
-  expr: Expression<unknown>,
-  r: RewriteRule
-): Expression<unknown> | null {
+export function applyRule(expr: Expression<unknown>, r: RewriteRule): Expression<unknown> | null {
   const bindings = match(expr, r.pattern);
 
   if (bindings === null) {
@@ -310,10 +298,7 @@ export function rewrite(
   return current;
 }
 
-function rewriteOnce(
-  expr: Expression<unknown>,
-  rules: RewriteRule[]
-): Expression<unknown> | null {
+function rewriteOnce(expr: Expression<unknown>, rules: RewriteRule[]): Expression<unknown> | null {
   for (const r of rules) {
     const result = applyRule(expr, r);
     if (result !== null) {

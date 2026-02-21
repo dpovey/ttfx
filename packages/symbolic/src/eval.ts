@@ -96,11 +96,7 @@ function evalNode<T>(
   }
 }
 
-function evalVariable(
-  name: string,
-  bindings: Bindings,
-  opts: Required<EvaluateOptions>
-): number {
+function evalVariable(name: string, bindings: Bindings, opts: Required<EvaluateOptions>): number {
   if (name in bindings) {
     return bindings[name];
   }

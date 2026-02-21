@@ -97,7 +97,11 @@ function renderNode<T>(expr: Expression<T>, opts: Required<TextOptions>): string
   }
 }
 
-function renderConstant(value: number, name: string | undefined, opts: Required<TextOptions>): string {
+function renderConstant(
+  value: number,
+  name: string | undefined,
+  opts: Required<TextOptions>
+): string {
   if (name) {
     return name;
   }
@@ -107,7 +111,10 @@ function renderConstant(value: number, name: string | undefined, opts: Required<
   return value.toPrecision(opts.precision);
 }
 
-function renderBinary<T>(expr: Expression<T> & { kind: "binary" }, opts: Required<TextOptions>): string {
+function renderBinary<T>(
+  expr: Expression<T> & { kind: "binary" },
+  opts: Required<TextOptions>
+): string {
   const leftStr = render(expr.left, opts, PRECEDENCE[expr.op]);
   const rightPrec = expr.op === "^" ? PRECEDENCE[expr.op] : PRECEDENCE[expr.op] + 0.5;
   const rightStr = render(expr.right, opts, rightPrec);
@@ -126,7 +133,10 @@ function renderBinary<T>(expr: Expression<T> & { kind: "binary" }, opts: Require
   }
 }
 
-function renderUnary<T>(expr: Expression<T> & { kind: "unary" }, opts: Required<TextOptions>): string {
+function renderUnary<T>(
+  expr: Expression<T> & { kind: "unary" },
+  opts: Required<TextOptions>
+): string {
   const argStr = render(expr.arg, opts, PRECEDENCE.unary);
 
   switch (expr.op) {
@@ -135,16 +145,24 @@ function renderUnary<T>(expr: Expression<T> & { kind: "unary" }, opts: Required<
     case "abs":
       return `|${render(expr.arg, opts, 0)}|`;
     case "sqrt":
-      return opts.unicode ? `√(${render(expr.arg, opts, 0)})` : `sqrt(${render(expr.arg, opts, 0)})`;
+      return opts.unicode
+        ? `√(${render(expr.arg, opts, 0)})`
+        : `sqrt(${render(expr.arg, opts, 0)})`;
   }
 }
 
-function renderFunction<T>(expr: Expression<T> & { kind: "function" }, opts: Required<TextOptions>): string {
+function renderFunction<T>(
+  expr: Expression<T> & { kind: "function" },
+  opts: Required<TextOptions>
+): string {
   const argStr = render(expr.arg, opts, 0);
   return `${expr.fn}(${argStr})`;
 }
 
-function renderDerivative<T>(expr: Expression<T> & { kind: "derivative" }, opts: Required<TextOptions>): string {
+function renderDerivative<T>(
+  expr: Expression<T> & { kind: "derivative" },
+  opts: Required<TextOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   const v = expr.variable;
 
@@ -154,13 +172,19 @@ function renderDerivative<T>(expr: Expression<T> & { kind: "derivative" }, opts:
   return `d^${expr.order}/d${v}^${expr.order}(${innerStr})`;
 }
 
-function renderIntegral<T>(expr: Expression<T> & { kind: "integral" }, opts: Required<TextOptions>): string {
+function renderIntegral<T>(
+  expr: Expression<T> & { kind: "integral" },
+  opts: Required<TextOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   const symbol = opts.unicode ? "∫" : "int";
   return `${symbol}(${innerStr}) d${expr.variable}`;
 }
 
-function renderLimit<T>(expr: Expression<T> & { kind: "limit" }, opts: Required<TextOptions>): string {
+function renderLimit<T>(
+  expr: Expression<T> & { kind: "limit" },
+  opts: Required<TextOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   const arrow = opts.unicode ? "→" : "->";
   let approach = `${expr.variable} ${arrow} ${expr.approaching}`;
@@ -182,7 +206,10 @@ function renderSum<T>(expr: Expression<T> & { kind: "sum" }, opts: Required<Text
   return `${symbol}[${expr.variable}=${fromStr}..${toStr}](${innerStr})`;
 }
 
-function renderProduct<T>(expr: Expression<T> & { kind: "product" }, opts: Required<TextOptions>): string {
+function renderProduct<T>(
+  expr: Expression<T> & { kind: "product" },
+  opts: Required<TextOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   const fromStr = render(expr.from, opts, 0);
   const toStr = render(expr.to, opts, 0);

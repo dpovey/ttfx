@@ -103,12 +103,16 @@ function renderNode<T>(expr: Expression<T>, opts: Required<LatexOptions>): strin
   }
 }
 
-function renderConstant(value: number, name: string | undefined, opts: Required<LatexOptions>): string {
+function renderConstant(
+  value: number,
+  name: string | undefined,
+  opts: Required<LatexOptions>
+): string {
   if (name) {
     const knownSymbols: Record<string, string> = {
-      "π": "\\pi",
-      "e": "e",
-      "φ": "\\phi",
+      π: "\\pi",
+      e: "e",
+      φ: "\\phi",
       "∞": "\\infty",
       "½": "\\frac{1}{2}",
     };
@@ -172,7 +176,10 @@ function renderVariable(name: string): string {
   return `\\text{${name}}`;
 }
 
-function renderBinary<T>(expr: BinaryOp<unknown, unknown, T>, opts: Required<LatexOptions>): string {
+function renderBinary<T>(
+  expr: BinaryOp<unknown, unknown, T>,
+  opts: Required<LatexOptions>
+): string {
   switch (expr.op) {
     case "+":
       return `${render(expr.left, opts, PRECEDENCE["+"])} + ${render(expr.right, opts, PRECEDENCE["+"] + 0.5)}`;
@@ -238,14 +245,22 @@ function renderPower(
   const expStr = render(right, opts, 0);
 
   // Simple exponents don't need braces
-  if (right.kind === "constant" && Number.isInteger(right.value) && right.value >= 0 && right.value <= 9) {
+  if (
+    right.kind === "constant" &&
+    Number.isInteger(right.value) &&
+    right.value >= 0 &&
+    right.value <= 9
+  ) {
     return `${baseStr}^${right.value}`;
   }
 
   return `${baseStr}^{${expStr}}`;
 }
 
-function renderUnary<T>(expr: Expression<T> & { kind: "unary" }, opts: Required<LatexOptions>): string {
+function renderUnary<T>(
+  expr: Expression<T> & { kind: "unary" },
+  opts: Required<LatexOptions>
+): string {
   switch (expr.op) {
     case "-":
       return `-${render(expr.arg, opts, PRECEDENCE.unary)}`;
@@ -256,7 +271,10 @@ function renderUnary<T>(expr: Expression<T> & { kind: "unary" }, opts: Required<
   }
 }
 
-function renderFunction<T>(expr: Expression<T> & { kind: "function" }, opts: Required<LatexOptions>): string {
+function renderFunction<T>(
+  expr: Expression<T> & { kind: "function" },
+  opts: Required<LatexOptions>
+): string {
   const argStr = render(expr.arg, opts, 0);
 
   const functionCommands: Record<string, string> = {
@@ -292,7 +310,10 @@ function renderFunction<T>(expr: Expression<T> & { kind: "function" }, opts: Req
   return `${cmd}\\left(${argStr}\\right)`;
 }
 
-function renderDerivative<T>(expr: Expression<T> & { kind: "derivative" }, opts: Required<LatexOptions>): string {
+function renderDerivative<T>(
+  expr: Expression<T> & { kind: "derivative" },
+  opts: Required<LatexOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   const v = expr.variable;
 
@@ -302,12 +323,18 @@ function renderDerivative<T>(expr: Expression<T> & { kind: "derivative" }, opts:
   return `\\frac{d^{${expr.order}}}{d${v}^{${expr.order}}}\\left(${innerStr}\\right)`;
 }
 
-function renderIntegral<T>(expr: Expression<T> & { kind: "integral" }, opts: Required<LatexOptions>): string {
+function renderIntegral<T>(
+  expr: Expression<T> & { kind: "integral" },
+  opts: Required<LatexOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   return `\\int ${innerStr} \\, d${expr.variable}`;
 }
 
-function renderLimit<T>(expr: Expression<T> & { kind: "limit" }, opts: Required<LatexOptions>): string {
+function renderLimit<T>(
+  expr: Expression<T> & { kind: "limit" },
+  opts: Required<LatexOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   let approach = `${expr.variable} \\to ${expr.approaching}`;
 
@@ -327,7 +354,10 @@ function renderSum<T>(expr: Expression<T> & { kind: "sum" }, opts: Required<Late
   return `\\sum_{${expr.variable}=${fromStr}}^{${toStr}} ${innerStr}`;
 }
 
-function renderProduct<T>(expr: Expression<T> & { kind: "product" }, opts: Required<LatexOptions>): string {
+function renderProduct<T>(
+  expr: Expression<T> & { kind: "product" },
+  opts: Required<LatexOptions>
+): string {
   const innerStr = render(expr.expr, opts, 0);
   const fromStr = render(expr.from, opts, 0);
   const toStr = render(expr.to, opts, 0);
