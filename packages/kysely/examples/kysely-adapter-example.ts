@@ -6,7 +6,7 @@
  */
 
 import { Kysely, sql } from "kysely";
-import { ksql, ref$, table$, id$, lit$, join$, raw$ } from "@typesugar/kysely";
+import { ksql, ref$, table$, id$, lit$, join$, raw$ } from "@typesugar/kysely-adapter";
 
 console.log("=== Kysely Adapter Example ===\n");
 

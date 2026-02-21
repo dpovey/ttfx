@@ -392,12 +392,12 @@ Effect-TS integration.
 npm install @typesugar/effect
 ```
 
-### @typesugar/kysely
+### @typesugar/kysely-adapter
 
 Kysely integration.
 
 ```bash
-npm install @typesugar/kysely
+npm install @typesugar/kysely-adapter
 ```
 
 **Exports:**

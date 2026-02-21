@@ -1,5 +1,5 @@
 /**
- * @typesugar/kysely
+ * @typesugar/kysely-adapter
  *
  * Kysely adapter for typemacro - type-safe SQL tagged templates that compile
  * to Kysely's RawBuilder for use with Kysely query builder.
@@ -7,7 +7,7 @@
  * ## Usage
  *
  * ```ts
- * import { sql } from "@typesugar/kysely";
+ * import { sql } from "@typesugar/kysely-adapter";
  * import { Kysely, Generated } from "kysely";
  *
  * // Define your database schema
@@ -36,7 +36,7 @@
  * The `ksql` macro provides compile-time SQL validation and transformation:
  *
  * ```ts
- * import { ksql } from "@typesugar/kysely";
+ * import { ksql } from "@typesugar/kysely-adapter";
  *
  * // Compiles to optimized Kysely sql call with type inference
  * const query = ksql<DB>`
@@ -437,7 +437,7 @@ register();
 export function ksql<T = unknown>(_strings: TemplateStringsArray, ..._values: unknown[]): never {
   throw new Error(
     "ksql was not transformed at compile time. " +
-      "Make sure @typesugar/kysely is registered with the transformer."
+      "Make sure @typesugar/kysely-adapter is registered with the transformer."
   );
 }
 
@@ -447,7 +447,7 @@ export function ksql<T = unknown>(_strings: TemplateStringsArray, ..._values: un
 export function ref$(_reference: string): never {
   throw new Error(
     "ref$ was not transformed at compile time. " +
-      "Make sure @typesugar/kysely is registered with the transformer."
+      "Make sure @typesugar/kysely-adapter is registered with the transformer."
   );
 }
 
@@ -457,7 +457,7 @@ export function ref$(_reference: string): never {
 export function table$(_name: string): never {
   throw new Error(
     "table$ was not transformed at compile time. " +
-      "Make sure @typesugar/kysely is registered with the transformer."
+      "Make sure @typesugar/kysely-adapter is registered with the transformer."
   );
 }
 
@@ -467,7 +467,7 @@ export function table$(_name: string): never {
 export function id$(_identifier: string): never {
   throw new Error(
     "id$ was not transformed at compile time. " +
-      "Make sure @typesugar/kysely is registered with the transformer."
+      "Make sure @typesugar/kysely-adapter is registered with the transformer."
   );
 }
 
@@ -477,7 +477,7 @@ export function id$(_identifier: string): never {
 export function lit$<T>(_value: T): never {
   throw new Error(
     "lit$ was not transformed at compile time. " +
-      "Make sure @typesugar/kysely is registered with the transformer."
+      "Make sure @typesugar/kysely-adapter is registered with the transformer."
   );
 }
 
@@ -487,7 +487,7 @@ export function lit$<T>(_value: T): never {
 export function join$<T>(_items: T[], _separator?: unknown): never {
   throw new Error(
     "join$ was not transformed at compile time. " +
-      "Make sure @typesugar/kysely is registered with the transformer."
+      "Make sure @typesugar/kysely-adapter is registered with the transformer."
   );
 }
 
@@ -497,7 +497,7 @@ export function join$<T>(_items: T[], _separator?: unknown): never {
 export function raw$(_sql: string): never {
   throw new Error(
     "raw$ was not transformed at compile time. " +
-      "Make sure @typesugar/kysely is registered with the transformer."
+      "Make sure @typesugar/kysely-adapter is registered with the transformer."
   );
 }
 

@@ -1,17 +1,17 @@
-# @typesugar/drizzle
+# @typesugar/drizzle-adapter
 
 > Drizzle ORM adapter for typesugar type-safe SQL macros.
 
 ## Overview
 
-`@typesugar/drizzle` integrates typesugar SQL macros with Drizzle ORM, providing type-safe SQL tagged templates that compile to Drizzle's `sql` template. Get compile-time SQL validation while using Drizzle's powerful query builder ecosystem.
+`@typesugar/drizzle-adapter` integrates typesugar SQL macros with Drizzle ORM, providing type-safe SQL tagged templates that compile to Drizzle's `sql` template. Get compile-time SQL validation while using Drizzle's powerful query builder ecosystem.
 
 ## Installation
 
 ```bash
-npm install @typesugar/drizzle
+npm install @typesugar/drizzle-adapter
 # or
-pnpm add @typesugar/drizzle
+pnpm add @typesugar/drizzle-adapter
 ```
 
 Requires Drizzle ORM as a peer dependency:
@@ -25,7 +25,7 @@ npm install drizzle-orm
 ### dsql — Type-Safe SQL Templates
 
 ```typescript
-import { dsql } from "@typesugar/drizzle";
+import { dsql } from "@typesugar/drizzle-adapter";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
@@ -44,7 +44,7 @@ const result = await db.execute(query);
 ### ref$ — Column/Table References
 
 ```typescript
-import { ref$ } from "@typesugar/drizzle";
+import { ref$ } from "@typesugar/drizzle-adapter";
 
 const column = ref$("users.name");
 // Compiles to: sql.identifier("users.name")
@@ -53,7 +53,7 @@ const column = ref$("users.name");
 ### id$ — SQL Identifiers
 
 ```typescript
-import { id$ } from "@typesugar/drizzle";
+import { id$ } from "@typesugar/drizzle-adapter";
 
 const col = id$("column_name");
 // Compiles to: sql.identifier("column_name")
@@ -62,7 +62,7 @@ const col = id$("column_name");
 ### raw$ — Raw SQL (Use with Caution)
 
 ```typescript
-import { raw$ } from "@typesugar/drizzle";
+import { raw$ } from "@typesugar/drizzle-adapter";
 
 const now = raw$("NOW()");
 // Compiles to: sql.raw("NOW()")
@@ -73,7 +73,7 @@ const now = raw$("NOW()");
 ### join$ — Join SQL Fragments
 
 ```typescript
-import { join$, dsql } from "@typesugar/drizzle";
+import { join$, dsql } from "@typesugar/drizzle-adapter";
 
 const columns = [dsql`id`, dsql`name`, dsql`email`];
 const cols = join$(columns, dsql`, `);
@@ -86,7 +86,7 @@ To execute Drizzle queries purely and transactionally using the Doobie-inspired 
 
 ```typescript
 import { ConnectionIO } from "@typesugar/sql";
-import { DrizzleQueryable } from "@typesugar/drizzle";
+import { DrizzleQueryable } from "@typesugar/drizzle-adapter";
 
 // A drizzle query builder object
 const query = db.select().from(users).where(eq(users.id, 1));

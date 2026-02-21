@@ -1,17 +1,17 @@
-# @typesugar/kysely
+# @typesugar/kysely-adapter
 
 > Kysely adapter for typesugar type-safe SQL macros.
 
 ## Overview
 
-`@typesugar/kysely` integrates typesugar SQL macros with Kysely, providing type-safe SQL tagged templates that compile to Kysely's RawBuilder. Get compile-time SQL validation while using Kysely's powerful query builder ecosystem.
+`@typesugar/kysely-adapter` integrates typesugar SQL macros with Kysely, providing type-safe SQL tagged templates that compile to Kysely's RawBuilder. Get compile-time SQL validation while using Kysely's powerful query builder ecosystem.
 
 ## Installation
 
 ```bash
-npm install @typesugar/kysely
+npm install @typesugar/kysely-adapter
 # or
-pnpm add @typesugar/kysely
+pnpm add @typesugar/kysely-adapter
 ```
 
 Requires Kysely as a peer dependency:
@@ -25,7 +25,7 @@ npm install kysely
 ### ksql — Type-Safe SQL Templates
 
 ```typescript
-import { ksql } from "@typesugar/kysely";
+import { ksql } from "@typesugar/kysely-adapter";
 import { Kysely } from "kysely";
 
 interface Database {
@@ -52,7 +52,7 @@ const result = await query.execute(db);
 ### ref$ — Column References
 
 ```typescript
-import { ref$ } from "@typesugar/kysely";
+import { ref$ } from "@typesugar/kysely-adapter";
 
 const column = ref$("users.name");
 // Compiles to: sql.ref("users.name")
@@ -61,7 +61,7 @@ const column = ref$("users.name");
 ### table$ — Table References
 
 ```typescript
-import { table$ } from "@typesugar/kysely";
+import { table$ } from "@typesugar/kysely-adapter";
 
 const tbl = table$("users");
 // Compiles to: sql.table("users")
@@ -70,7 +70,7 @@ const tbl = table$("users");
 ### id$ — SQL Identifiers
 
 ```typescript
-import { id$ } from "@typesugar/kysely";
+import { id$ } from "@typesugar/kysely-adapter";
 
 const col = id$("column_name");
 // Compiles to: sql.id("column_name")
@@ -79,7 +79,7 @@ const col = id$("column_name");
 ### lit$ — SQL Literals
 
 ```typescript
-import { lit$ } from "@typesugar/kysely";
+import { lit$ } from "@typesugar/kysely-adapter";
 
 const order = lit$("DESC");
 // Compiles to: sql.lit("DESC")
@@ -90,7 +90,7 @@ const order = lit$("DESC");
 ### join$ — Join SQL Fragments
 
 ```typescript
-import { join$, ksql } from "@typesugar/kysely";
+import { join$, ksql } from "@typesugar/kysely-adapter";
 
 const columns = [ksql`id`, ksql`name`, ksql`email`];
 const cols = join$(columns, ksql`, `);
@@ -100,7 +100,7 @@ const cols = join$(columns, ksql`, `);
 ### raw$ — Raw SQL (Use with Caution)
 
 ```typescript
-import { raw$ } from "@typesugar/kysely";
+import { raw$ } from "@typesugar/kysely-adapter";
 
 const now = raw$("NOW()");
 // Compiles to: sql.raw("NOW()")
@@ -125,7 +125,7 @@ const suspicious = ksql`SELECT * FROM users; DROP TABLE users`;
 ## With Kysely Query Builder
 
 ```typescript
-import { ksql } from "@typesugar/kysely";
+import { ksql } from "@typesugar/kysely-adapter";
 
 // Use in subqueries
 const activeUsers = db

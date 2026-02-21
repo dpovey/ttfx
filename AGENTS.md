@@ -97,7 +97,7 @@ packages/
 ├── units/              # @typesugar/units — units of measure
 ├── strings/            # @typesugar/strings — string manipulation macros
 ├── effect/             # @typesugar/effect — Effect TS integration (@service, @layer, resolveLayer, derives)
-├── kysely/             # @typesugar/kysely — Kysely integration
+├── kysely/             # @typesugar/kysely-adapter — Kysely integration
 ├── unplugin-typesugar/      # unplugin-typesugar — build tool integrations
 ├── eslint-plugin/      # @typesugar/eslint-plugin
 ├── hlist/              # @typesugar/hlist — heterogeneous lists (Boost.Fusion)

@@ -53,7 +53,7 @@ const query = sql`SELECT * FROM users ${whereClause}`;
 ### With Kysely
 
 ```typescript
-import { kyselySql } from "@typesugar/kysely";
+import { kyselySql } from "@typesugar/kysely-adapter";
 
 const result = await db
   .selectFrom("users")

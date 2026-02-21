@@ -88,7 +88,7 @@ alice.toJson(); // JSON serialization
 | Package                              | Description                                                           |
 | ------------------------------------ | --------------------------------------------------------------------- |
 | [@typesugar/effect](packages/effect) | Effect-TS integration (`@service`, `@layer`, `resolveLayer`, derives) |
-| [@typesugar/kysely](packages/kysely) | Kysely integration                                                    |
+| [@typesugar/kysely-adapter](packages/kysely) | Kysely integration                                                    |
 
 ### Tooling
 

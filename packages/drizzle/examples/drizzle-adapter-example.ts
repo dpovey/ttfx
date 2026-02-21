@@ -15,7 +15,7 @@ import {
   join$,
   raw$,
   DrizzleQueryable,
-} from "@typesugar/drizzle";
+} from "@typesugar/drizzle-adapter";
 import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
 import { eq } from "drizzle-orm";
 

@@ -1,5 +1,5 @@
 /**
- * @typesugar/drizzle
+ * @typesugar/drizzle-adapter
  *
  * Drizzle adapter for typemacro - type-safe SQL tagged templates that compile
  * to Drizzle's sql tagged template.
@@ -7,7 +7,7 @@
  * ## Usage
  *
  * ```ts
- * import { dsql } from "@typesugar/drizzle";
+ * import { dsql } from "@typesugar/drizzle-adapter";
  * import { drizzle } from "drizzle-orm/postgres-js";
  *
  * const db = drizzle(client);
@@ -26,7 +26,7 @@
  * The `dsql` macro provides compile-time SQL validation and transformation:
  *
  * ```ts
- * import { dsql, ref$ } from "@typesugar/drizzle";
+ * import { dsql, ref$ } from "@typesugar/drizzle-adapter";
  *
  * // Compiles to optimized Drizzle sql call with type inference
  * const query = dsql`
@@ -333,7 +333,7 @@ register();
 export function dsql<T = unknown>(_strings: TemplateStringsArray, ..._values: unknown[]): never {
   throw new Error(
     "dsql was not transformed at compile time. " +
-      "Make sure @typesugar/drizzle is registered with the transformer."
+      "Make sure @typesugar/drizzle-adapter is registered with the transformer."
   );
 }
 
@@ -343,7 +343,7 @@ export function dsql<T = unknown>(_strings: TemplateStringsArray, ..._values: un
 export function ref$(_reference: string): never {
   throw new Error(
     "ref$ was not transformed at compile time. " +
-      "Make sure @typesugar/drizzle is registered with the transformer."
+      "Make sure @typesugar/drizzle-adapter is registered with the transformer."
   );
 }
 
@@ -353,7 +353,7 @@ export function ref$(_reference: string): never {
 export function id$(_identifier: string): never {
   throw new Error(
     "id$ was not transformed at compile time. " +
-      "Make sure @typesugar/drizzle is registered with the transformer."
+      "Make sure @typesugar/drizzle-adapter is registered with the transformer."
   );
 }
 
@@ -363,7 +363,7 @@ export function id$(_identifier: string): never {
 export function join$<T>(_items: T[], _separator?: unknown): never {
   throw new Error(
     "join$ was not transformed at compile time. " +
-      "Make sure @typesugar/drizzle is registered with the transformer."
+      "Make sure @typesugar/drizzle-adapter is registered with the transformer."
   );
 }
 
@@ -373,7 +373,7 @@ export function join$<T>(_items: T[], _separator?: unknown): never {
 export function raw$(_sql: string): never {
   throw new Error(
     "raw$ was not transformed at compile time. " +
-      "Make sure @typesugar/drizzle is registered with the transformer."
+      "Make sure @typesugar/drizzle-adapter is registered with the transformer."
   );
 }
 
