@@ -193,7 +193,7 @@ function extractStringArg(ctx: MacroContext, arg: ts.Expression, macroName: stri
 /**
  * Convert a ComptimeValue to a boolean (mirrors context.ts logic).
  */
-function comptimeToBoolean(value: import("../core/types.js").ComptimeValue): boolean | null {
+function comptimeToBoolean(value: import("@typesugar/core").ComptimeValue): boolean | null {
   switch (value.kind) {
     case "boolean":
       return value.value;

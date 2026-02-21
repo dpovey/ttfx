@@ -284,7 +284,7 @@ export function tryDeriveViaGeneric(
   }
 
   // Step 2: Obtain GenericMeta
-  let meta = getGenericMeta(typeName);
+  let meta: GenericMeta | undefined | null = getGenericMeta(typeName);
   if (!meta) {
     const mirrorCached = mirrorCache.get(typeName);
     if (mirrorCached === false) {
@@ -462,11 +462,11 @@ export function canDeriveViaGeneric(typeclassName: string, typeName: string): bo
   // Check derivation cache first — if we already derived it, it's derivable
   if (derivationCache.has(`${typeclassName}<${typeName}>`)) return true;
 
-  let meta = getGenericMeta(typeName);
+  let meta: GenericMeta | undefined | null = getGenericMeta(typeName);
   if (!meta) {
     const mirrorCached = mirrorCache.get(typeName);
     if (mirrorCached === false) return false;
-    meta = mirrorCached ?? null;
+    meta = mirrorCached ?? undefined;
   }
   if (!meta) return false;
 
