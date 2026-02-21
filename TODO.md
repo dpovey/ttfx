@@ -8,10 +8,10 @@
 
 2. **Algebraic Data Types (`@adt`)**
    - **What:** A concise syntax for defining ADTs that auto-generates constructors, type guards, and matchers.
-   - **Why:** Reduces boilerplate for sum types and pairs perfectly with the existing `match` macro in `@typesugar/fp`.
+   - **Why:** Reduces boilerplate for sum types and pairs perfectly with the existing `match` macro in `@typesugar/std`.
 
 3. ~~**Structural Pattern Matching (`match!`)**~~ ✅ **Done**
-   - Unified `match()` macro in `@typesugar/fp` with:
+   - Unified `match()` macro in `@typesugar/std` with:
      - Compile-time exhaustiveness checking via type checker
      - Auto-detected discriminants (`kind`, `_tag`, `type`, `tag`, `ok`, etc.)
      - `when()`/`otherwise()` guard syntax

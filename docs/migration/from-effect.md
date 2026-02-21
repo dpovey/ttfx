@@ -125,7 +125,8 @@ Option.match(maybeValue, {
 });
 
 // typesugar
-import { Option, Some, None, match } from "@typesugar/fp";
+import { Option, Some, None } from "@typesugar/fp";
+import { match } from "@typesugar/std";
 
 const maybeValue = Some(42);
 const none = None;

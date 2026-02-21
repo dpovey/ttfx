@@ -219,7 +219,8 @@ npx typesugar doctor
 | `@typesugar/operators` | `@operators()`, `ops()`, `pipe()`                                                             |
 | `@typesugar/typeclass` | `@typeclass`, `@instance`, `@deriving`, `summon<T>()`                                         |
 | `@typesugar/contracts` | `requires:`, `ensures:`, `invariant:`                                                         |
-| `@typesugar/fp`        | `Option`, `Result`, `IO`, `match()`                                                           |
+| `@typesugar/std`       | `match()`, `when()`, `otherwise()`, `isType()`, `P`, extension methods                        |
+| `@typesugar/fp`        | `Option`, `Result`, `IO`                                                                      |
 | `@typesugar/strings`   | `regex`, `html`, `json` tagged templates                                                      |
 | `@typesugar/units`     | `units` tagged template for dimensional analysis                                              |
 

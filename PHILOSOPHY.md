@@ -200,7 +200,7 @@ The implementation:
 
 - Did not actually narrow type parameters
 - Required wrapper types and manual registration
-- Duplicated the `match` macro from `@typesugar/fp`
+- Duplicated the `match` macro from `@typesugar/std`
 - Was strictly less capable than native TypeScript discriminated unions
 
 **Decision**: Drop it entirely. Document real GADTs (with type-parameter narrowing via type-checker integration) as a future project worth doing properly.

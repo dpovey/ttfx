@@ -49,7 +49,7 @@ opt.match({
 ### Pattern Matching
 
 ```typescript
-import { match } from "@typesugar/fp";
+import { match } from "@typesugar/std";
 
 const message = match(findUser(42), {
   some: (user) => `Hello, ${user.name}`,
