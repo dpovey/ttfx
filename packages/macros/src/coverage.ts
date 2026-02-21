@@ -334,4 +334,5 @@ setCoverageHooks(registerPrimitive, validateCoverageOrError);
 // Exports
 // ============================================================================
 
-export { primitiveRegistry, CoverageConfig, CoverageResult, FieldInfo };
+export type { CoverageConfig, CoverageResult, FieldInfo };
+export { primitiveRegistry };
