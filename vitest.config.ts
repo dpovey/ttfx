@@ -4,36 +4,24 @@ import typemacro from "unplugin-typesugar/vite";
 export default defineConfig({
   plugins: [typemacro({ verbose: true })],
   test: {
-    // Run tests sequentially for more predictable output
     pool: "forks",
 
-    // Increase pool timeout for CI environments
     poolOptions: {
       forks: {
-        singleFork: true, // Run all tests in a single fork to avoid worker timeout issues
+        maxForks: 2,
       },
     },
 
-    // Test file patterns
     include: ["tests/**/*.test.ts"],
 
-    // Exclude patterns
-    exclude: [
-      "node_modules",
-      "dist",
-      // These tests reference moved code and need updating
-      "tests/react/**",
-    ],
+    exclude: ["node_modules", "dist", "tests/react/**"],
 
-    // TypeScript configuration
     typecheck: {
-      enabled: false, // Separate type checking from test running
+      enabled: false,
     },
 
-    // Reporter configuration
     reporters: ["verbose"],
 
-    // Coverage configuration (optional)
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
@@ -41,10 +29,7 @@ export default defineConfig({
       exclude: ["**/*.d.ts", "**/*.test.ts"],
     },
 
-    // Timeout for individual tests (ms) — generous to avoid flakiness on CI
     testTimeout: 30000,
-
-    // Hooks timeout (ms)
     hookTimeout: 15000,
   },
 });
