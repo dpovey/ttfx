@@ -82,45 +82,62 @@ export const TWO: Constant<number> = const_(2);
 export const HALF: Constant<number> = const_(0.5, "½");
 
 // ============================================================================
+// Auto-wrapping: numbers become constants automatically
+// ============================================================================
+
+/** Input that can be an Expression or a raw number (auto-wrapped) */
+export type ExprLike<T> = Expression<T> | number;
+
+/** Convert ExprLike to Expression, wrapping numbers as constants */
+function toExpr<T>(e: ExprLike<T>): Expression<T> {
+  return typeof e === "number" ? (const_(e) as Expression<T>) : e;
+}
+
+// ============================================================================
 // Binary Operations
 // ============================================================================
 
 /**
  * Addition: a + b
+ * Accepts raw numbers which are auto-wrapped as constants.
  */
-export function add<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Add<A, B>> {
-  return { kind: "binary", op: "+", left, right };
+export function add<A, B>(left: ExprLike<A>, right: ExprLike<B>): BinaryOp<A, B, Add<A, B>> {
+  return { kind: "binary", op: "+", left: toExpr(left), right: toExpr(right) };
 }
 
 /**
  * Subtraction: a - b
+ * Accepts raw numbers which are auto-wrapped as constants.
  */
-export function sub<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Sub<A, B>> {
-  return { kind: "binary", op: "-", left, right };
+export function sub<A, B>(left: ExprLike<A>, right: ExprLike<B>): BinaryOp<A, B, Sub<A, B>> {
+  return { kind: "binary", op: "-", left: toExpr(left), right: toExpr(right) };
 }
 
 /**
  * Multiplication: a * b
+ * Accepts raw numbers which are auto-wrapped as constants.
  */
-export function mul<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Mul<A, B>> {
-  return { kind: "binary", op: "*", left, right };
+export function mul<A, B>(left: ExprLike<A>, right: ExprLike<B>): BinaryOp<A, B, Mul<A, B>> {
+  return { kind: "binary", op: "*", left: toExpr(left), right: toExpr(right) };
 }
 
 /**
  * Division: a / b
+ * Accepts raw numbers which are auto-wrapped as constants.
  */
-export function div<A, B>(left: Expression<A>, right: Expression<B>): BinaryOp<A, B, Div<A, B>> {
-  return { kind: "binary", op: "/", left, right };
+export function div<A, B>(left: ExprLike<A>, right: ExprLike<B>): BinaryOp<A, B, Div<A, B>> {
+  return { kind: "binary", op: "/", left: toExpr(left), right: toExpr(right) };
 }
 
 /**
  * Power: a ^ b
+ * Accepts raw numbers which are auto-wrapped as constants.
  */
 export function pow<A>(
-  base: Expression<A>,
-  exponent: Expression<number>
+  base: ExprLike<A>,
+  exponent: ExprLike<number>
 ): BinaryOp<A, number, Pow<A, number>> {
-  return { kind: "binary", op: "^", left: base, right: exponent };
+  return { kind: "binary", op: "^", left: toExpr(base), right: toExpr(exponent) };
 }
 
 // ============================================================================
