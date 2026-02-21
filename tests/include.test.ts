@@ -57,6 +57,7 @@ describe("compile-time file I/O macros", () => {
     const host = ts.createCompilerHost(options);
     const program = ts.createProgram([sourceFilePath], options, {
       ...host,
+      getCurrentDirectory: () => tmpDir,
       getSourceFile: (name) =>
         name === sourceFilePath
           ? sourceFile

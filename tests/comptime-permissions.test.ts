@@ -80,7 +80,11 @@ function transformSource(source: string): {
     },
   };
 
-  const program = ts.createProgram([mainFile], options);
+  const host = ts.createCompilerHost(options);
+  const program = ts.createProgram([mainFile], options, {
+    ...host,
+    getCurrentDirectory: () => tmpDir,
+  });
   const sourceFile = program.getSourceFile(mainFile)!;
 
   const transformerFactory = macroTransformerFactory(program, {

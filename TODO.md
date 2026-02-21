@@ -38,3 +38,45 @@
 7. **Deep-Type Compatibility Checking (`@typesugar/mapper`)**
    - **What:** Add recursive deep-type compatibility checking to the `transformInto` macro.
    - **Why:** To ensure nested objects and complex mappings strictly adhere to the target type without runtime mapping errors.
+
+## Soundness & Type Safety
+
+- [ ] **Post-expansion type checking** — Macro expansions are not re-type-checked after the transformer runs. Explore running a second `tsc` pass on expanded output, or integrating with TypeScript's incremental checker to validate generated code. (Analysis §4.1)
+- [ ] **Specialization diagnostics** — Emit compile-time warnings when `specialize` falls back to dictionary passing (early returns, try/catch, loops, mutable state). Currently the fallback is silent — users have no way to know their "zero-cost" code isn't actually zero-cost. (Analysis §4.6)
+- [ ] **Binding-time analysis for specialization** — Replace the ad-hoc "can we inline this?" checks in `specialize.ts` with a proper binding-time analysis pass that statically determines specialization feasibility before attempting it. (Analysis §4.6)
+- [ ] **Macro expansion cycle detection** — No expansion depth limit or cycle detection exists for recursive re-expansion of macro results. Add a configurable max depth with a clear compile error when exceeded. (Analysis §4.7)
+
+## Coherence & Instance Resolution
+
+- [ ] **Orphan instance detection** — `CoherenceChecker` exists with priority-based conflict detection, but there are no orphan rules (instances must be defined in the module of the typeclass or the type). In JS, this is especially dangerous since module execution order can be non-deterministic. (Analysis §4.3)
+- [ ] **Integrate resolution traces into error messages** — `packages/core/src/resolution-trace.ts` collects resolution events but they're not attached to `summon()` failure diagnostics. When resolution fails, show what was tried and why each path failed.
+- [ ] **Migrate all error paths to rich diagnostics** — Some code still uses legacy `ctx.reportError()` (string-based) instead of `ctx.diagnostic()` (rich builder with spans, notes, suggestions). Audit and migrate remaining call sites.
+
+## Source Maps & Debugging
+
+- [ ] **AST transformer source maps** — The preprocessor generates source maps via `magic-string`, but the AST transformer returns `map: null`. Breakpoints and stack traces for macro-expanded code point to generated code rather than the original macro call site. `ExpansionTracker.generateSourceMap()` is referenced in comments but not implemented.
+- [ ] **Debug mode with expansion comments** — Consider a debug/development mode that emits inline comments in generated code showing the original macro invocation, making transformed output easier to read.
+
+## Build & Bundle Optimization
+
+- [ ] **Tree-shaking: `/*#__PURE__*/` annotations on generated code** — The transformer should auto-emit `/*#__PURE__*/` on generated instance constants and other side-effect-free expressions. Currently only the unplugin export has this annotation. Without it, bundlers can't eliminate unused auto-derived instances.
+- [ ] **`sideEffects: false` in package.json** — None of the packages declare `sideEffects: false`, so bundlers treat all exports as potentially side-effectful.
+- [ ] **Lazy/tree-shakeable instance registration** — `registerInstance()` calls are side-effectful and anchor unused instances in the bundle. Consider lazy registration (register on first `summon()`) or making registration eliminable.
+
+## Tooling & DX
+
+- [ ] **Prettier plugin** — Custom syntax (`|>`, `::`, `F<_>`) breaks Prettier. Need a Prettier plugin or pre-processor integration so files can be auto-formatted.
+- [ ] **Unplugin HMR/watch mode** — The unplugin creates `ts.Program` once at `buildStart` and never invalidates it. During dev mode, type information goes stale as files change. Add watch mode support with incremental program updates and proper cache invalidation.
+
+## Language Design
+
+- [ ] **`===` operator semantics** — Rewriting `===` from reference equality to structural equality is the biggest "principle of least surprise" concern. Consider whether structural equality should use a distinct operator (e.g., `==` or a custom operator via the preprocessor) rather than overloading `===`. (Analysis §4.2)
+- [ ] **True lexical hygiene** — Current hygiene is name-mangling (`gensym`-style), not true lexical hygiene (Racket/`syntax-case`). Investigate whether TypeScript's Symbol API can support scope-aware identifier tracking so macros can reliably refer to bindings from their definition site. (Analysis §4.5)
+- [ ] **Phase separation in unplugin path** — The preprocessor rewrites `F<_>` to `$<F, A>` at the text level, but the type checker sees the original source. Type information during AST transformation may not match the actual code being compiled. (Analysis §4.4)
+
+## Cross-Cutting Concerns (Analysis §4.8)
+
+- [ ] **`defineWrappingMacro()` helper** — No uniform helper for body-wrapping macros. Each `@profiled`/`@traced`/`@retry` macro would need to independently handle async, generators, arrow functions, method vs standalone, `cfg()` stripping, and composition ordering. A shared helper would unblock the entire category.
+- [ ] **Validate + refined type integration** — `@typesugar/validate` and `@typesugar/type-system` refined types are not wired together. `generateValidationChecks` sees `Refined<number, Positive>` as plain `number` and misses the registered predicate `n > 0`.
+- [ ] **Call-site analysis macros** — `@deprecated` (warn at callers), `@mustUse` (detect discarded return values), taint tracking — all need call-site analysis. The transformer is definition-oriented; `moduleIndex()`/`collectTypes()` exist but aren't integrated into the expansion pipeline for definition-site macros to trigger call-site diagnostics.
+- [ ] **Type-directed taint tracking** — Branded `TaintedString = Refined<string, "Tainted">` + `@sanitized` functions + contracts prover for compile-time sink verification. All pieces exist; composition does not.

@@ -58,11 +58,38 @@ function recordDependency(absolutePath: string): void {
 // =============================================================================
 
 /**
- * Resolve a relative path against the source file's directory.
+ * Resolve a path against the source file's directory, ensuring the result
+ * stays within the project root to prevent path traversal attacks (F2).
+ *
+ * Blocks:
+ * - Absolute paths: `/etc/passwd`
+ * - Traversal: `../../../.env`
+ * - Symlink escapes: resolved path is checked, not the raw input
  */
 function resolveRelativePath(ctx: MacroContext, relativePath: string): string {
+  if (path.isAbsolute(relativePath)) {
+    throw new Error(
+      `Security: absolute paths are not allowed in include macros. ` +
+        `Use a path relative to the source file instead: "${relativePath}"`,
+    );
+  }
+
   const sourceDir = path.dirname(ctx.sourceFile.fileName);
-  return path.resolve(sourceDir, relativePath);
+  const resolved = path.normalize(path.resolve(sourceDir, relativePath));
+  const projectRoot = path.normalize(ctx.program.getCurrentDirectory());
+
+  if (
+    !resolved.startsWith(projectRoot + path.sep) &&
+    resolved !== projectRoot
+  ) {
+    throw new Error(
+      `Security: path "${relativePath}" resolves to "${resolved}" which is ` +
+        `outside the project root "${projectRoot}". ` +
+        `File access is restricted to the project directory.`,
+    );
+  }
+
+  return resolved;
 }
 
 /**

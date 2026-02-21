@@ -31,6 +31,37 @@
 import * as ts from "typescript";
 
 // =============================================================================
+// Source Map Preservation Helper
+// =============================================================================
+
+/**
+ * Preserve source map information when replacing an original node with a new synthetic node.
+ *
+ * TypeScript's emitter uses source map ranges on AST nodes to generate source maps.
+ * Synthetic nodes (created by macro expansion) have pos: -1, end: -1 by default,
+ * which produces no source map entries. This helper copies the source map range
+ * from the original macro call site to the expanded output, so debuggers and
+ * stack traces point to the original source location.
+ *
+ * @param newNode - The synthetic node produced by macro expansion
+ * @param originalNode - The original node (macro call site) being replaced
+ * @returns The newNode with source map range set to originalNode's range
+ *
+ * @example
+ * ```typescript
+ * const expanded = macro.expand(ctx, node, args);
+ * return preserveSourceMap(expanded, node);
+ * ```
+ */
+export function preserveSourceMap<T extends ts.Node>(
+  newNode: T,
+  originalNode: ts.Node,
+): T {
+  ts.setSourceMapRange(newNode, ts.getSourceMapRange(originalNode));
+  return newNode;
+}
+
+// =============================================================================
 // Expansion Record
 // =============================================================================
 
@@ -61,7 +92,30 @@ export interface ExpansionRecord {
 
   /** Whether the expansion was from cache */
   fromCache: boolean;
+
+  /** Package that provided this macro (for audit trail) */
+  sourcePackage?: string;
+
+  /** Number of unhygienic identifiers introduced */
+  unhygienicEscapes?: number;
 }
+
+/**
+ * Patterns in expanded output that may indicate security concerns.
+ * Used by the audit report to flag suspicious expansions.
+ */
+const SUSPICIOUS_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
+  { pattern: /\beval\s*\(/, label: "eval()" },
+  { pattern: /\bnew\s+Function\s*\(/, label: "new Function()" },
+  {
+    pattern: /\brequire\s*\(\s*['"]child_process['"]/,
+    label: "require('child_process')",
+  },
+  { pattern: /\brequire\s*\(\s*['"]fs['"]/, label: "require('fs')" },
+  { pattern: /\bprocess\.env\b/, label: "process.env access" },
+  { pattern: /\bfetch\s*\(\s*['"]https?:\/\//, label: "network fetch" },
+  { pattern: /\bimport\s*\(/, label: "dynamic import()" },
+];
 
 // =============================================================================
 // Expansion Tracker
@@ -204,9 +258,127 @@ export class ExpansionTracker {
         original: e.originalText,
         expanded: e.expandedText,
         cached: e.fromCache,
+        package: e.sourcePackage,
       })),
     };
   }
+
+  /**
+   * Scan all expansions for suspicious patterns in expanded output.
+   * Returns a list of flagged expansions with the matched pattern labels.
+   */
+  auditExpansions(): Array<{ record: ExpansionRecord; flags: string[] }> {
+    const flagged: Array<{ record: ExpansionRecord; flags: string[] }> = [];
+
+    for (const record of this.expansions) {
+      const flags: string[] = [];
+      for (const { pattern, label } of SUSPICIOUS_PATTERNS) {
+        if (pattern.test(record.expandedText)) {
+          flags.push(label);
+        }
+      }
+      if (record.unhygienicEscapes && record.unhygienicEscapes > 0) {
+        flags.push(`${record.unhygienicEscapes} unhygienic escape(s)`);
+      }
+      if (flags.length > 0) {
+        flagged.push({ record, flags });
+      }
+    }
+
+    return flagged;
+  }
+
+  /**
+   * Generate a security audit report.
+   * Lists all expansions with suspicious patterns flagged.
+   */
+  generateAuditReport(): string {
+    const flagged = this.auditExpansions();
+
+    if (flagged.length === 0 && this.expansions.length > 0) {
+      return (
+        `Security Audit: ${this.expansions.length} macro expansion(s), ` +
+        `0 suspicious patterns detected.`
+      );
+    }
+
+    if (this.expansions.length === 0) {
+      return "Security Audit: No macro expansions recorded.";
+    }
+
+    const lines: string[] = [
+      `Security Audit Report (${flagged.length} flagged / ${this.expansions.length} total)`,
+      "=".repeat(70),
+      "",
+    ];
+
+    for (const { record, flags } of flagged) {
+      const pkg = record.sourcePackage ?? "unknown";
+      lines.push(
+        `  [${flags.join(", ")}]`,
+        `  Macro: ${record.macroName} (from ${pkg})`,
+        `  File:  ${record.originalFile}:${record.originalLine}`,
+        `  Input: ${truncate(record.originalText, 80)}`,
+        `  Output: ${truncate(record.expandedText, 80)}`,
+        "",
+      );
+    }
+
+    return lines.join("\n");
+  }
+
+  /**
+   * Generate a JSON audit log suitable for CI diffing.
+   * Deterministic output: sorted by file, then line, no timestamps.
+   */
+  toAuditJSON(): object {
+    const sorted = [...this.expansions].sort((a, b) => {
+      const fileCmp = a.originalFile.localeCompare(b.originalFile);
+      if (fileCmp !== 0) return fileCmp;
+      return a.originalLine - b.originalLine;
+    });
+
+    const flaggedSet = new Set(this.auditExpansions().map((f) => f.record));
+
+    return {
+      version: 1,
+      totalExpansions: sorted.length,
+      flaggedCount: flaggedSet.size,
+      files: Object.fromEntries(
+        groupBy(sorted, (e) => e.originalFile).map(([file, exps]) => [
+          file,
+          {
+            expansions: exps.map((e) => ({
+              macro: e.macroName,
+              package: e.sourcePackage ?? "unknown",
+              line: e.originalLine,
+              original: e.originalText,
+              expanded: e.expandedText,
+              unhygienicEscapes: e.unhygienicEscapes ?? 0,
+              flags: flaggedSet.has(e)
+                ? (this.auditExpansions().find((f) => f.record === e)?.flags ??
+                  [])
+                : [],
+            })),
+          },
+        ]),
+      ),
+    };
+  }
+}
+
+function groupBy<T>(
+  items: T[],
+  keyFn: (item: T) => string,
+): Array<[string, T[]]> {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyFn(item);
+    const arr = map.get(key) ?? [];
+    arr.push(item);
+    map.set(key, arr);
+  }
+  return [...map.entries()];
 }
 
 /**

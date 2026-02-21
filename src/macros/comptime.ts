@@ -74,11 +74,15 @@ const MAX_ITERATIONS = 100_000;
 /**
  * Create a permission-checked fs module for the sandbox.
  * Permissions are passed directly and checked at each operation.
+ * All resolved paths are validated against projectRoot to prevent traversal.
  */
 function createSandboxFs(
   baseDir: string,
+  projectRoot: string,
   permissions: ComptimePermissions,
 ): Record<string, unknown> {
+  const normalizedRoot = nodePath.normalize(projectRoot);
+
   const checkRead = () => {
     const fsPermission = permissions.fs;
     if (!fsPermission || fsPermission === false) {
@@ -95,9 +99,25 @@ function createSandboxFs(
 
   const resolvePath = (relativePath: string): string => {
     if (nodePath.isAbsolute(relativePath)) {
-      return relativePath;
+      throw new Error(
+        `Security: absolute paths are not allowed in comptime fs. ` +
+          `Use a path relative to the source file instead: "${relativePath}"`,
+      );
     }
-    return nodePath.resolve(baseDir, relativePath);
+    const resolved = nodePath.normalize(
+      nodePath.resolve(baseDir, relativePath),
+    );
+    if (
+      !resolved.startsWith(normalizedRoot + nodePath.sep) &&
+      resolved !== normalizedRoot
+    ) {
+      throw new Error(
+        `Security: path "${relativePath}" resolves to "${resolved}" which is ` +
+          `outside the project root "${normalizedRoot}". ` +
+          `File access is restricted to the project directory.`,
+      );
+    }
+    return resolved;
   };
 
   return {
@@ -210,9 +230,10 @@ function createSandboxProcess(
  */
 function createSandboxRequire(
   baseDir: string,
+  projectRoot: string,
   permissions: ComptimePermissions,
 ): (moduleName: string) => unknown {
-  const sandboxFs = createSandboxFs(baseDir, permissions);
+  const sandboxFs = createSandboxFs(baseDir, projectRoot, permissions);
   const sandboxProcess = createSandboxProcess(baseDir, permissions);
 
   return (moduleName: string): unknown => {
@@ -432,11 +453,10 @@ function evaluateViaVm(
 
   // Get the base directory for relative path resolution
   const baseDir = nodePath.dirname(ctx.sourceFile.fileName);
+  const projectRoot = ctx.program.getCurrentDirectory();
 
   try {
-    // Create sandbox with permissions baked in
-    // Note: We create a new sandbox for each call because permissions vary
-    const sandbox = createComptimeSandbox(baseDir, permissions);
+    const sandbox = createComptimeSandbox(baseDir, projectRoot, permissions);
     const context = vm.createContext(sandbox);
 
     const result = vm.runInContext(cleanedJs, context, {
@@ -558,11 +578,16 @@ function formatComptimeError(
  */
 function createComptimeSandbox(
   baseDir: string,
+  projectRoot: string,
   permissions: ComptimePermissions,
 ): Record<string, unknown> {
-  const sandboxFs = createSandboxFs(baseDir, permissions);
+  const sandboxFs = createSandboxFs(baseDir, projectRoot, permissions);
   const sandboxProcess = createSandboxProcess(baseDir, permissions);
-  const sandboxRequire = createSandboxRequire(baseDir, permissions);
+  const sandboxRequire = createSandboxRequire(
+    baseDir,
+    projectRoot,
+    permissions,
+  );
 
   return {
     // Safe built-ins
