@@ -5,16 +5,16 @@ Consistent branding across CLI, docs, packages, and GitHub.
 ## Identity
 
 - **Name:** typesugar (always lowercase)
-- **Tagline:** Zero-cost typeclasses for TypeScript
+- **Tagline:** Syntactic sugar for TypeScript with zero calories
 - **Logo:** Crystalline sugar cube, purple-to-pink gradient, four-pointed sparkles
 
 ## Emoji Convention
 
-| Emoji | Use |
-| ----- | --- |
-| 🧊 | Primary brand mark — CLI headers, banners, log prefixes, package descriptions |
-| ✨ | Success states — "compiled", "setup complete", "all checks passed" |
-| ✓/✗/⚠ | Status indicators in CLI output (pass/fail/warn) |
+| Emoji | Use                                                                           |
+| ----- | ----------------------------------------------------------------------------- |
+| 🧊    | Primary brand mark — CLI headers, banners, log prefixes, package descriptions |
+| ✨    | Success states — "compiled", "setup complete", "all checks passed"            |
+| ✓/✗/⚠ | Status indicators in CLI output (pass/fail/warn)                              |
 
 ### CLI Output Examples
 
@@ -34,31 +34,31 @@ Consistent branding across CLI, docs, packages, and GitHub.
 Prefix the `description` field in each package.json with 🧊:
 
 ```json
-"description": "🧊 Compile-time macros for TypeScript"
+"description": "🧊 Syntactic sugar for TypeScript with zero calories"
 ```
 
 ## Colors
 
 ### Brand Palette (CSS/Docs)
 
-| Token | Hex | Use |
-| ----- | --- | --- |
-| Purple | `#8b5cf6` | Primary brand, light mode |
-| Purple light | `#a78bfa` | Primary brand, dark mode |
-| Purple deep | `#7c3aed` | Accents |
-| Pink | `#ec4899` | Gradient stop |
-| Orange | `#f97316` | Gradient stop |
+| Token        | Hex       | Use                       |
+| ------------ | --------- | ------------------------- |
+| Purple       | `#8b5cf6` | Primary brand, light mode |
+| Purple light | `#a78bfa` | Primary brand, dark mode  |
+| Purple deep  | `#7c3aed` | Accents                   |
+| Pink         | `#ec4899` | Gradient stop             |
+| Orange       | `#f97316` | Gradient stop             |
 
 ### CLI Colors (ANSI)
 
-| Color | Use |
-| ----- | --- |
+| Color         | Use                    |
+| ------------- | ---------------------- |
 | Cyan (bright) | Headers, command names |
-| Green | Success, pass |
-| Red | Error, fail |
-| Yellow | Warning |
-| Blue | Fix suggestions |
-| Dim | Secondary text |
+| Green         | Success, pass          |
+| Red           | Error, fail            |
+| Yellow        | Warning                |
+| Blue          | Fix suggestions        |
+| Dim           | Secondary text         |
 
 ## Old Names
 

@@ -1,10 +1,32 @@
 # @typesugar/derive
 
-> Auto-derive common implementations for TypeScript types.
+> Syntactic sugar for TypeScript with zero calories.
 
 ## Overview
 
-`@typesugar/derive` provides Rust-style derive macros for TypeScript. Annotate your interfaces, classes, or type aliases with `@derive()` and the macro generates implementations at compile time — no runtime reflection, no code generation scripts.
+Typeclass operations work automatically on any type with derivable structure:
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const alice: User = { id: 1, name: "Alice", email: "alice@example.com" };
+const bob: User = { id: 2, name: "Bob", email: "bob@example.com" };
+
+// Operators just work — auto-derived, auto-specialized
+alice === bob; // false (compiles to: alice.id === bob.id && ...)
+alice < bob; // true  (lexicographic comparison)
+
+// Methods just work too
+alice.show(); // "User(id = 1, name = Alice, email = alice@example.com)"
+alice.clone(); // deep copy
+alice.toJson(); // JSON serialization
+```
+
+**No decorators. No imports.** The compiler derives typeclasses from type structure and inlines them to zero-cost code.
 
 ## Installation
 
@@ -14,7 +36,36 @@ npm install @typesugar/derive
 pnpm add @typesugar/derive
 ```
 
-## Usage
+## Implicit Usage (Default)
+
+Just use operators and methods on your types:
+
+```typescript
+interface Point {
+  x: number;
+  y: number;
+}
+
+const p1: Point = { x: 1, y: 2 };
+const p2: Point = { x: 1, y: 2 };
+
+p1 === p2; // true  — Eq typeclass
+p1 < p2; // false — Ord typeclass
+p1.show(); // "Point(x = 1, y = 2)" — Show typeclass
+p1.clone(); // { x: 1, y: 2 } — Clone typeclass
+p1.hash(); // 12345 — Hash typeclass
+```
+
+Everything compiles to direct code:
+
+```typescript
+// p1 === p2 compiles to:
+p1.x === p2.x && p1.y === p2.y;
+```
+
+## Explicit Derivation (Optional)
+
+Use `@derive()` to document capabilities in the type definition:
 
 ```typescript
 import { derive } from "@typesugar/derive";
@@ -25,178 +76,133 @@ interface User {
   name: string;
   email?: string;
 }
-
-// Generated functions:
-// - userEq(a: User, b: User): boolean
-// - userCompare(a: User, b: User): -1 | 0 | 1
-// - cloneUser(value: User): User
-// - debugUser(value: User): string
-// - hashUser(value: User): number
-// - defaultUser(): User
-// - userToJson(value: User): string
-// - userFromJson(json: string): User
-// - class UserBuilder { withId(id: number): UserBuilder; ... build(): User; }
 ```
 
-## Available Derives
+This is **purely documentation** — the same operations work without the decorator.
 
-### Eq
+## Available Typeclasses
 
-Generate an equality comparison function.
+### Eq — Equality
 
 ```typescript
-@derive(Eq)
-interface Point { x: number; y: number; }
-
-// Generated:
-function pointEq(a: Point, b: Point): boolean {
-  return a.x === b.x && a.y === b.y;
+interface Point {
+  x: number;
+  y: number;
 }
+
+p1 === p2; // true
+p1.eq(p2); // true (method form)
 ```
 
-### Ord
-
-Generate a comparison function for ordering.
+### Ord — Ordering
 
 ```typescript
-@derive(Ord)
-interface Point { x: number; y: number; }
-
-// Generated:
-function pointCompare(a: Point, b: Point): -1 | 0 | 1 {
-  if (a.x < b.x) return -1;
-  if (a.x > b.x) return 1;
-  if (a.y < b.y) return -1;
-  if (a.y > b.y) return 1;
-  return 0;
+interface Version {
+  major: number;
+  minor: number;
 }
+
+v1 < v2; // true (lexicographic by field order)
+v1.compare(v2); // -1
 ```
 
-### Clone
-
-Generate a deep clone function.
+### Show — String Representation
 
 ```typescript
-@derive(Clone)
-interface Point { x: number; y: number; }
-
-// Generated:
-function clonePoint(value: Point): Point {
-  return { x: value.x, y: value.y };
+interface User {
+  id: number;
+  name: string;
 }
+
+user.show(); // "User(id = 1, name = Alice)"
 ```
 
-### Debug
-
-Generate a debug string representation.
+### Clone — Deep Copy
 
 ```typescript
-@derive(Debug)
-interface Point { x: number; y: number; }
-
-// Generated:
-function debugPoint(value: Point): string {
-  return `Point { x: ${JSON.stringify(value.x)}, y: ${JSON.stringify(value.y)} }`;
+interface Config {
+  settings: Map<string, string>;
 }
 
-debugPoint({ x: 1, y: 2 }); // "Point { x: 1, y: 2 }"
+const c2 = c1.clone(); // Deep copy
 ```
 
-### Hash
-
-Generate a hash function (djb2-style).
+### Hash — Hash Code
 
 ```typescript
-@derive(Hash)
-interface Point { x: number; y: number; }
-
-// Generated:
-function hashPoint(value: Point): number {
-  let hash = 5381;
-  hash = ((hash << 5) + hash) + (value.x | 0);
-  hash = ((hash << 5) + hash) + (value.y | 0);
-  return hash >>> 0;
+interface Point {
+  x: number;
+  y: number;
 }
+
+point.hash(); // Consistent number for hash maps
 ```
 
-### Default
-
-Generate a default value factory.
+### Default — Default Value
 
 ```typescript
-@derive(Default)
-interface Point { x: number; y: number; }
-
-// Generated:
-function defaultPoint(): Point {
-  return { x: 0, y: 0 };
+interface Options {
+  enabled: boolean;
+  count: number;
 }
+
+Options.default(); // { enabled: false, count: 0 }
 ```
 
-### Json
-
-Generate JSON serialization and deserialization with validation.
+### Json — Serialization
 
 ```typescript
-@derive(Json)
-interface User { id: number; name: string; }
-
-// Generated:
-function userToJson(value: User): string {
-  return JSON.stringify(value);
+interface User {
+  id: number;
+  name: string;
 }
 
-function userFromJson(json: string): User {
-  const obj = JSON.parse(json);
-  if (obj.id === undefined) throw new Error("Missing required field: id");
-  if (typeof obj.id !== "number") throw new Error("Field id must be number");
-  // ... more validation
-  return obj as User;
+user.toJson(); // '{"id":1,"name":"Alice"}'
+User.fromJson(json); // { id: 1, name: "Alice" }
+```
+
+### Builder — Fluent Builder
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email?: string;
+}
+
+new UserBuilder().withId(1).withName("Alice").build();
+```
+
+### TypeGuard — Runtime Type Check
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+}
+
+if (User.isUser(data)) {
+  console.log(data.name); // data is typed as User
 }
 ```
 
-### Builder
+## Custom Instances
 
-Generate a fluent builder pattern.
-
-```typescript
-@derive(Builder)
-interface User { id: number; name: string; email?: string; }
-
-// Generated:
-class UserBuilder {
-  private _id: number = 0;
-  private _name: string = "";
-  private _email: string | undefined = undefined;
-
-  withId(id: number): UserBuilder { this._id = id; return this; }
-  withName(name: string): UserBuilder { this._name = name; return this; }
-  withEmail(email: string | undefined): UserBuilder { this._email = email; return this; }
-
-  build(): User {
-    return { id: this._id, name: this._name, email: this._email };
-  }
-}
-
-// Usage:
-const user = new UserBuilder().withId(1).withName("Alice").build();
-```
-
-### TypeGuard
-
-Generate a runtime type guard function.
+When you need non-standard behavior:
 
 ```typescript
-@derive(TypeGuard)
-interface User { id: number; name: string; }
+import { instance } from "@typesugar/typeclass";
 
-// Generated:
-function isUser(value: unknown): value is User {
-  if (typeof value !== "object" || value === null) return false;
-  const obj = value as Record<string, unknown>;
-  return typeof obj["id"] === "number"
-      && typeof obj["name"] === "string";
+interface User {
+  id: number;
+  name: string;
+  passwordHash: string;  // Should not affect equality
 }
+
+@instance
+const userEq: Eq<User> = {
+  eq: (a, b) => a.id === b.id && a.name === b.name,
+};
 ```
 
 ## API Reference
@@ -215,10 +221,6 @@ function isUser(value: unknown): value is User {
 - `EqDerive`, `OrdDerive`, `CloneDerive`, `DebugDerive`
 - `HashDerive`, `DefaultDerive`, `JsonDerive`, `BuilderDerive`
 - `TypeGuardDerive`
-
-### Registration
-
-- `register()` — Register all derive macros (called automatically on import)
 
 ## License
 

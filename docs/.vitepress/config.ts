@@ -2,7 +2,7 @@ import { defineConfig } from "vitepress";
 
 export default defineConfig({
   title: "typesugar",
-  description: "Zero-cost typeclasses for TypeScript",
+  description: "Syntactic sugar for TypeScript with zero calories",
 
   head: [
     ["link", { rel: "icon", type: "image/png", href: "/logo.png" }],
@@ -13,7 +13,7 @@ export default defineConfig({
       "meta",
       {
         property: "og:description",
-        content: "Zero-cost typeclasses for TypeScript",
+        content: "Syntactic sugar for TypeScript with zero calories",
       },
     ],
   ],

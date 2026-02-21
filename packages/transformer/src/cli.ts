@@ -90,7 +90,7 @@ function parseArgs(args: string[]): CliOptions {
 
 function printHelp(): void {
   console.log(`
-🧊 typesugar — Compile-time macros for TypeScript
+🧊 typesugar — Syntactic sugar for TypeScript with zero calories
 
 USAGE:
   typesugar <command> [options]

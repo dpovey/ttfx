@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: typesugar
-  text: Zero-cost typeclasses for TypeScript
+  text: Syntactic sugar for TypeScript with zero calories
   tagline: Operators and methods that just work, compiled to exactly what you'd write by hand.
   image:
     src: /logo.png
