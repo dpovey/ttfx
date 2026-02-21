@@ -2,6 +2,17 @@
   "name": "@typesugar/eslint-plugin",
   "version": "0.1.0",
   "description": "🧊 ESLint plugin for typesugar macro system - lints transformed output",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/eslint-plugin"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/eslint-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +38,6 @@
     "typescript",
     "macros"
   ],
-  "license": "MIT",
   "peerDependencies": {
     "eslint": ">=8.0.0",
     "typescript": ">=5.0.0"

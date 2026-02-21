@@ -2,6 +2,17 @@
   "name": "@typesugar/typeclass",
   "version": "0.1.0",
   "description": "🧊 Scala 3-style typeclass macros with auto-derivation for typesugar",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/typeclass"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/typeclass#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -26,8 +37,6 @@
     "deriving",
     "scala"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*"
   },

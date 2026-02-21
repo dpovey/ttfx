@@ -2,6 +2,17 @@
   "name": "@typesugar/derive",
   "version": "0.1.0",
   "description": "🧊 Auto-derive common implementations (Eq, Ord, Clone, etc.) for typesugar",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/derive"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/derive#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -25,8 +36,6 @@
     "derive",
     "codegen"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*"
   },

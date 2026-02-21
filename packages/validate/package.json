@@ -2,6 +2,17 @@
   "name": "@typesugar/validate",
   "version": "0.1.0",
   "description": "Zero-cost validation and schema macros for typesugar",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/validate"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/validate#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -29,8 +40,6 @@
     "zod",
     "zero-cost"
   ],
-  "author": "dpovey",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*",
     "@typesugar/fp": "workspace:*",

@@ -2,6 +2,17 @@
   "name": "@typesugar/contracts-refined",
   "version": "0.1.0",
   "description": "🧊 Integrate @typesugar/contracts with @typesugar/type-system refinement types — single source of truth for type predicates",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/contracts-refined"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/contracts-refined#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -27,8 +38,6 @@
     "type-system",
     "integration"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/contracts": "workspace:*",
     "@typesugar/type-system": "workspace:*"

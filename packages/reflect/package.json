@@ -2,6 +2,17 @@
   "name": "@typesugar/reflect",
   "version": "0.1.0",
   "description": "🧊 Compile-time type reflection macros for typesugar",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/reflect"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/reflect#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -25,8 +36,6 @@
     "reflection",
     "type-info"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*"
   },

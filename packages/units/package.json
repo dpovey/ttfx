@@ -2,6 +2,17 @@
   "name": "@typesugar/units",
   "version": "0.1.0",
   "description": "🧊 Type-safe physical units library with compile-time validation for typesugar",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/units"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/units#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -26,8 +37,6 @@
     "physics",
     "dimensional-analysis"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*"
   },

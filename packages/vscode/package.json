@@ -1,10 +1,21 @@
 {
   "name": "@typesugar/vscode",
-  "displayName": "typesugar",
-  "description": "🧊 IDE support for typesugar — syntax highlighting, expansion preview, and diagnostics for compile-time macros",
   "version": "0.1.0",
-  "publisher": "typesugar",
+  "description": "🧊 IDE support for typesugar — syntax highlighting, expansion preview, and diagnostics for compile-time macros",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/vscode"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/vscode#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
   "license": "MIT",
+  "displayName": "typesugar",
+  "publisher": "typesugar",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -88,13 +99,27 @@
       {
         "language": "typescript",
         "scopes": {
-          "macro": ["entity.name.function.macro.typesugar"],
-          "macroDecorator": ["entity.name.function.decorator.macro.typesugar"],
-          "macroTemplate": ["entity.name.tag.macro.typesugar"],
-          "extensionMethod": ["entity.name.function.extension.typesugar"],
-          "deriveArg": ["entity.name.type.derive.typesugar"],
-          "bindVariable": ["variable.other.bind.typesugar"],
-          "comptimeBlock": ["entity.name.function.comptime.typesugar"]
+          "macro": [
+            "entity.name.function.macro.typesugar"
+          ],
+          "macroDecorator": [
+            "entity.name.function.decorator.macro.typesugar"
+          ],
+          "macroTemplate": [
+            "entity.name.tag.macro.typesugar"
+          ],
+          "extensionMethod": [
+            "entity.name.function.extension.typesugar"
+          ],
+          "deriveArg": [
+            "entity.name.type.derive.typesugar"
+          ],
+          "bindVariable": [
+            "variable.other.bind.typesugar"
+          ],
+          "comptimeBlock": [
+            "entity.name.function.comptime.typesugar"
+          ]
         }
       }
     ],

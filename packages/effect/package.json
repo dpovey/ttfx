@@ -2,6 +2,17 @@
   "name": "@typesugar/effect",
   "version": "0.1.0",
   "description": "🧊 Effect-TS adapter for typesugar - do-notation and comprehension syntax",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/effect"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/effect#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -29,8 +40,6 @@
     "comprehension",
     "monads"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*",
     "@typesugar/std": "workspace:*"

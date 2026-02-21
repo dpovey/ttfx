@@ -2,6 +2,17 @@
   "name": "@typesugar/drizzle",
   "version": "0.1.0",
   "description": "🧊 Drizzle adapter for typesugar - type-safe SQL tagged templates that compile to Drizzle's sql template",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/drizzle"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/drizzle#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -30,8 +41,6 @@
     "type-safe",
     "query-builder"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*",
     "@typesugar/sql": "workspace:*"

@@ -2,6 +2,17 @@
   "name": "@typesugar/std",
   "version": "0.1.0",
   "description": "🧊 Standard typeclasses and extension methods for enriching basic TypeScript types",
+  "author": "Dean Povey <dean.povey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpovey/typesugar.git",
+    "directory": "packages/std"
+  },
+  "homepage": "https://github.com/dpovey/typesugar/tree/main/packages/std#readme",
+  "bugs": {
+    "url": "https://github.com/dpovey/typesugar/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -53,8 +64,6 @@
     "extension-methods",
     "typesugar"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@typesugar/core": "workspace:*",
     "@typesugar/typeclass": "workspace:*",
