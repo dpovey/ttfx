@@ -70,6 +70,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typesugar
 
+  packages/codec:
+    dependencies:
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
+
   packages/comptime:
     dependencies:
       '@typesugar/core':
@@ -165,6 +181,22 @@ importers:
         specifier: ^3.14.0
         version: 3.19.17
 
+  packages/erased:
+    dependencies:
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
+
   packages/eslint-plugin:
     dependencies:
       '@typesugar/core':
@@ -209,6 +241,62 @@ importers:
         specifier: workspace:*
         version: link:../unplugin-typesugar
 
+  packages/fusion:
+    dependencies:
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
+
+  packages/geometry:
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
+
+  packages/graph:
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
+
+  packages/hlist:
+    dependencies:
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
+
   packages/kysely:
     dependencies:
       '@typesugar/core':
@@ -225,22 +313,6 @@ importers:
         specifier: ^0.27.0
         version: 0.27.6
 
-  packages/macros:
-    dependencies:
-      '@typesugar/core':
-        specifier: workspace:*
-        version: link:../core
-      typescript:
-        specifier: '>=5.0.0'
-        version: 5.9.3
-    devDependencies:
-      tsup:
-        specifier: ^8.0.0
-        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
-      vitest:
-        specifier: ^1.0.0
-        version: 1.6.1(@types/node@22.19.11)
-
   packages/mapper:
     dependencies:
       '@typesugar/core':
@@ -254,6 +326,22 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/node@22.19.11)
 
+  packages/named-args:
+    dependencies:
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
+
   packages/operators:
     dependencies:
       '@typesugar/core':
@@ -262,6 +350,22 @@ importers:
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
+
+  packages/parser:
+    dependencies:
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.11)
 
   packages/preprocessor:
     dependencies:
@@ -318,9 +422,6 @@ importers:
       '@typesugar/core':
         specifier: workspace:*
         version: link:../core
-      '@typesugar/macros':
-        specifier: workspace:*
-        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
@@ -370,16 +471,9 @@ importers:
       '@typesugar/core':
         specifier: workspace:*
         version: link:../core
-      '@typesugar/macros':
-        specifier: workspace:*
-        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
-    optionalDependencies:
-      '@typesugar/contracts':
-        specifier: workspace:*
-        version: link:../contracts
 
   packages/type-system:
     dependencies:
@@ -410,9 +504,6 @@ importers:
       '@typesugar/derive':
         specifier: workspace:*
         version: link:../derive
-      '@typesugar/macros':
-        specifier: workspace:*
-        version: link:../macros
       '@typesugar/operators':
         specifier: workspace:*
         version: link:../operators
@@ -458,10 +549,6 @@ importers:
       unplugin:
         specifier: ^2.0.0
         version: 2.3.11
-    devDependencies:
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.19.11)
 
   packages/validate:
     dependencies:
@@ -478,9 +565,6 @@ importers:
         specifier: workspace:*
         version: link:../type-system
     devDependencies:
-      '@typesugar/transformer':
-        specifier: workspace:*
-        version: link:../transformer
       tsup:
         specifier: ^8.0.0
         version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
