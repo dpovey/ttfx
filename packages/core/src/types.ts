@@ -70,6 +70,8 @@ export type MacroKind =
 // Macro Context - Available to all macros during expansion
 // ============================================================================
 
+import type { HygieneContext } from "./hygiene.js";
+
 export interface MacroContext {
   /** The TypeScript Program instance */
   program: ts.Program;
@@ -85,6 +87,9 @@ export interface MacroContext {
 
   /** The transformer context */
   transformContext: ts.TransformationContext;
+
+  /** Hygiene context for scoped identifier generation */
+  hygiene: HygieneContext;
 
   // -------------------------------------------------------------------------
   // Node Creation Utilities
@@ -161,6 +166,16 @@ export interface MacroContext {
 
   /** Generate a unique identifier to avoid name collisions */
   generateUniqueName(prefix: string): ts.Identifier;
+
+  // -------------------------------------------------------------------------
+  // Tree-Shaking Annotations
+  // -------------------------------------------------------------------------
+
+  /**
+   * Add a #__PURE__ comment to a node to indicate it has no side effects.
+   * Bundlers will drop the result if it's unused.
+   */
+  markPure<T extends ts.Node>(node: T): T;
 }
 
 // ============================================================================

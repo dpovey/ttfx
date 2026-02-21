@@ -4,6 +4,7 @@
 
 import * as ts from "typescript";
 import { MacroContext, ComptimeValue, MacroDiagnostic } from "./types.js";
+import { HygieneContext, globalHygiene } from "./hygiene.js";
 
 export class MacroContextImpl implements MacroContext {
   private diagnostics: MacroDiagnostic[] = [];
@@ -16,19 +17,34 @@ export class MacroContextImpl implements MacroContext {
    */
   private _printer: ts.Printer | undefined;
 
+  /** Hygiene context for scoped identifier generation */
+  public readonly hygiene: HygieneContext;
+
   constructor(
     public readonly program: ts.Program,
     public readonly typeChecker: ts.TypeChecker,
     public readonly sourceFile: ts.SourceFile,
     public readonly factory: ts.NodeFactory,
-    public readonly transformContext: ts.TransformationContext
-  ) {}
+    public readonly transformContext: ts.TransformationContext,
+    hygiene?: HygieneContext
+  ) {
+    this.hygiene = hygiene ?? globalHygiene;
+  }
 
   /** Lazily-created shared printer instance */
   get printer(): ts.Printer {
     return (this._printer ??= ts.createPrinter({
       newLine: ts.NewLineKind.LineFeed,
     }));
+  }
+
+  // -------------------------------------------------------------------------
+  // Tree-Shaking Annotations
+  // -------------------------------------------------------------------------
+
+  markPure<T extends ts.Node>(node: T): T {
+    ts.addSyntheticLeadingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, "#__PURE__", false);
+    return node;
   }
 
   // -------------------------------------------------------------------------
@@ -610,6 +626,11 @@ export class MacroContextImpl implements MacroContext {
   // -------------------------------------------------------------------------
 
   generateUniqueName(prefix: string): ts.Identifier {
+    // Delegate to the hygiene context when inside a scope for proper
+    // scoped name mangling; fall back to the simple counter otherwise.
+    if (this.hygiene.isInScope()) {
+      return this.hygiene.createIdentifier(prefix);
+    }
     const name = `__typemacro_${prefix}_${this.uniqueNameCounter++}__`;
     return this.factory.createIdentifier(name);
   }
@@ -656,13 +677,28 @@ export class MacroContextImpl implements MacroContext {
 export function createMacroContext(
   program: ts.Program,
   sourceFile: ts.SourceFile,
-  transformContext: ts.TransformationContext
+  transformContext: ts.TransformationContext,
+  hygiene?: HygieneContext
 ): MacroContextImpl {
   return new MacroContextImpl(
     program,
     program.getTypeChecker(),
     sourceFile,
     transformContext.factory,
-    transformContext
+    transformContext,
+    hygiene
   );
+}
+
+/**
+ * Standalone markPure utility for use outside of MacroContext.
+ * Use this in places without a MacroContext (e.g., the transformer itself).
+ *
+ * Bundlers (esbuild, webpack, Rollup) recognize this annotation on call
+ * expressions and `new` expressions to indicate they have no side effects
+ * and can be dropped if unused.
+ */
+export function markPure<T extends ts.Node>(node: T): T {
+  ts.addSyntheticLeadingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, "#__PURE__", false);
+  return node;
 }

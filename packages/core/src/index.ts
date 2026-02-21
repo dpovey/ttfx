@@ -178,3 +178,12 @@ export {
   evaluateConditionExpr,
   type JsValueContext,
 } from "./ast-utils.js";
+
+// Hygiene System
+export {
+  HygieneContext,
+  globalHygiene,
+} from "./hygiene.js";
+
+// Re-export markPure from context
+export { markPure } from "./context.js";

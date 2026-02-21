@@ -2016,6 +2016,7 @@ export type InlineFailureReason =
   | "mutable variable"
   | "throw statement"
   | "no return statement"
+  | "expression statement"
   | null;
 
 /**
@@ -2243,6 +2244,8 @@ export function getInlineFailureHelp(reason: InlineFailureReason): string {
       return "Use Result type instead of throwing, or move throws outside";
     case "no return statement":
       return "Add a return statement or use an expression body";
+    case "expression statement":
+      return "Move side effects outside the inlined function or use IIFE";
     default:
       return "";
   }
