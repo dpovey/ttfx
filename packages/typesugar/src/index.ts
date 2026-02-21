@@ -70,6 +70,19 @@ export { reflectNs as reflect };
 import * as deriveNs from "@typesugar/derive";
 export { deriveNs as deriveMacros };
 
+// Re-export derive name symbols for use in @derive() decorators
+export {
+  Eq,
+  Ord,
+  Clone,
+  Debug,
+  Hash,
+  Default,
+  Json,
+  Builder,
+  TypeGuard,
+} from "@typesugar/derive";
+
 // Operator overloading (@operators, ops, pipe, compose)
 import * as operatorsNs from "@typesugar/operators";
 export { operatorsNs as operators };

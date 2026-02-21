@@ -48,6 +48,16 @@ export {
   JsonDerive,
   BuilderDerive,
   TypeGuardDerive,
+  // Derive name symbols for use in @derive() decorators
+  Eq,
+  Ord,
+  Clone,
+  Debug,
+  Hash,
+  Default,
+  Json,
+  Builder,
+  TypeGuard,
 } from "./derive.js";
 export {
   operatorsAttribute,

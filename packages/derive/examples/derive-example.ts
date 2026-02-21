@@ -10,7 +10,18 @@
  * - Builder — fluent builder pattern
  */
 
-import { derive } from "typesugar";
+import {
+  derive,
+  Eq,
+  Ord,
+  Clone,
+  Debug,
+  Hash,
+  Default,
+  Json,
+  Builder,
+  TypeGuard,
+} from "typesugar";
 
 console.log("=== Derive Macro Example ===\n");
 
