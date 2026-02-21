@@ -169,6 +169,12 @@
         "title": "typesugar: Generate Macro Manifest"
       }
     ],
+    "typescriptServerPlugins": [
+      {
+        "name": "@typesugar/ts-plugin",
+        "enableForWorkspaceTypeScriptVersions": true
+      }
+    ],
     "configuration": {
       "title": "typesugar",
       "properties": {
@@ -200,16 +206,22 @@
     "build:watch": "tsup --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
+    "prepackage": "node scripts/bundle-ts-plugin.js",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.7.1",
     "tsup": "^8.5.1",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@typesugar/core": "workspace:*"
+    "@typesugar/core": "workspace:*",
+    "@typesugar/ts-plugin": "workspace:*"
   },
+  "bundledDependencies": [
+    "@typesugar/ts-plugin"
+  ],
   "sideEffects": false
 }
