@@ -2344,20 +2344,20 @@ export const derivingAttribute = defineAttributeMacro({
         const { typeParameters } = typeInfo;
 
         // Use typeInfo.kind to determine derivation method
-        if (typeInfo.kind === "sum" && typeInfo.discriminant && sumInfo) {
+        if (typeInfo.kind === "sum" && typeInfo.discriminant && variants.length > 0) {
           // For generic types with type parameters, try factory function derivation
           if (typeParameters.length > 0 && derivation.deriveGenericSum) {
             code = derivation.deriveGenericSum(
               typeName,
               typeInfo.discriminant,
-              sumInfo.variants,
+              variants,
               typeParameters
             );
           }
 
           // Fall back to non-generic derivation if generic not supported
           if (!code) {
-            code = derivation.deriveSum(typeName, typeInfo.discriminant, sumInfo.variants);
+            code = derivation.deriveSum(typeName, typeInfo.discriminant, variants);
           }
         } else {
           code = derivation.deriveProduct(typeName, fields);

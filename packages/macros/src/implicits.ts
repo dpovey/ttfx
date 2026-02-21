@@ -569,4 +569,5 @@ globalRegistry.register(summonAllMacro);
 // Exports
 // ============================================================================
 
-export { ImplicitParamInfo, ImplicitsFunctionInfo, ImplicitScope, implicitsFunctions };
+export type { ImplicitParamInfo, ImplicitsFunctionInfo, ImplicitScope };
+export { implicitsFunctions };
