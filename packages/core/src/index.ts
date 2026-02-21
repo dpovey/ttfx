@@ -46,7 +46,12 @@ export type {
   ExtensionMethodInfo,
   ExtensionMethodRegistry,
   StandaloneExtensionInfo,
+  OperatorSymbol,
+  Op,
 } from "./types.js";
+
+// Re-export operator symbols constant
+export { OPERATOR_SYMBOLS } from "./types.js";
 
 // Standalone extension utilities
 export {
@@ -97,9 +102,13 @@ export {
 export {
   globalResolutionTracer,
   ResolutionTracer,
+  formatResolutionTrace,
+  generateHelpFromTrace,
   type ResolutionKind,
   type ResolutionRecord,
   type FileSummary,
+  type ResolutionAttempt,
+  type ResolutionTrace,
 } from "./resolution-trace.js";
 
 // Coherence Checking
@@ -150,3 +159,12 @@ export {
   type ExportKind,
   type ImportSuggestion,
 } from "./import-suggestions.js";
+
+// Source Map Utilities
+export {
+  preserveSourceMap,
+  ExpansionTracker,
+  globalExpansionTracker,
+  type RawSourceMap,
+  type ExpansionRecord,
+} from "./source-map.js";

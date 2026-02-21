@@ -12,10 +12,16 @@
  * - Auto-derivation via @deriving
  * - Extension methods via the typeclass system
  * - Zero-cost specialization via inlining
+ * - Operator overloading via Op<> annotations
  */
+
+import type { Op } from "@typesugar/core";
 
 // Re-export FlatMap typeclass (HKT-based, for let:/yield: macro)
 export * from "./flatmap.js";
+
+// Re-export generic numeric operations
+export * from "./numeric-ops.js";
 
 // ============================================================================
 // Bounded — Haskell Bounded, Rust: implicit via type, Scala: not built-in
@@ -101,12 +107,19 @@ export const enumString: Enum<string> = {
 
 /**
  * Numeric typeclass - types supporting basic arithmetic operations.
+ *
+ * This is the Ring abstraction: add, sub, mul with identity elements.
  * Use `registerStdInstances()` macro to enable summon<Numeric<T>>() resolution.
+ *
+ * Operators dispatch via Op<> annotations:
+ * - `a + b` → `Numeric.add(a, b)`
+ * - `a - b` → `Numeric.sub(a, b)`
+ * - `a * b` → `Numeric.mul(a, b)`
  */
 export interface Numeric<A> {
-  add(a: A, b: A): A;
-  sub(a: A, b: A): A;
-  mul(a: A, b: A): A;
+  add(a: A, b: A): A & Op<"+">;
+  sub(a: A, b: A): A & Op<"-">;
+  mul(a: A, b: A): A & Op<"*">;
   negate(a: A): A;
   abs(a: A): A;
   signum(a: A): A;
@@ -147,9 +160,18 @@ export const numericBigInt: Numeric<bigint> = {
 // Integer-like types supporting division and modulo.
 // ============================================================================
 
+/**
+ * Integral typeclass - integer-like types supporting division and modulo.
+ *
+ * This is the Euclidean Ring abstraction.
+ *
+ * Operators dispatch via Op<> annotations (for integer types):
+ * - `a / b` → `Integral.div(a, b)` (floor division)
+ * - `a % b` → `Integral.mod(a, b)` (modulo)
+ */
 export interface Integral<A> {
-  div(a: A, b: A): A;
-  mod(a: A, b: A): A;
+  div(a: A, b: A): A & Op<"/">;
+  mod(a: A, b: A): A & Op<"%">;
   divMod(a: A, b: A): [A, A];
   quot(a: A, b: A): A;
   rem(a: A, b: A): A;
@@ -188,8 +210,16 @@ export const integralBigInt: Integral<bigint> = {
 // Types supporting real division.
 // ============================================================================
 
+/**
+ * Fractional typeclass - types supporting real division.
+ *
+ * This is the Field abstraction (for fractional/floating types).
+ *
+ * Operators dispatch via Op<> annotations (for fractional types):
+ * - `a / b` → `Fractional.div(a, b)` (true division)
+ */
 export interface Fractional<A> {
-  div(a: A, b: A): A;
+  div(a: A, b: A): A & Op<"/">;
   recip(a: A): A;
   fromRational(num: number, den: number): A;
 }
@@ -545,3 +575,49 @@ export interface Searchable<F> {
   contains<A>(fa: F, elem: A): boolean;
   indexOf<A>(fa: F, elem: A): number;
 }
+
+// ============================================================================
+// Group — Haskell Group, Scala cats-kernel Group
+// Monoid with an inverse operation. Completes the algebraic chain:
+// Semigroup → Monoid → Group
+// ============================================================================
+
+/**
+ * Group typeclass - a Monoid with an inverse operation.
+ *
+ * Laws:
+ * - All Monoid laws (associativity, identity)
+ * - Left inverse: `combine(invert(a), a) === empty()`
+ * - Right inverse: `combine(a, invert(a)) === empty()`
+ *
+ * @example
+ * ```typescript
+ * const additiveGroup: Group<number> = {
+ *   empty: () => 0,
+ *   combine: (a, b) => a + b,
+ *   invert: (a) => -a,
+ * };
+ * ```
+ */
+export interface Group<A> {
+  /** The identity element */
+  empty(): A;
+  /** Associative binary operation */
+  combine(a: A, b: A): A & Op<"+">;
+  /** Inverse operation: combine(invert(a), a) === empty() */
+  invert(a: A): A;
+}
+
+/** Additive group for numbers (identity: 0, operation: +, inverse: negation) */
+export const groupNumber: Group<number> = {
+  empty: () => 0,
+  combine: (a, b) => a + b,
+  invert: (a) => -a,
+};
+
+/** Additive group for bigint */
+export const groupBigInt: Group<bigint> = {
+  empty: () => 0n,
+  combine: (a, b) => a + b,
+  invert: (a) => -a,
+};

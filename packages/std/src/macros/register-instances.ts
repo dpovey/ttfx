@@ -13,10 +13,13 @@
  *
  * // Now you can use summon<>() for std instances:
  * import { summon } from "@typesugar/typeclass";
- * import type { Bounded } from "@typesugar/std/typeclasses";
+ * import type { Bounded, Numeric } from "@typesugar/std/typeclasses";
  *
  * const bounded = summon<Bounded<number>>();
  * console.log(bounded.minBound()); // Number.MIN_SAFE_INTEGER
+ *
+ * const numeric = summon<Numeric<number>>();
+ * console.log(numeric.add(1, 2)); // 3
  * ```
  *
  * ## Why is this needed?
@@ -30,7 +33,11 @@
  *
  * - Bounded<number>, Bounded<bigint>, Bounded<boolean>, Bounded<string>
  * - Enum<number>, Enum<boolean>, Enum<string>
- * - Numeric<number>, Numeric<bigint>
+ * - Numeric<number>, Numeric<bigint> (with Op<+>, Op<->, Op<*>)
+ * - Integral<number>, Integral<bigint> (with Op</>, Op<%>)
+ * - Fractional<number> (with Op</>)
+ * - Floating<number> (transcendental functions)
+ * - Group<number>, Group<bigint> (Monoid with inverse)
  * - FlatMap<Array>, FlatMap<Promise>, FlatMap<Iterable>, FlatMap<AsyncIterable>
  */
 
@@ -67,9 +74,23 @@ const STD_INSTANCES: InstanceReg[] = [
   { typeclass: "Enum", forType: "boolean", importPath: "@typesugar/std/typeclasses", exportName: "enumBoolean" },
   { typeclass: "Enum", forType: "string", importPath: "@typesugar/std/typeclasses", exportName: "enumString" },
 
-  // Numeric instances
+  // Numeric instances (Ring abstraction with Op<+>, Op<->, Op<*>)
   { typeclass: "Numeric", forType: "number", importPath: "@typesugar/std/typeclasses", exportName: "numericNumber" },
   { typeclass: "Numeric", forType: "bigint", importPath: "@typesugar/std/typeclasses", exportName: "numericBigInt" },
+
+  // Integral instances (Euclidean Ring with Op</>, Op<%>)
+  { typeclass: "Integral", forType: "number", importPath: "@typesugar/std/typeclasses", exportName: "integralNumber" },
+  { typeclass: "Integral", forType: "bigint", importPath: "@typesugar/std/typeclasses", exportName: "integralBigInt" },
+
+  // Fractional instances (Field with Op</>)
+  { typeclass: "Fractional", forType: "number", importPath: "@typesugar/std/typeclasses", exportName: "fractionalNumber" },
+
+  // Floating instances (transcendental functions)
+  { typeclass: "Floating", forType: "number", importPath: "@typesugar/std/typeclasses", exportName: "floatingNumber" },
+
+  // Group instances (Monoid with inverse)
+  { typeclass: "Group", forType: "number", importPath: "@typesugar/std/typeclasses", exportName: "groupNumber" },
+  { typeclass: "Group", forType: "bigint", importPath: "@typesugar/std/typeclasses", exportName: "groupBigInt" },
 
   // FlatMap instances (HKT)
   { typeclass: "FlatMap", forType: "Array", importPath: "@typesugar/std/typeclasses/flatmap", exportName: "flatMapArray" },

@@ -5,6 +5,56 @@
 import * as ts from "typescript";
 
 // ============================================================================
+// Operator Symbol Types (for Op<> typeclass method annotations)
+// ============================================================================
+
+/**
+ * List of operators that can be mapped via typeclass method Op<> annotations.
+ * These are binary operators that the transformer can rewrite.
+ */
+export const OPERATOR_SYMBOLS = [
+  "+",
+  "-",
+  "*",
+  "/",
+  "%",
+  "**",
+  "<",
+  "<=",
+  ">",
+  ">=",
+  "==",
+  "===",
+  "!=",
+  "!==",
+  "&",
+  "|",
+  "^",
+  "<<",
+  ">>",
+] as const;
+
+/** Union type of all supported operator strings. */
+export type OperatorSymbol = (typeof OPERATOR_SYMBOLS)[number];
+
+/**
+ * Branded intersection type used as a compile-time marker on typeclass method
+ * return types to declare operator mappings.
+ *
+ * The transformer strips `Op<>` from emitted code — it has zero runtime cost.
+ *
+ * @example
+ * ```typescript
+ * interface Numeric<A> {
+ *   add(a: A, b: A): A & Op<"+">;
+ *   sub(a: A, b: A): A & Op<"-">;
+ *   mul(a: A, b: A): A & Op<"*">;
+ * }
+ * ```
+ */
+export type Op<_S extends OperatorSymbol> = {};
+
+// ============================================================================
 // Macro Kinds
 // ============================================================================
 
