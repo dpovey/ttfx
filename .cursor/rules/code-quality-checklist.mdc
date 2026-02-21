@@ -66,3 +66,25 @@ alwaysApply: false
 | `filter(p)` + `filter(!p)` for partition                 | Single-pass with accumulator              |
 | `F[_]` in comments or code                               | Use `F<_>` (TypeScript syntax, not Scala) |
 | Relying on `vitest` being hoisted from root              | Add to `devDependencies`                  |
+
+## Replacing Code
+
+When implementing a new approach that replaces an old one, **delete the old code in the same PR**.
+
+### Cleanup checklist
+
+- [ ] Remove old function definitions
+- [ ] Remove old registry entries (typeclass, instance, extension registries)
+- [ ] Remove old transformer branches that reference the removed code
+- [ ] Update or remove tests that used the old API
+- [ ] Search for ALL references to the old approach and update them
+- [ ] Verify the build passes after cleanup
+
+### Why this matters
+
+Leaving old code behind creates:
+
+1. **Confusion** — which implementation is canonical?
+2. **Dead code accumulation** — future sessions find "dead code" and waste time investigating
+3. **Type conflicts** — old and new types may have incompatible signatures
+4. **Test failures** — tests import removed or renamed exports

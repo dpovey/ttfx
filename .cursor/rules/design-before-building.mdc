@@ -1,0 +1,60 @@
+---
+description: Confirm design approach before implementing large changes
+alwaysApply: true
+---
+
+# Design Before Building
+
+Prevents the "build wrong approach, then revert" pattern that has wasted significant time across multiple sessions.
+
+## When to Confirm First
+
+For changes touching any of these, **confirm the approach with the user BEFORE writing code**:
+
+- Macro `expand` functions in `src/macros/`
+- Transformer logic in `src/transforms/macro-transformer.ts`
+- New packages or major package restructuring
+- Registry changes (typeclass, instance, extension registries)
+- Changes to HKT encoding or typeclass resolution
+
+## What to Do
+
+### If there are 2+ plausible approaches
+
+Present them briefly instead of picking one:
+
+```
+I see two ways to implement this:
+
+1. **Extend @typeclass**: Add a `syntax` field to TypeclassInfo...
+2. **Use Op<> return types**: Annotate method returns with Op<"+">...
+
+Which approach do you prefer?
+```
+
+### If a plan doc exists
+
+Check `docs/PLAN-*.md` for the relevant feature. If a plan exists:
+
+1. **Follow it** — don't improvise a different design
+2. If the plan seems wrong, discuss before diverging
+3. Update the plan if the user approves changes in conversation
+
+### If you've already built something wrong
+
+When the user says "that's not right" or "that's not what I want":
+
+1. **Revert cleanly** — don't leave broken code, half-implemented features, or dangling references
+2. **Ask for clarification** — understand what they actually want
+3. **Search existing code** — the right approach may already exist (see check-existing-first rule)
+
+## Clean Revert Checklist
+
+When reverting a wrong approach:
+
+- [ ] Remove new function definitions
+- [ ] Remove new registry entries
+- [ ] Remove transformer branches that reference the old approach
+- [ ] Update or remove tests that used the old API
+- [ ] Search for any other references to the removed code
+- [ ] Verify the build passes after cleanup

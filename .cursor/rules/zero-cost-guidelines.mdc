@@ -1,0 +1,94 @@
+---
+description: Concrete zero-cost abstraction rules and common violations to avoid
+globs: ["packages/*/src/**/*.ts", "src/**/*.ts"]
+alwaysApply: false
+---
+
+# Zero-Cost Guidelines
+
+These rules complement the zero-cost principle in AGENTS.md with specific patterns that agents keep violating.
+
+## Core Rule
+
+Every abstraction should compile away to what you'd write by hand. If the generated code has overhead a human wouldn't write, it's wrong.
+
+## `summon()` Must Be Compile-Time
+
+`summon<TC<T>>()` resolves typeclass instances. It MUST resolve at compile time.
+
+```typescript
+// WRONG — runtime Map lookup defeats zero-cost
+function summon<TC>(name: string): TC {
+  const instance = instanceMap.get(name);
+  if (!instance) throw new Error(`No instance for ${name}`);
+  return instance;
+}
+
+// CORRECT — compile-time resolution, emits literal instance
+// summon<Show<number>>() → ShowNumber (the actual object, inlined)
+```
+
+**Never add a runtime fallback to `summon()`.** If an instance can't be found at compile time, emit a compile error.
+
+## Inherent vs Avoidable Overhead
+
+Not all overhead is a violation. Distinguish:
+
+| Inherent (acceptable)                 | Avoidable (violation)                        |
+| ------------------------------------- | -------------------------------------------- |
+| Closure in `flatMap` callback         | Dictionary lookup at call site               |
+| Generator yield points                | Wrapper object allocation                    |
+| Promise microtask scheduling          | Runtime type checking                        |
+| Small adapter function for native API | `ops()` wrapper when extension methods exist |
+
+**Test**: Look at the compile output. Would a human write this code for this specific type? If not, find a way to inline or eliminate the overhead.
+
+## Specific Violations to Avoid
+
+### 1. Runtime `summon()`
+
+```typescript
+// WRONG
+const show = summon<Show<T>>(); // runtime lookup
+
+// CORRECT — specialize() inlines the instance
+const result = specialize((S: Show<T>) => S.show(value));
+```
+
+### 2. `ops()` wrapper when extension methods exist
+
+```typescript
+// WRONG — explicit wrapper
+const result = ops(a + b); // overhead: function call
+
+// CORRECT — extension methods rewrite directly
+a + b; // rewrites to → Semigroup.concat(a, b) via transformer
+```
+
+### 3. Explicit `@derive` when auto-derivation works
+
+```typescript
+// WRONG — unnecessary annotation
+@derive(Eq, Show)
+interface Point { x: number; y: number; }
+
+// CORRECT — summon auto-derives when all fields have instances
+summon<Eq<Point>>() // synthesizes EqPoint automatically
+```
+
+## Favor Autoderivation
+
+If a type's fields all have the required typeclass instances, `summon` should synthesize the instance automatically. Users should not need to annotate types that can be derived.
+
+The derivation hierarchy:
+
+1. **Explicit `@instance`** — manual implementation, highest priority
+2. **`@deriving(TC)`** — explicit derivation request, integrates with typeclass system
+3. **Auto-derivation via `summon`** — automatic synthesis for product/sum types (preferred when possible)
+4. **`@derive(TC)`** — generates standalone functions (use sparingly, doesn't integrate with `summon`)
+
+## When in Doubt
+
+Show the compile output and ask: "Would a human write this for this specific type?"
+
+If the answer is no, the abstraction isn't zero-cost.

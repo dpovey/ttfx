@@ -96,7 +96,7 @@ packages/
 ├── type-system/        # @typesugar/type-system — refined types, newtype, vec
 ├── units/              # @typesugar/units — units of measure
 ├── strings/            # @typesugar/strings — string manipulation macros
-├── effect/             # @typesugar/effect — Effect TS integration
+├── effect/             # @typesugar/effect — Effect TS integration (@service, @layer, resolveLayer, derives)
 ├── kysely/             # @typesugar/kysely — Kysely integration
 ├── unplugin-typesugar/      # unplugin-typesugar — build tool integrations
 ├── eslint-plugin/      # @typesugar/eslint-plugin
@@ -696,8 +696,8 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 | Read config values              | `config.get(path)`, `config.evaluate(condition)`                    | `core/config.ts`          |
 | Include file at compile time    | `includeStr()`, `includeJson()`                                     | `macros/include.ts`       |
 | Assert at compile time          | `static_assert(cond, msg)`                                          | `macros/static-assert.ts` |
-| Register FlatMap instance       | `registerFlatMap<F>(name, impl)`                                    | `@typesugar/std`               |
-| Use do-notation for monads      | `let: { x << ... } yield: { ... }`                                  | `@typesugar/std`               |
+| Register FlatMap instance       | `registerFlatMap<F>(name, impl)`                                    | `@typesugar/std`          |
+| Use do-notation for monads      | `let: { x << ... } yield: { ... }`                                  | `@typesugar/std`          |
 
 ---
 
@@ -719,6 +719,35 @@ The transformer is the runtime engine that orchestrates all macro expansion duri
 4. **All imports must be at the top of the file** — no mid-file imports
 5. **Re-export everything from `index.ts`** — including derived operations, not just core types
 6. **Don't export dead code** — if a type-level function or type has no instances, don't export it
+
+## Package Boundaries
+
+Understanding what goes where prevents architecture confusion:
+
+| Package                  | Contents                                                                                                               | Does NOT contain          |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `@typesugar/typeclass`   | Machinery: `@typeclass`, `@instance`, `@deriving`, `summon`, `extend`, `specialize`, `defineExpressionMacro`           | Typeclass definitions     |
+| `@typesugar/std`         | Standard typeclasses (Eq, Ord, Show, Semigroup, FlatMap), built-in type extensions, `let:/yield:` do-notation, `match` | FP data types             |
+| `@typesugar/fp`          | FP data types (Option, Either, IO, List, etc.) and their typeclass instances                                           | General-purpose utilities |
+| `@typesugar/collections` | Collection typeclass hierarchy (IterableOnce, Iterable, Seq, MapLike, SetLike)                                         | Data type implementations |
+
+**Key clarifications:**
+
+- `match` is a general-purpose control flow primitive — it belongs in `std`, not `fp`
+- `@typesugar/typeclass` provides the machinery to define typeclasses, but the typeclasses themselves live in `std`
+- Extensions on built-in types (`number`, `string`, `Array`) go in `std`
+
+### `@derive` vs `@deriving` vs Auto-derivation
+
+| Mechanism                    | What it does                                                             | When to use                                  |
+| ---------------------------- | ------------------------------------------------------------------------ | -------------------------------------------- |
+| `@derive(TC)`                | Generates standalone functions                                           | Rarely — doesn't integrate with `summon`     |
+| `@deriving(TC)`              | Integrates with typeclass system, supports `summon()` and `specialize()` | When explicit derivation is needed           |
+| Auto-derivation via `summon` | Automatically synthesizes instances for product/sum types                | **Preferred** when all fields have instances |
+
+**Favor auto-derivation**: when a type's fields all have the required instances, prefer letting `summon` auto-derive rather than requiring explicit annotations. Users should not need to annotate types that can be derived automatically.
+
+---
 
 ## Code Quality Checklist
 
@@ -747,6 +776,71 @@ Before considering any code complete, verify:
 - Name operations consistently across typeclasses — if both `Seq` and `MapLike` have `updated`, disambiguate in standalone ops (e.g., `mapUpdated`)
 - Bridge modules should cover ALL relevant typeclasses from the target package, not just a subset
 - Every derived operation should be re-exported from the package's `index.ts`
+
+---
+
+## Error Investigation
+
+When encountering errors during build/test, **investigate properly before declaring them "pre-existing"**.
+
+### Before claiming an error is pre-existing
+
+1. **Check file overlap**: Did your changes touch the same file? Same module? Same type signatures?
+2. **Check import chains**: Did you modify something the erroring file imports?
+3. **Check recent git history**: Was this file working in the last commit?
+
+### Accumulated errors are your responsibility
+
+If errors have accumulated across multiple sessions (especially HKT type errors in `@typesugar/fp` or `@typesugar/collections`), they ARE the responsibility of the current session. Don't defer indefinitely.
+
+### Type errors that break packages
+
+Type errors that make a package **unusable** (can't import, can't typecheck) must be:
+
+1. **Fixed** in the current session, OR
+2. **Explicitly escalated** to the user with a clear description
+
+Never silently skip type errors with comments like "pre-existing, will fix later."
+
+---
+
+## Testing Guidelines
+
+### No hardcoded timing thresholds
+
+Never use hardcoded timing thresholds in benchmark tests:
+
+```typescript
+// WRONG — machine-dependent, CI-flaky
+expect(stats.medianMs).toBeLessThan(500);
+
+// BETTER — relative comparison
+expect(optimizedTime).toBeLessThan(baselineTime * 1.5);
+
+// BEST — skip timing tests in CI entirely
+if (!process.env.CI) {
+  expect(stats.medianMs).toBeLessThan(500);
+}
+```
+
+### TypeScript version compatibility
+
+`node.getText()` on synthetic nodes throws on TS < 5.8: "Node must have a real position for this operation."
+
+Use alternatives:
+
+- `ts.getTextOfNode(node)` — works on synthetic nodes
+- Print the node with a printer: `ts.createPrinter().printNode(...)`
+
+### Verify API names before testing
+
+When tests reference API names, verify the actual export names first — don't guess:
+
+- `nel` vs `nelOf`
+- `semigroupString` vs `stringSemigroup`
+- `eitherMonad` vs `monadEither`
+
+Check the package's `index.ts` to see what's actually exported.
 
 ---
 

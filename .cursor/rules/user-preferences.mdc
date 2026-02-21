@@ -1,0 +1,59 @@
+---
+description: User preferences captured from chat history
+alwaysApply: true
+---
+
+# User Preferences
+
+Preferences expressed repeatedly across chat sessions. Follow these unless explicitly told otherwise.
+
+## Execution Style
+
+- **Prefer autonomous execution** — don't ask for scope narrowing unless genuinely ambiguous. Default to "everything" when given a choice.
+- **"Don't just sketch. Plan!"** — always produce concrete plans WITH implementation, not just discussion or ideas.
+- **Run as long as you can** — the user prefers long autonomous sessions over frequent interruptions for confirmation.
+
+## Design Inspiration
+
+When unsure about design direction, look to these languages for patterns:
+
+1. **Scala 3** — typeclasses, extension methods, HKT encoding, do-comprehension
+2. **Rust** — zero-cost abstractions, derive macros, pattern matching, cfg
+3. **Zig** — comptime evaluation, no hidden allocations
+
+If a feature exists in one of these languages, that's likely the intended design direction.
+
+## Project History
+
+The project has been renamed multiple times:
+
+```
+macrots → typemacro → ttfx → typesugar
+```
+
+When encountering old names (`@ttfx/*`, `typemacro`, `macrots`) in code, comments, or docs, these are stale references that should be updated to `typesugar` / `@typesugar/*`.
+
+## GitHub Account
+
+Use `dpovey` (personal account) for this repo.
+
+If you hit SSH key issues when pushing:
+
+1. Check if `.envrc` exists and is loaded (`direnv status`)
+2. Run `gh auth status` to verify the active account
+3. Switch if needed: `gh auth switch --user dpovey`
+
+## Git Hygiene
+
+- **node_modules is gitignored.** If it ever appears in `git status`, it was accidentally tracked — untrack with `git rm -r --cached node_modules/`, don't investigate why it's there.
+- **Break commits into logical units** — don't commit unrelated changes together.
+- **CI must pass** before considering work done.
+
+## Null-Based Option
+
+Option uses null, not wrapper objects:
+
+- `Some(x)` = `x` (the value itself)
+- `None` = `null`
+
+This is a zero-cost design choice — no wrapper allocation.
