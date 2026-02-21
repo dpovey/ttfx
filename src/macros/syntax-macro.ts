@@ -144,7 +144,7 @@ function parsePattern(pattern: string): {
 function extractCaptures(
   captures: PatternCapture[],
   args: readonly ts.Expression[],
-  ctx: MacroContext,
+  ctx: MacroContext
 ): Map<string, ts.Node> | null {
   const result = new Map<string, ts.Node>();
 
@@ -198,7 +198,7 @@ function extractCaptures(
 function expandTemplate(
   template: string,
   captures: Map<string, ts.Node>,
-  ctx: MacroContext,
+  ctx: MacroContext
 ): string {
   const printer = getPrinter();
 
@@ -242,7 +242,7 @@ function expandTemplate(
 export function defineSyntaxMacro(
   name: string,
   options: SyntaxMacroOptions,
-  macroModule?: string,
+  macroModule?: string
 ): ExpressionMacro {
   // Normalize to multi-arm format
   const arms: PatternArm[] = [];
@@ -275,7 +275,7 @@ export function defineSyntaxMacro(
     expand(
       ctx: MacroContext,
       callExpr: ts.CallExpression,
-      args: readonly ts.Expression[],
+      args: readonly ts.Expression[]
     ): ts.Expression {
       // Try each arm in order
       for (const arm of arms) {
@@ -297,7 +297,7 @@ export function defineSyntaxMacro(
             callExpr,
             `Syntax macro '${name}': Failed to parse expansion: ${expanded}\n  ${
               e instanceof Error ? e.message : String(e)
-            }`,
+            }`
           );
           return callExpr;
         }
@@ -307,7 +307,7 @@ export function defineSyntaxMacro(
       ctx.reportError(
         callExpr,
         `Syntax macro '${name}': No pattern arm matched the arguments. ` +
-          `Expected one of:\n${arms.map((a) => `  - ${a.patternSource}`).join("\n")}`,
+          `Expected one of:\n${arms.map((a) => `  - ${a.patternSource}`).join("\n")}`
       );
       return callExpr;
     },
@@ -335,7 +335,7 @@ export function defineRewrite(
   name: string,
   pattern: string,
   expand: string,
-  macroModule?: string,
+  macroModule?: string
 ): ExpressionMacro {
   return defineSyntaxMacro(name, { pattern, expand }, macroModule);
 }

@@ -51,10 +51,7 @@ export interface ExpansionRecord {
  * @param originalNode - The original node (macro call site) being replaced
  * @returns The newNode with source map range set to originalNode's range
  */
-export function preserveSourceMap<T extends ts.Node>(
-  newNode: T,
-  originalNode: ts.Node,
-): T {
+export function preserveSourceMap<T extends ts.Node>(newNode: T, originalNode: ts.Node): T {
   ts.setSourceMapRange(newNode, ts.getSourceMapRange(originalNode));
   return newNode;
 }
@@ -70,7 +67,7 @@ export class ExpansionTracker {
     originalNode: ts.Node,
     sourceFile: ts.SourceFile,
     expandedText: string,
-    fromCache: boolean = false,
+    fromCache: boolean = false
   ): void {
     const start = originalNode.getStart(sourceFile);
     const end = originalNode.getEnd();
@@ -113,10 +110,7 @@ export class ExpansionTracker {
     this.expansions = [];
   }
 
-  generateSourceMap(
-    originalSource: string,
-    fileName: string = "source.ts",
-  ): RawSourceMap | null {
+  generateSourceMap(originalSource: string, fileName: string = "source.ts"): RawSourceMap | null {
     const fileExpansions = this.getExpansionsForFile(fileName);
     if (fileExpansions.length === 0) {
       return null;
@@ -124,15 +118,13 @@ export class ExpansionTracker {
 
     const s = new MagicString(originalSource);
 
-    const sorted = [...fileExpansions].sort(
-      (a, b) => b.originalStart - a.originalStart,
-    );
+    const sorted = [...fileExpansions].sort((a, b) => b.originalStart - a.originalStart);
 
     const appliedRanges: Array<{ start: number; end: number }> = [];
 
     for (const exp of sorted) {
       const isNested = appliedRanges.some(
-        (range) => exp.originalStart >= range.start && exp.originalEnd <= range.end,
+        (range) => exp.originalStart >= range.start && exp.originalEnd <= range.end
       );
       if (isNested) {
         continue;

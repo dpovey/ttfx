@@ -62,9 +62,9 @@
   ],
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
+    "@typesugar/core": "workspace:*",
     "@typesugar/preprocessor": "workspace:*",
     "@typesugar/transformer": "workspace:*",
-    "typesugar": "workspace:*",
     "unplugin": "^2.0.0"
   },
   "peerDependencies": {

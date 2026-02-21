@@ -24,6 +24,9 @@ importers:
       '@typesugar/contracts-refined':
         specifier: workspace:*
         version: link:packages/contracts-refined
+      '@typesugar/prettier-plugin':
+        specifier: workspace:*
+        version: link:packages/prettier-plugin
       '@typesugar/testing':
         specifier: workspace:*
         version: link:packages/testing
@@ -36,6 +39,9 @@ importers:
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
+      prettier:
+        specifier: ^3.5.0
+        version: 3.8.1
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -50,7 +56,7 @@ importers:
         version: 5.9.3
       typesugar:
         specifier: workspace:*
-        version: link:packages/typesugar
+        version: link:packages/vscode
       unplugin-typesugar:
         specifier: workspace:*
         version: link:packages/unplugin-typesugar
@@ -71,7 +77,7 @@ importers:
         version: 5.9.3
       typesugar:
         specifier: workspace:*
-        version: link:../../packages/typesugar
+        version: link:../../packages/vscode
 
   packages/codec:
     dependencies:
@@ -139,6 +145,9 @@ importers:
 
   packages/core:
     dependencies:
+      magic-string:
+        specifier: ^0.30.21
+        version: 0.30.21
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
@@ -590,6 +599,9 @@ importers:
       '@ampproject/remapping':
         specifier: ^2.3.0
         version: 2.3.0
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:../core
       '@typesugar/preprocessor':
         specifier: workspace:*
         version: link:../preprocessor
@@ -599,9 +611,6 @@ importers:
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
-      typesugar:
-        specifier: workspace:*
-        version: link:../typesugar
       unplugin:
         specifier: ^2.0.0
         version: 2.3.11

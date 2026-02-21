@@ -36,6 +36,9 @@
     "metaprogramming",
     "core"
   ],
+  "dependencies": {
+    "magic-string": "^0.30.21"
+  },
   "peerDependencies": {
     "typescript": ">=5.0.0"
   },

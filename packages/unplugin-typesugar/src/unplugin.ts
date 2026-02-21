@@ -30,11 +30,9 @@ import * as fs from "fs";
 import * as path from "path";
 import { createUnplugin, type UnpluginFactory } from "unplugin";
 import remapping from "@ampproject/remapping";
-import macroTransformerFactory, {
-  type MacroTransformerConfig,
-} from "@typesugar/transformer";
+import macroTransformerFactory, { type MacroTransformerConfig } from "@typesugar/transformer";
 import { preprocess, type RawSourceMap } from "@typesugar/preprocessor";
-import { globalExpansionTracker } from "typesugar";
+import { globalExpansionTracker } from "@typesugar/core";
 
 export interface TypesugarPluginOptions {
   /** Path to tsconfig.json (default: auto-detected) */
@@ -65,7 +63,7 @@ function findTsConfig(cwd: string, explicit?: string): string {
   if (!found) {
     throw new Error(
       `[typesugar] Could not find tsconfig.json from ${cwd}. ` +
-        `Pass the tsconfig option to specify the path explicitly.`,
+        `Pass the tsconfig option to specify the path explicitly.`
     );
   }
   return found;
@@ -75,15 +73,11 @@ function createProgram(configPath: string): ProgramCache {
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
   if (configFile.error) {
     throw new Error(
-      `[typesugar] Error reading ${configPath}: ${ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n")}`,
+      `[typesugar] Error reading ${configPath}: ${ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n")}`
     );
   }
 
-  const config = ts.parseJsonConfigFileContent(
-    configFile.config,
-    ts.sys,
-    path.dirname(configPath),
-  );
+  const config = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath));
 
   const host = ts.createCompilerHost(config.options);
   const program = ts.createProgram(config.fileNames, config.options, host);
@@ -94,7 +88,7 @@ function createProgram(configPath: string): ProgramCache {
 function shouldTransform(
   id: string,
   include?: RegExp | string[],
-  exclude?: RegExp | string[],
+  exclude?: RegExp | string[]
 ): boolean {
   const normalizedId = id.replace(/\\/g, "/");
 
@@ -103,8 +97,7 @@ function shouldTransform(
     if (exclude instanceof RegExp) {
       if (exclude.test(normalizedId)) return false;
     } else {
-      if (exclude.some((pattern) => normalizedId.includes(pattern)))
-        return false;
+      if (exclude.some((pattern) => normalizedId.includes(pattern))) return false;
     }
   } else {
     if (/node_modules/.test(normalizedId)) return false;
@@ -121,9 +114,9 @@ function shouldTransform(
   return /\.[jt]sx?$/.test(normalizedId);
 }
 
-export const unpluginFactory: UnpluginFactory<
-  TypesugarPluginOptions | undefined
-> = (options = {}) => {
+export const unpluginFactory: UnpluginFactory<TypesugarPluginOptions | undefined> = (
+  options = {}
+) => {
   let cache: ProgramCache | undefined;
   const verbose = options?.verbose ?? false;
 
@@ -140,9 +133,7 @@ export const unpluginFactory: UnpluginFactory<
         cache = createProgram(configPath);
         if (verbose) {
           console.log(`[typesugar] Loaded config from ${configPath}`);
-          console.log(
-            `[typesugar] Program has ${cache.config.fileNames.length} files`,
-          );
+          console.log(`[typesugar] Program has ${cache.config.fileNames.length} files`);
         }
       } catch (error) {
         console.error(String(error));
@@ -249,17 +240,29 @@ export const unpluginFactory: UnpluginFactory<
         if (wasPreprocessed && preprocessResult?.map && transformerMap) {
           // Compose: originalSource -> preprocessedCode -> transformedCode
           // The remapping function takes the innermost map and a loader for upstream maps
+          // Type assertions are needed because @ampproject/remapping has stricter types
+          // than our RawSourceMap interface, but they're structurally compatible at runtime
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const composed = remapping(
-            transformerMap as Parameters<typeof remapping>[0],
-            (file) => {
+            transformerMap as any,
+            ((file: string) => {
               // Return the preprocessor's map as the upstream source
               if (file === id || file === preprocessResult.map?.sources?.[0]) {
-                return preprocessResult.map as ReturnType<typeof remapping>;
+                return preprocessResult.map;
               }
               return null;
-            },
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }) as any
           );
-          finalMap = composed as unknown as RawSourceMap;
+          finalMap = {
+            version: 3,
+            file: composed.file ?? undefined,
+            sourceRoot: composed.sourceRoot ?? "",
+            sources: composed.sources.filter((s): s is string => s !== null),
+            sourcesContent: composed.sourcesContent,
+            names: composed.names,
+            mappings: composed.mappings as string,
+          };
         }
 
         // Return transformed code with source map

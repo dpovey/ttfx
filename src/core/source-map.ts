@@ -29,6 +29,20 @@
  */
 
 import * as ts from "typescript";
+import MagicString from "magic-string";
+
+/**
+ * Standard source map v3 format (VLQ-encoded)
+ */
+export interface RawSourceMap {
+  version: 3;
+  file?: string;
+  sourceRoot?: string;
+  sources: string[];
+  sourcesContent?: (string | null)[];
+  names: string[];
+  mappings: string;
+}
 
 // =============================================================================
 // Source Map Preservation Helper
@@ -53,10 +67,7 @@ import * as ts from "typescript";
  * return preserveSourceMap(expanded, node);
  * ```
  */
-export function preserveSourceMap<T extends ts.Node>(
-  newNode: T,
-  originalNode: ts.Node,
-): T {
+export function preserveSourceMap<T extends ts.Node>(newNode: T, originalNode: ts.Node): T {
   ts.setSourceMapRange(newNode, ts.getSourceMapRange(originalNode));
   return newNode;
 }
@@ -80,6 +91,12 @@ export interface ExpansionRecord {
 
   /** Column number in the original source (0-based) */
   originalColumn: number;
+
+  /** Byte offset of the start of the original node in the source file */
+  originalStart: number;
+
+  /** Byte offset of the end of the original node in the source file */
+  originalEnd: number;
 
   /** The original source text that was replaced */
   originalText: string;
@@ -136,9 +153,10 @@ export class ExpansionTracker {
     originalNode: ts.Node,
     sourceFile: ts.SourceFile,
     expandedText: string,
-    fromCache: boolean = false,
+    fromCache: boolean = false
   ): void {
     const start = originalNode.getStart(sourceFile);
+    const end = originalNode.getEnd();
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(start);
 
     let originalText: string;
@@ -153,6 +171,8 @@ export class ExpansionTracker {
       originalFile: sourceFile.fileName,
       originalLine: line + 1,
       originalColumn: character,
+      originalStart: start,
+      originalEnd: end,
       originalText,
       expandedText,
       timestamp: Date.now(),
@@ -320,7 +340,7 @@ export class ExpansionTracker {
         `  File:  ${record.originalFile}:${record.originalLine}`,
         `  Input: ${truncate(record.originalText, 80)}`,
         `  Output: ${truncate(record.expandedText, 80)}`,
-        "",
+        ""
       );
     }
 
@@ -356,21 +376,99 @@ export class ExpansionTracker {
               expanded: e.expandedText,
               unhygienicEscapes: e.unhygienicEscapes ?? 0,
               flags: flaggedSet.has(e)
-                ? (this.auditExpansions().find((f) => f.record === e)?.flags ??
-                  [])
+                ? (this.auditExpansions().find((f) => f.record === e)?.flags ?? [])
                 : [],
             })),
           },
-        ]),
+        ])
       ),
     };
   }
+
+  /**
+   * Generate a v3 source map from the recorded expansions.
+   *
+   * Uses MagicString to compute VLQ-encoded mappings that map transformed
+   * code positions back to original source positions.
+   *
+   * @param originalSource - The original source code before transformation
+   * @param fileName - The source file name to include in the map
+   * @returns A v3 source map, or null if no expansions were recorded
+   */
+  generateSourceMap(originalSource: string, fileName: string = "source.ts"): RawSourceMap | null {
+    const fileExpansions = this.getExpansionsForFile(fileName);
+    if (fileExpansions.length === 0) {
+      return null;
+    }
+
+    const s = new MagicString(originalSource);
+
+    // Sort expansions by originalStart descending so we apply from end to start
+    // This prevents position shifting from affecting subsequent overwrites
+    const sorted = [...fileExpansions].sort((a, b) => b.originalStart - a.originalStart);
+
+    // Track applied ranges to handle nested expansions
+    // (skip inner expansions if contained within an already-applied outer expansion)
+    const appliedRanges: Array<{ start: number; end: number }> = [];
+
+    for (const exp of sorted) {
+      // Check if this expansion is nested within an already-applied expansion
+      const isNested = appliedRanges.some(
+        (range) => exp.originalStart >= range.start && exp.originalEnd <= range.end
+      );
+      if (isNested) {
+        continue;
+      }
+
+      // Apply the overwrite
+      try {
+        s.overwrite(exp.originalStart, exp.originalEnd, exp.expandedText);
+        appliedRanges.push({ start: exp.originalStart, end: exp.originalEnd });
+      } catch {
+        // Overlapping ranges or invalid positions - skip this expansion
+        continue;
+      }
+    }
+
+    const map = s.generateMap({
+      hires: true,
+      source: fileName,
+      includeContent: true,
+    });
+
+    return {
+      version: 3,
+      file: fileName.replace(/\.ts$/, ".js"),
+      sourceRoot: "",
+      sources: map.sources,
+      sourcesContent: map.sourcesContent as (string | null)[] | undefined,
+      names: map.names,
+      mappings: map.mappings,
+    };
+  }
+
+  /**
+   * Generate a source map for a single file's expansions.
+   *
+   * This is a convenience method that filters expansions for the given file
+   * and generates a source map. It's useful when you have the original and
+   * transformed source as strings.
+   *
+   * @param originalSource - The original source code before transformation
+   * @param transformedSource - The transformed source code (for validation)
+   * @param fileName - The source file name
+   * @returns A v3 source map, or null if no expansions or validation fails
+   */
+  generateSourceMapForFile(
+    originalSource: string,
+    _transformedSource: string,
+    fileName: string
+  ): RawSourceMap | null {
+    return this.generateSourceMap(originalSource, fileName);
+  }
 }
 
-function groupBy<T>(
-  items: T[],
-  keyFn: (item: T) => string,
-): Array<[string, T[]]> {
+function groupBy<T>(items: T[], keyFn: (item: T) => string): Array<[string, T[]]> {
   const map = new Map<string, T[]>();
   for (const item of items) {
     const key = keyFn(item);
