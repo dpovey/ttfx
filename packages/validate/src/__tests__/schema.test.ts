@@ -1,13 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
-  Schema,
-  ValidatorF,
+  NativeSchema,
   nativeSchema,
-  parseOrElse,
-  parseMap,
-  parseAll,
-  safeParseAll,
-  makeSchema,
+  nativeParseOrElse,
+  nativeParseMap,
+  nativeParseAll,
+  nativeSafeParseAll,
+  makeNativeSchema,
 } from "../schema.js";
 
 describe("Schema typeclass", () => {
@@ -46,33 +45,33 @@ describe("Schema typeclass", () => {
     const isPositive = (value: unknown): value is number =>
       typeof value === "number" && value > 0;
 
-    it("parseOrElse returns value when valid", () => {
-      const parse = parseOrElse(nativeSchema);
+    it("nativeParseOrElse returns value when valid", () => {
+      const parse = nativeParseOrElse(nativeSchema);
       expect(parse(isPositive, 42, -1)).toBe(42);
     });
 
-    it("parseOrElse returns fallback when invalid", () => {
-      const parse = parseOrElse(nativeSchema);
+    it("nativeParseOrElse returns fallback when invalid", () => {
+      const parse = nativeParseOrElse(nativeSchema);
       expect(parse(isPositive, -5, -1)).toBe(-1);
     });
 
-    it("parseMap transforms valid results", () => {
-      const parse = parseMap(nativeSchema);
+    it("nativeParseMap transforms valid results", () => {
+      const parse = nativeParseMap(nativeSchema);
       expect(parse(isPositive, 42, (n) => n * 2)).toBe(84);
     });
 
-    it("parseAll validates multiple values", () => {
-      const parse = parseAll(nativeSchema);
+    it("nativeParseAll validates multiple values", () => {
+      const parse = nativeParseAll(nativeSchema);
       expect(parse(isPositive, [1, 2, 3])).toEqual([1, 2, 3]);
     });
 
-    it("parseAll throws on first invalid value", () => {
-      const parse = parseAll(nativeSchema);
+    it("nativeParseAll throws on first invalid value", () => {
+      const parse = nativeParseAll(nativeSchema);
       expect(() => parse(isPositive, [1, -2, 3])).toThrow();
     });
 
-    it("safeParseAll collects all valid values", () => {
-      const parse = safeParseAll(nativeSchema);
+    it("nativeSafeParseAll collects all valid values", () => {
+      const parse = nativeSafeParseAll(nativeSchema);
       const result = parse(isPositive, [1, 2, 3]);
       expect(result._tag).toBe("Valid");
       if (result._tag === "Valid") {
@@ -80,16 +79,16 @@ describe("Schema typeclass", () => {
       }
     });
 
-    it("safeParseAll returns Invalid when any value fails", () => {
-      const parse = safeParseAll(nativeSchema);
+    it("nativeSafeParseAll returns Invalid when any value fails", () => {
+      const parse = nativeSafeParseAll(nativeSchema);
       const result = parse(isPositive, [1, -2, 3]);
       expect(result._tag).toBe("Invalid");
     });
   });
 
-  describe("makeSchema", () => {
-    it("creates a custom Schema instance", () => {
-      const customSchema = makeSchema<ValidatorF>(
+  describe("makeNativeSchema", () => {
+    it("creates a custom NativeSchema instance", () => {
+      const customSchema = makeNativeSchema(
         (validator, data) => {
           if (validator(data)) return data;
           throw new Error("Custom validation failed");
