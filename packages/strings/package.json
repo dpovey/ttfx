@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/strings",
   "version": "0.1.0",
-  "description": "String interpolation macros (regex, html, fmt, json, raw) for typesugar",
+  "description": "🧊 String interpolation macros (regex, html, fmt, json, raw) for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

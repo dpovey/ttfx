@@ -456,7 +456,7 @@ function getPackagesForPersona(
 export async function runInit(verbose: boolean): Promise<void> {
   const cwd = process.cwd();
 
-  header("typesugar init");
+  header("🧊 typesugar init");
 
   log("Detecting your project setup...\n");
   const stack = detectStack(cwd);
@@ -563,7 +563,7 @@ export async function runInit(verbose: boolean): Promise<void> {
     warn("ts-patch install failed - run manually: npx ts-patch install");
   }
 
-  header("Setup complete!");
+  header("✨ Setup complete!");
 
   log("Next steps:");
   log("");

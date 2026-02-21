@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/typeclass",
   "version": "0.1.0",
-  "description": "Scala 3-style typeclass macros with auto-derivation for typesugar",
+  "description": "🧊 Scala 3-style typeclass macros with auto-derivation for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

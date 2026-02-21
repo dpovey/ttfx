@@ -1,7 +1,7 @@
 {
   "name": "typesugar-monorepo",
   "private": true,
-  "description": "Compile-time macros for TypeScript -- inspired by Rust, Scala 3, and Zig",
+  "description": "🧊 Compile-time macros for TypeScript -- inspired by Rust, Scala 3, and Zig",
   "type": "module",
   "scripts": {
     "build": "pnpm -r --filter '!typesugar-example-*' build",

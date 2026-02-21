@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/operators",
   "version": "0.1.0",
-  "description": "Operator overloading macros for typesugar",
+  "description": "🧊 Operator overloading macros for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

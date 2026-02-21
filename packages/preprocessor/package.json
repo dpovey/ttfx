@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/preprocessor",
   "version": "0.1.0",
-  "description": "Lexical preprocessor for typesugar syntax extensions (HKT, custom operators)",
+  "description": "🧊 Lexical preprocessor for typesugar syntax extensions (HKT, custom operators)",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

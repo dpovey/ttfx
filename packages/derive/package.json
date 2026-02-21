@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/derive",
   "version": "0.1.0",
-  "description": "Auto-derive common implementations (Eq, Ord, Clone, etc.) for typesugar",
+  "description": "🧊 Auto-derive common implementations (Eq, Ord, Clone, etc.) for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

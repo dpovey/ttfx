@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/units",
   "version": "0.1.0",
-  "description": "Type-safe physical units library with compile-time validation for typesugar",
+  "description": "🧊 Type-safe physical units library with compile-time validation for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/drizzle",
   "version": "0.1.0",
-  "description": "Drizzle adapter for typesugar - type-safe SQL tagged templates that compile to Drizzle's sql template",
+  "description": "🧊 Drizzle adapter for typesugar - type-safe SQL tagged templates that compile to Drizzle's sql template",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

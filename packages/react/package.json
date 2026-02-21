@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/react",
   "version": "0.1.0",
-  "description": "Compile-time React macros — Vue/Svelte-style reactivity with automatic dependency tracking",
+  "description": "🧊 Compile-time React macros — Vue/Svelte-style reactivity with automatic dependency tracking",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

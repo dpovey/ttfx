@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/specialize",
   "version": "0.1.0",
-  "description": "Zero-cost typeclass specialization macros for typesugar",
+  "description": "🧊 Zero-cost typeclass specialization macros for typesugar",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

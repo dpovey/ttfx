@@ -607,7 +607,7 @@ const x = comptime(1 + 1);
 export async function runDoctor(verbose: boolean): Promise<void> {
   const cwd = process.cwd();
 
-  header("typesugar doctor");
+  header("🧊 typesugar doctor");
 
   console.log(`Checking typesugar configuration in: ${cwd}\n`);
 
@@ -666,9 +666,9 @@ export async function runDoctor(verbose: boolean): Promise<void> {
     console.log(`${COLORS.green}All critical checks passed.${COLORS.reset}`);
   } else {
     console.log(
-      `${COLORS.green}${COLORS.bright}All checks passed!${COLORS.reset}`,
+      `${COLORS.green}${COLORS.bright}✨ All checks passed!${COLORS.reset}`,
     );
-    console.log("\ntypesugar is properly configured and ready to use.");
+    console.log("\n🧊 typesugar is properly configured and ready to use.");
   }
 
   if (verbose) {

@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/kysely",
   "version": "0.1.0",
-  "description": "Kysely adapter for typesugar - type-safe SQL tagged templates that compile to Kysely's RawBuilder",
+  "description": "🧊 Kysely adapter for typesugar - type-safe SQL tagged templates that compile to Kysely's RawBuilder",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

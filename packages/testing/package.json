@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/testing",
   "version": "0.1.0",
-  "description": "Compile-time testing macros — power assertions, property-based testing, type assertions",
+  "description": "🧊 Compile-time testing macros — power assertions, property-based testing, type assertions",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

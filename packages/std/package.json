@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/std",
   "version": "0.1.0",
-  "description": "Standard typeclasses and extension methods for enriching basic TypeScript types",
+  "description": "🧊 Standard typeclasses and extension methods for enriching basic TypeScript types",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

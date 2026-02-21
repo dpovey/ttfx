@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/contracts",
   "version": "0.1.0",
-  "description": "Design by Contract macros for typesugar — requires/ensures/invariant with configurable stripping and compile-time proofs",
+  "description": "🧊 Design by Contract macros for typesugar — requires/ensures/invariant with configurable stripping and compile-time proofs",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

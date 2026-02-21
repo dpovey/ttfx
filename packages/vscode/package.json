@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/vscode",
   "displayName": "typesugar",
-  "description": "IDE support for typesugar — syntax highlighting, expansion preview, and diagnostics for compile-time macros",
+  "description": "🧊 IDE support for typesugar — syntax highlighting, expansion preview, and diagnostics for compile-time macros",
   "version": "0.1.0",
   "publisher": "typesugar",
   "license": "MIT",

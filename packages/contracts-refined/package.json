@@ -1,7 +1,7 @@
 {
   "name": "@typesugar/contracts-refined",
   "version": "0.1.0",
-  "description": "Integrate @typesugar/contracts with @typesugar/type-system refinement types — single source of truth for type predicates",
+  "description": "🧊 Integrate @typesugar/contracts with @typesugar/type-system refinement types — single source of truth for type predicates",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

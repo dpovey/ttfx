@@ -90,7 +90,7 @@ function parseArgs(args: string[]): CliOptions {
 
 function printHelp(): void {
   console.log(`
-typesugar - Compile-time macros for TypeScript
+🧊 typesugar — Compile-time macros for TypeScript
 
 USAGE:
   typesugar <command> [options]
@@ -198,8 +198,8 @@ function build(options: CliOptions): void {
   const config = readTsConfig(options.project);
 
   if (options.verbose) {
-    console.log(`[typemacro] Using config: ${path.resolve(options.project)}`);
-    console.log(`[typemacro] Compiling ${config.fileNames.length} files...`);
+    console.log(`🧊 Using config: ${path.resolve(options.project)}`);
+    console.log(`🧊 Compiling ${config.fileNames.length} files...`);
   }
 
   const noEmit = options.command === "check";
@@ -228,10 +228,10 @@ function build(options: CliOptions): void {
     const fileCount = config.fileNames.length;
     if (errorCount > 0) {
       console.error(
-        `\n[typemacro] Found ${errorCount} error${errorCount === 1 ? "" : "s"} in ${fileCount} files.`,
+        `\n🧊 Found ${errorCount} error${errorCount === 1 ? "" : "s"} in ${fileCount} files.`,
       );
     } else {
-      console.log(`[typemacro] Successfully compiled ${fileCount} files.`);
+      console.log(`✨ Successfully compiled ${fileCount} files.`);
     }
   }
 
@@ -263,14 +263,14 @@ function watch(options: CliOptions): void {
         diagnostic.messageText,
         "\n",
       );
-      console.log(`[typemacro] ${message}`);
+      console.log(`🧊 ${message}`);
     },
   );
 
   const origCreateProgram = host.createProgram;
   host.createProgram = (rootNames, opts, hostObj, oldProgram) => {
     if (options.verbose) {
-      console.log("[typemacro] Recompiling...");
+      console.log("🧊 Recompiling...");
     }
     return origCreateProgram(rootNames, opts, hostObj, oldProgram);
   };
@@ -305,7 +305,7 @@ function watch(options: CliOptions): void {
     origAfterProgramCreate?.(builderProgram);
   };
 
-  console.log("[typemacro] Starting watch mode...");
+  console.log("🧊 Starting watch mode...");
   ts.createWatchProgram(host);
 }
 
