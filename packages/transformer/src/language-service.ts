@@ -1,11 +1,14 @@
 /**
- * typesugar TypeScript Language Service Plugin
+ * typesugar TypeScript Language Service Plugin (v2 - Transform-First)
  *
- * Provides IDE integration for typesugar:
- * - Suppresses false-positive diagnostics from macro invocations
- * - Adds custom diagnostics for macro errors
- * - Provides completions inside @derive() decorators
- * - Shows macro expansion info on hover
+ * This plugin intercepts file reads and serves transformed code to TypeScript,
+ * enabling full IDE support (completions, hover, go-to-definition) for
+ * macro-generated code.
+ *
+ * Architecture:
+ * 1. Intercept getScriptSnapshot to serve transformed code
+ * 2. Map incoming positions (editor → transformed)
+ * 3. Map outgoing positions (transformed → editor)
  *
  * Configure in tsconfig.json:
  * {
@@ -16,181 +19,20 @@
  */
 
 import type * as ts from "typescript";
-
-/** Known expression macro names from the typesugar core */
-const EXPRESSION_MACROS = new Set([
-  "comptime",
-  "ops",
-  "pipe",
-  "compose",
-  "summon",
-  "extend",
-  "typeInfo",
-  "fieldNames",
-  "validator",
-]);
+import * as path from "path";
+import { TransformationPipeline, type TransformResult } from "./pipeline.js";
+import { IdentityPositionMapper, type PositionMapper, type TextRange } from "./position-mapper.js";
 
 /**
- * Known typeclass method names and their providing typeclasses.
+ * Cache entry for transformed files
  */
-const TYPECLASS_EXTENSION_METHODS: Record<
-  string,
-  { typeclass: string; description: string; returnType: string }
-> = {
-  show: {
-    typeclass: "Show",
-    description: "Convert to a human-readable string representation",
-    returnType: "string",
-  },
-  eq: {
-    typeclass: "Eq",
-    description: "Check equality with another value",
-    returnType: "boolean",
-  },
-  neq: {
-    typeclass: "Eq",
-    description: "Check inequality with another value",
-    returnType: "boolean",
-  },
-  compare: {
-    typeclass: "Ord",
-    description: "Compare ordering with another value (-1, 0, or 1)",
-    returnType: "-1 | 0 | 1",
-  },
-  hash: {
-    typeclass: "Hash",
-    description: "Compute a hash code for this value",
-    returnType: "number",
-  },
-  combine: {
-    typeclass: "Semigroup",
-    description: "Combine with another value using the Semigroup operation",
-    returnType: "self",
-  },
-  empty: {
-    typeclass: "Monoid",
-    description: "Get the identity element for this type",
-    returnType: "self",
-  },
-  map: {
-    typeclass: "Functor",
-    description: "Apply a function to the contained value(s)",
-    returnType: "self",
-  },
-  // Derived methods from @derive() macros
-  equals: {
-    typeclass: "Eq",
-    description: "Check equality with another value (derived)",
-    returnType: "boolean",
-  },
-  clone: {
-    typeclass: "Clone",
-    description: "Create a deep copy of this value (derived)",
-    returnType: "self",
-  },
-  debug: {
-    typeclass: "Debug",
-    description: "Get debug string representation (derived)",
-    returnType: "string",
-  },
-  toJson: {
-    typeclass: "Json",
-    description: "Serialize to JSON (derived)",
-    returnType: "unknown",
-  },
-  fromJson: {
-    typeclass: "Json",
-    description: "Deserialize from JSON (derived, static)",
-    returnType: "self",
-  },
-  default: {
-    typeclass: "Default",
-    description: "Get default instance (derived, static)",
-    returnType: "self",
-  },
-  builder: {
-    typeclass: "Builder",
-    description: "Get builder instance (derived, static)",
-    returnType: "Builder<self>",
-  },
-  build: {
-    typeclass: "Builder",
-    description: "Build the final instance (derived)",
-    returnType: "self",
-  },
-};
-
-/** Names of all known derive macros for suppression */
-const DERIVE_MACRO_NAMES = new Set([
-  "Eq",
-  "Ord",
-  "Clone",
-  "Debug",
-  "Hash",
-  "Default",
-  "Json",
-  "Builder",
-  "TypeGuard",
-  "Show",
-]);
-
-const EXTENSION_METHOD_NAMES = new Set(Object.keys(TYPECLASS_EXTENSION_METHODS));
-
-const DECORATOR_MACROS = new Set([
-  "derive",
-  "operators",
-  "reflect",
-  "typeclass",
-  "instance",
-  "deriving",
-  "inline",
-]);
-
-const DERIVE_MACROS = [
-  { name: "Eq", description: "Generate equality comparison function" },
-  { name: "Ord", description: "Generate ordering/comparison function" },
-  { name: "Clone", description: "Generate deep clone function" },
-  { name: "Debug", description: "Generate debug string representation" },
-  { name: "Hash", description: "Generate hash function" },
-  { name: "Default", description: "Generate default value factory" },
-  { name: "Json", description: "Generate JSON serialization/deserialization" },
-  { name: "Builder", description: "Generate builder pattern class" },
-];
-
-const TAGGED_TEMPLATE_MACROS = new Set(["sql", "regex", "html", "fmt", "json", "raw", "units"]);
-
-/** Semantic diagnostic codes to suppress unconditionally */
-const SUPPRESSED_SEMANTIC_CODES = new Set([
-  1206, // Decorators are not valid here
-  1345, // Expression of type void cannot be tested
-  2304, // Cannot find name
-  2339, // Property does not exist
-]);
-
-/** Code 6133 is handled specially - only suppress for typesugar imports */
-const UNUSED_IMPORT_CODE = 6133;
-
-/** typesugar package prefixes for import detection */
-const TYPESUGAR_PACKAGE_PREFIXES = [
-  "typesugar",
-  "@typesugar/",
-  "typemacro", // legacy name
-  "@typemacro/", // legacy name
-  "ttfx", // legacy name
-  "@ttfx/", // legacy name
-];
-
-/** Syntactic (parse) error codes that may occur from HKT syntax like F<_> */
-const HKT_PARSE_ERROR_CODES = new Set([
-  1005, // ',' expected (from <_>)
-  1003, // Identifier expected (from <_>)
-  1109, // Expression expected
-  1128, // Declaration or statement expected
-  1434, // Unexpected keyword or identifier
-]);
+interface TransformCacheEntry {
+  result: TransformResult;
+  version: string;
+}
 
 function init(modules: { typescript: typeof ts }) {
-  console.log("[typesugar] Language service plugin initializing...");
+  console.log("[typesugar] Language service plugin v2 (transform-first) initializing...");
   const tsModule = modules.typescript;
 
   function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
@@ -198,15 +40,134 @@ function init(modules: { typescript: typeof ts }) {
       "[typesugar] Creating language service proxy for project:",
       info.project.getProjectName()
     );
+
     const log = (msg: string) => {
       info.project.projectService.logger.info(`[typesugar] ${msg}`);
     };
 
-    log("typesugar language service plugin initialized");
+    log("typesugar language service plugin v2 initialized");
 
+    // ---------------------------------------------------------------------------
+    // Transform cache and pipeline
+    // ---------------------------------------------------------------------------
+    const transformCache = new Map<string, TransformCacheEntry>();
+    let pipeline: TransformationPipeline | null = null;
+
+    /**
+     * Get or create the transformation pipeline
+     */
+    function getPipeline(): TransformationPipeline {
+      if (!pipeline) {
+        const compilerOptions = info.project.getCompilerOptions();
+        const fileNames = info.project.getFileNames();
+
+        log(`Initializing pipeline with ${fileNames.length} files`);
+
+        pipeline = new TransformationPipeline(compilerOptions, fileNames, {
+          verbose: false,
+          readFile: (fileName: string): string | undefined => {
+            // Read from the original host to avoid cyclic interception
+            const snapshot = originalGetScriptSnapshot(fileName);
+            if (snapshot) {
+              return snapshot.getText(0, snapshot.getLength());
+            }
+            return undefined;
+          },
+          fileExists: (fileName: string): boolean => {
+            return info.languageServiceHost.fileExists?.(fileName) ?? false;
+          },
+        });
+      }
+      return pipeline;
+    }
+
+    /**
+     * Get the script version for cache invalidation
+     */
+    function getScriptVersion(fileName: string): string {
+      return info.languageServiceHost.getScriptVersion(fileName);
+    }
+
+    /**
+     * Transform a file and cache the result
+     */
+    function getTransformResult(fileName: string): TransformResult | null {
+      const normalizedFileName = path.normalize(fileName);
+
+      // Check if we should transform this file
+      const p = getPipeline();
+      if (!p.shouldTransform(normalizedFileName)) {
+        return null;
+      }
+
+      // Check cache validity
+      const currentVersion = getScriptVersion(normalizedFileName);
+      const cached = transformCache.get(normalizedFileName);
+
+      if (cached && cached.version === currentVersion) {
+        return cached.result;
+      }
+
+      // Invalidate stale cache entry
+      if (cached) {
+        p.invalidate(normalizedFileName);
+      }
+
+      try {
+        const result = p.transform(normalizedFileName);
+
+        // Only cache if transformation actually changed the file
+        if (result.changed) {
+          transformCache.set(normalizedFileName, {
+            result,
+            version: currentVersion,
+          });
+          log(`Transformed ${normalizedFileName} (${result.code.length} chars)`);
+        }
+
+        return result;
+      } catch (error) {
+        log(`Transform error for ${normalizedFileName}: ${error}`);
+        return null;
+      }
+    }
+
+    /**
+     * Get the position mapper for a file
+     */
+    function getMapper(fileName: string): PositionMapper {
+      const result = getTransformResult(fileName);
+      return result?.mapper ?? new IdentityPositionMapper();
+    }
+
+    // ---------------------------------------------------------------------------
+    // Intercept LanguageServiceHost.getScriptSnapshot
+    // ---------------------------------------------------------------------------
+    const originalGetScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(
+      info.languageServiceHost
+    );
+
+    info.languageServiceHost.getScriptSnapshot = (
+      fileName: string
+    ): ts.IScriptSnapshot | undefined => {
+      const result = getTransformResult(fileName);
+
+      if (result && result.changed) {
+        // Return transformed code as a script snapshot
+        return tsModule.ScriptSnapshot.fromString(result.code);
+      }
+
+      // Fall back to original snapshot
+      return originalGetScriptSnapshot(fileName);
+    };
+
+    // ---------------------------------------------------------------------------
+    // Create proxy for LanguageService methods
+    // ---------------------------------------------------------------------------
     const proxy = Object.create(null) as ts.LanguageService;
     const oldLS = info.languageService;
 
+    // Copy all methods from the original language service
     for (const k of Object.keys(oldLS)) {
       const prop = (oldLS as unknown as Record<string, unknown>)[k];
       if (typeof prop === "function") {
@@ -216,529 +177,538 @@ function init(modules: { typescript: typeof ts }) {
       }
     }
 
-    // -----------------------------------------------------------------------
-    // Override: getSyntacticDiagnostics
-    // Suppress parse errors from HKT syntax like F<_>
-    // -----------------------------------------------------------------------
-    proxy.getSyntacticDiagnostics = (fileName: string): ts.DiagnosticWithLocation[] => {
-      const diagnostics = oldLS.getSyntacticDiagnostics(fileName);
-      const program = oldLS.getProgram();
-      if (!program) return diagnostics;
+    // ---------------------------------------------------------------------------
+    // Override: Diagnostic methods (map positions back to original)
+    // ---------------------------------------------------------------------------
 
-      const sourceFile = program.getSourceFile(fileName);
-      if (!sourceFile) return diagnostics;
+    /**
+     * Map a single diagnostic's positions back to original source
+     */
+    function mapDiagnostic(diag: ts.Diagnostic, mapper: PositionMapper): ts.Diagnostic | null {
+      if (diag.start === undefined) return diag;
 
-      const sourceText = sourceFile.getFullText();
+      const originalStart = mapper.toOriginal(diag.start);
 
-      return diagnostics.filter((diag) => {
-        // Check if this is a potential HKT parse error
-        if (!HKT_PARSE_ERROR_CODES.has(diag.code)) return true;
-        if (diag.start === undefined) return true;
+      // If we can't map the position, it's in macro-generated code — suppress it
+      if (originalStart === null) {
+        return null;
+      }
 
-        // Look for HKT pattern near the error position: Identifier<_>
-        // Check a window around the error position for the <_> pattern
-        const windowStart = Math.max(0, diag.start - 30);
-        const windowEnd = Math.min(sourceText.length, diag.start + diag.length + 30);
-        const window = sourceText.slice(windowStart, windowEnd);
-
-        // Pattern: uppercase identifier followed by <_> or <_, _>
-        const hktPattern = /[A-Z][a-zA-Z0-9]*\s*<\s*_(\s*,\s*_)*\s*>/;
-        if (hktPattern.test(window)) {
-          log(
-            `Suppressed syntactic diagnostic ${diag.code} (HKT syntax): ${window.trim().slice(0, 40)}...`
-          );
-          return false;
+      // Map the length as well
+      let originalLength = diag.length;
+      if (diag.length !== undefined) {
+        const originalEnd = mapper.toOriginal(diag.start + diag.length);
+        if (originalEnd !== null) {
+          originalLength = Math.max(1, originalEnd - originalStart);
         }
+      }
 
-        return true;
-      });
-    };
+      return {
+        ...diag,
+        start: originalStart,
+        length: originalLength,
+      };
+    }
 
-    // -----------------------------------------------------------------------
-    // Override: getSemanticDiagnostics
-    // Suppress false positives from macro invocations
-    // -----------------------------------------------------------------------
+    /**
+     * Map an array of diagnostics
+     */
+    function mapDiagnostics<T extends ts.Diagnostic>(
+      diagnostics: readonly T[],
+      fileName: string
+    ): T[] {
+      const mapper = getMapper(fileName);
+      const mapped: T[] = [];
+
+      for (const diag of diagnostics) {
+        const mappedDiag = mapDiagnostic(diag, mapper);
+        if (mappedDiag !== null) {
+          mapped.push(mappedDiag as T);
+        }
+      }
+
+      return mapped;
+    }
+
     proxy.getSemanticDiagnostics = (fileName: string): ts.Diagnostic[] => {
       const diagnostics = oldLS.getSemanticDiagnostics(fileName);
-      const program = oldLS.getProgram();
-      if (!program) return diagnostics;
-
-      const sourceFile = program.getSourceFile(fileName);
-      if (!sourceFile) return diagnostics;
-
-      return diagnostics.filter((diag) => {
-        // Handle 6133 (unused variable) specially - only suppress for typesugar imports
-        if (diag.code === UNUSED_IMPORT_CODE) {
-          if (diag.start === undefined) return true;
-
-          const node = findNodeAtPosition(tsModule, sourceFile, diag.start);
-          if (!node) return true;
-
-          // Check if this is an import specifier from a typesugar package
-          if (isTypesugarImport(tsModule, node, sourceFile)) {
-            log(`Suppressed diagnostic ${diag.code} for typesugar import`);
-            return false;
-          }
-
-          return true;
-        }
-
-        if (!SUPPRESSED_SEMANTIC_CODES.has(diag.code)) return true;
-        if (diag.start === undefined) return true;
-
-        const node = findNodeAtPosition(tsModule, sourceFile, diag.start);
-        if (!node) return true;
-
-        if (diag.code === 1206) {
-          const decorator = findAncestor(tsModule, node, tsModule.isDecorator);
-          if (decorator && tsModule.isDecorator(decorator)) {
-            const name = getDecoratorName(tsModule, decorator as ts.Decorator);
-            if (name && DECORATOR_MACROS.has(name)) {
-              log(`Suppressed diagnostic ${diag.code} for @${name}`);
-              return false;
-            }
-          }
-        }
-
-        if (diag.code === 2304) {
-          if (isNearMacroInvocation(tsModule, sourceFile, node)) {
-            log(`Suppressed diagnostic ${diag.code} near macro invocation`);
-            return false;
-          }
-          // Suppress "Cannot find name" for derive macro arguments like Eq, Clone, Debug
-          if (tsModule.isIdentifier(node) && DERIVE_MACRO_NAMES.has(node.text)) {
-            if (isInDeriveDecorator(tsModule, node)) {
-              log(`Suppressed diagnostic ${diag.code} for derive macro arg: ${node.text}`);
-              return false;
-            }
-          }
-        }
-
-        if (diag.code === 2339) {
-          if (isExtensionMethodCall(tsModule, sourceFile, node)) {
-            log(`Suppressed diagnostic ${diag.code} for extension method call`);
-            return false;
-          }
-        }
-
-        return true;
-      });
+      return mapDiagnostics(diagnostics, fileName);
     };
+
+    proxy.getSyntacticDiagnostics = (fileName: string): ts.DiagnosticWithLocation[] => {
+      const diagnostics = oldLS.getSyntacticDiagnostics(fileName);
+      return mapDiagnostics(diagnostics, fileName);
+    };
+
+    proxy.getSuggestionDiagnostics = (fileName: string): ts.DiagnosticWithLocation[] => {
+      const diagnostics = oldLS.getSuggestionDiagnostics(fileName);
+      return mapDiagnostics(diagnostics, fileName);
+    };
+
+    // ---------------------------------------------------------------------------
+    // Override: Position-based IDE features (map positions bidirectionally)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Map a TextSpan back to original coordinates
+     */
+    function mapTextSpanToOriginal(span: ts.TextSpan, mapper: PositionMapper): ts.TextSpan | null {
+      const originalStart = mapper.toOriginal(span.start);
+      if (originalStart === null) return null;
+
+      const originalEnd = mapper.toOriginal(span.start + span.length);
+      const originalLength =
+        originalEnd !== null ? Math.max(1, originalEnd - originalStart) : span.length;
+
+      return { start: originalStart, length: originalLength };
+    }
 
     proxy.getCompletionsAtPosition = (
       fileName: string,
       position: number,
       options: ts.GetCompletionsAtPositionOptions | undefined
     ): ts.WithMetadata<ts.CompletionInfo> | undefined => {
-      const prior = oldLS.getCompletionsAtPosition(fileName, position, options);
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
 
-      const program = oldLS.getProgram();
-      if (!program) return prior;
-
-      const sourceFile = program.getSourceFile(fileName);
-      if (!sourceFile) return prior;
-
-      const node = findNodeAtPosition(tsModule, sourceFile, position);
-      if (!node) return prior;
-
-      const deriveContext = findDeriveContext(tsModule, node);
-      if (deriveContext) {
-        const deriveEntries: ts.CompletionEntry[] = DERIVE_MACROS.map((macro) => ({
-          name: macro.name,
-          kind: tsModule.ScriptElementKind.constElement,
-          kindModifiers: "",
-          sortText: `0${macro.name}`,
-          labelDetails: {
-            description: macro.description,
-          },
-        }));
-
-        if (prior) {
-          return {
-            ...prior,
-            entries: [...deriveEntries, ...prior.entries],
-          };
-        }
-
-        return {
-          isGlobalCompletion: false,
-          isMemberCompletion: false,
-          isNewIdentifierLocation: false,
-          entries: deriveEntries,
-        };
+      if (transformedPosition === null) {
+        log(`getCompletionsAtPosition: could not map position ${position} in ${fileName}`);
+        return undefined;
       }
 
-      const extensionEntries = getExtensionMethodCompletions(tsModule, sourceFile, node, program);
-      if (extensionEntries.length > 0) {
-        if (prior) {
-          return {
-            ...prior,
-            entries: [...extensionEntries, ...prior.entries],
-          };
+      const result = oldLS.getCompletionsAtPosition(fileName, transformedPosition, options);
+
+      if (!result) return result;
+
+      // Map replacement spans back to original coordinates
+      const mappedEntries = result.entries.map((entry) => {
+        if (entry.replacementSpan) {
+          const mappedSpan = mapTextSpanToOriginal(entry.replacementSpan, mapper);
+          if (mappedSpan) {
+            return { ...entry, replacementSpan: mappedSpan };
+          }
         }
+        return entry;
+      });
 
-        return {
-          isGlobalCompletion: false,
-          isMemberCompletion: true,
-          isNewIdentifierLocation: false,
-          entries: extensionEntries,
-        };
-      }
-
-      return prior;
+      return {
+        ...result,
+        entries: mappedEntries,
+      };
     };
 
     proxy.getQuickInfoAtPosition = (
       fileName: string,
       position: number
     ): ts.QuickInfo | undefined => {
-      const prior = oldLS.getQuickInfoAtPosition(fileName, position);
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
 
-      const program = oldLS.getProgram();
-      if (!program) return prior;
-
-      const sourceFile = program.getSourceFile(fileName);
-      if (!sourceFile) return prior;
-
-      const node = findNodeAtPosition(tsModule, sourceFile, position);
-      if (!node) return prior;
-
-      if (tsModule.isIdentifier(node)) {
-        const name = node.text;
-
-        if (EXPRESSION_MACROS.has(name)) {
-          return {
-            kind: tsModule.ScriptElementKind.functionElement,
-            kindModifiers: "typesugar",
-            textSpan: {
-              start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile),
-            },
-            displayParts: [
-              {
-                text: `(typesugar expression macro) ${name}`,
-                kind: "text",
-              },
-            ],
-            documentation: [
-              {
-                text: "This call is expanded at compile time by the typesugar transformer.",
-                kind: "text",
-              },
-            ],
-          };
-        }
-
-        if (DECORATOR_MACROS.has(name)) {
-          return {
-            kind: tsModule.ScriptElementKind.functionElement,
-            kindModifiers: "typesugar",
-            textSpan: {
-              start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile),
-            },
-            displayParts: [
-              {
-                text: `(typesugar decorator macro) @${name}`,
-                kind: "text",
-              },
-            ],
-            documentation: [
-              {
-                text: "This decorator is processed at compile time by the typesugar transformer.",
-                kind: "text",
-              },
-            ],
-          };
-        }
-
-        if (TAGGED_TEMPLATE_MACROS.has(name)) {
-          return {
-            kind: tsModule.ScriptElementKind.functionElement,
-            kindModifiers: "typesugar",
-            textSpan: {
-              start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile),
-            },
-            displayParts: [
-              {
-                text: `(typesugar tagged template macro) ${name}\`...\``,
-                kind: "text",
-              },
-            ],
-            documentation: [
-              {
-                text: "This tagged template is processed at compile time by the typesugar transformer.",
-                kind: "text",
-              },
-            ],
-          };
-        }
-
-        const extInfo = getExtensionMethodHoverInfo(tsModule, sourceFile, node, program);
-        if (extInfo) {
-          return {
-            kind: tsModule.ScriptElementKind.memberFunctionElement,
-            kindModifiers: "typesugar extension",
-            textSpan: {
-              start: node.getStart(sourceFile),
-              length: node.getWidth(sourceFile),
-            },
-            displayParts: [
-              {
-                text: extInfo.displayText,
-                kind: "text",
-              },
-            ],
-            documentation: [
-              {
-                text: extInfo.documentation,
-                kind: "text",
-              },
-            ],
-          };
-        }
+      if (transformedPosition === null) {
+        log(`getQuickInfoAtPosition: could not map position ${position} in ${fileName}`);
+        return undefined;
       }
 
-      return prior;
+      const result = oldLS.getQuickInfoAtPosition(fileName, transformedPosition);
+
+      if (!result) return result;
+
+      // Map the textSpan back to original coordinates
+      const mappedSpan = mapTextSpanToOriginal(result.textSpan, mapper);
+      if (!mappedSpan) return undefined;
+
+      return {
+        ...result,
+        textSpan: mappedSpan,
+      };
     };
+
+    proxy.getDefinitionAtPosition = (
+      fileName: string,
+      position: number
+    ): readonly ts.DefinitionInfo[] | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        log(`getDefinitionAtPosition: could not map position ${position} in ${fileName}`);
+        return undefined;
+      }
+
+      const definitions = oldLS.getDefinitionAtPosition(fileName, transformedPosition);
+
+      if (!definitions) return definitions;
+
+      // Map each definition's textSpan back to original coordinates
+      // Note: definitions may point to different files, so we need per-file mappers
+      return definitions.map((def) => {
+        const targetMapper = getMapper(def.fileName);
+        const mappedSpan = mapTextSpanToOriginal(def.textSpan, targetMapper);
+
+        if (!mappedSpan) {
+          // Can't map — return original (best effort)
+          return def;
+        }
+
+        let mappedContextSpan = def.contextSpan;
+        if (def.contextSpan) {
+          mappedContextSpan =
+            mapTextSpanToOriginal(def.contextSpan, targetMapper) ?? def.contextSpan;
+        }
+
+        return {
+          ...def,
+          textSpan: mappedSpan,
+          contextSpan: mappedContextSpan,
+        };
+      });
+    };
+
+    proxy.getDefinitionAndBoundSpan = (
+      fileName: string,
+      position: number
+    ): ts.DefinitionInfoAndBoundSpan | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        log(`getDefinitionAndBoundSpan: could not map position ${position} in ${fileName}`);
+        return undefined;
+      }
+
+      const result = oldLS.getDefinitionAndBoundSpan(fileName, transformedPosition);
+
+      if (!result) return result;
+
+      // Map the textSpan (the "bound span" that gets highlighted)
+      const mappedTextSpan = mapTextSpanToOriginal(result.textSpan, mapper);
+      if (!mappedTextSpan) return undefined;
+
+      // Map each definition's spans
+      const mappedDefinitions = result.definitions?.map((def) => {
+        const targetMapper = getMapper(def.fileName);
+        const mappedDefSpan = mapTextSpanToOriginal(def.textSpan, targetMapper);
+
+        if (!mappedDefSpan) return def;
+
+        let mappedContextSpan = def.contextSpan;
+        if (def.contextSpan) {
+          mappedContextSpan =
+            mapTextSpanToOriginal(def.contextSpan, targetMapper) ?? def.contextSpan;
+        }
+
+        return {
+          ...def,
+          textSpan: mappedDefSpan,
+          contextSpan: mappedContextSpan,
+        };
+      });
+
+      return {
+        textSpan: mappedTextSpan,
+        definitions: mappedDefinitions,
+      };
+    };
+
+    proxy.getTypeDefinitionAtPosition = (
+      fileName: string,
+      position: number
+    ): readonly ts.DefinitionInfo[] | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        return undefined;
+      }
+
+      const definitions = oldLS.getTypeDefinitionAtPosition(fileName, transformedPosition);
+
+      if (!definitions) return definitions;
+
+      return definitions.map((def) => {
+        const targetMapper = getMapper(def.fileName);
+        const mappedSpan = mapTextSpanToOriginal(def.textSpan, targetMapper);
+
+        if (!mappedSpan) return def;
+
+        let mappedContextSpan = def.contextSpan;
+        if (def.contextSpan) {
+          mappedContextSpan =
+            mapTextSpanToOriginal(def.contextSpan, targetMapper) ?? def.contextSpan;
+        }
+
+        return {
+          ...def,
+          textSpan: mappedSpan,
+          contextSpan: mappedContextSpan,
+        };
+      });
+    };
+
+    proxy.getReferencesAtPosition = (
+      fileName: string,
+      position: number
+    ): ts.ReferenceEntry[] | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        return undefined;
+      }
+
+      const references = oldLS.getReferencesAtPosition(fileName, transformedPosition);
+
+      if (!references) return references;
+
+      const mapped: ts.ReferenceEntry[] = [];
+      for (const ref of references) {
+        const targetMapper = getMapper(ref.fileName);
+        const mappedSpan = mapTextSpanToOriginal(ref.textSpan, targetMapper);
+
+        if (!mappedSpan) continue;
+
+        const result: ts.ReferenceEntry = {
+          ...ref,
+          textSpan: mappedSpan,
+        };
+
+        if (ref.contextSpan) {
+          result.contextSpan =
+            mapTextSpanToOriginal(ref.contextSpan, targetMapper) ?? ref.contextSpan;
+        }
+
+        mapped.push(result);
+      }
+
+      return mapped;
+    };
+
+    proxy.findReferences = (
+      fileName: string,
+      position: number
+    ): ts.ReferencedSymbol[] | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        return undefined;
+      }
+
+      const symbols = oldLS.findReferences(fileName, transformedPosition);
+
+      if (!symbols) return symbols;
+
+      return symbols.map((symbol) => {
+        // Map the definition span
+        const defMapper = getMapper(symbol.definition.fileName);
+        const mappedDefSpan = mapTextSpanToOriginal(symbol.definition.textSpan, defMapper);
+
+        const mappedDef: ts.ReferencedSymbolDefinitionInfo = {
+          ...symbol.definition,
+          textSpan: mappedDefSpan ?? symbol.definition.textSpan,
+        };
+
+        if (symbol.definition.contextSpan) {
+          mappedDef.contextSpan =
+            mapTextSpanToOriginal(symbol.definition.contextSpan, defMapper) ??
+            symbol.definition.contextSpan;
+        }
+
+        // Map all references
+        const mappedReferences: ts.ReferencedSymbolEntry[] = [];
+        for (const ref of symbol.references) {
+          const refMapper = getMapper(ref.fileName);
+          const mappedRefSpan = mapTextSpanToOriginal(ref.textSpan, refMapper);
+
+          if (!mappedRefSpan) continue;
+
+          const mappedRef: ts.ReferencedSymbolEntry = {
+            ...ref,
+            textSpan: mappedRefSpan,
+          };
+
+          if (ref.contextSpan) {
+            mappedRef.contextSpan =
+              mapTextSpanToOriginal(ref.contextSpan, refMapper) ?? ref.contextSpan;
+          }
+
+          mappedReferences.push(mappedRef);
+        }
+
+        return {
+          definition: mappedDef,
+          references: mappedReferences,
+        };
+      });
+    };
+
+    proxy.getSignatureHelpItems = (
+      fileName: string,
+      position: number,
+      options: ts.SignatureHelpItemsOptions | undefined
+    ): ts.SignatureHelpItems | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        return undefined;
+      }
+
+      const result = oldLS.getSignatureHelpItems(fileName, transformedPosition, options);
+
+      if (!result) return result;
+
+      // Map the applicableSpan back to original coordinates
+      const mappedApplicableSpan = mapTextSpanToOriginal(result.applicableSpan, mapper);
+
+      return {
+        ...result,
+        applicableSpan: mappedApplicableSpan ?? result.applicableSpan,
+      };
+    };
+
+    proxy.getRenameInfo = (
+      fileName: string,
+      position: number,
+      options?: ts.RenameInfoOptions
+    ): ts.RenameInfo => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        return {
+          canRename: false,
+          localizedErrorMessage: "Cannot rename in macro-generated code",
+        };
+      }
+
+      const result = oldLS.getRenameInfo(fileName, transformedPosition, options);
+
+      if (!result.canRename) return result;
+
+      // Map the triggerSpan back to original coordinates
+      const mappedTriggerSpan = mapTextSpanToOriginal(result.triggerSpan, mapper);
+
+      if (!mappedTriggerSpan) {
+        return {
+          canRename: false,
+          localizedErrorMessage: "Cannot rename macro-generated identifier",
+        };
+      }
+
+      return {
+        ...result,
+        triggerSpan: mappedTriggerSpan,
+      };
+    };
+
+    proxy.findRenameLocations = (
+      fileName: string,
+      position: number,
+      findInStrings: boolean,
+      findInComments: boolean,
+      preferences?: boolean | ts.UserPreferences
+    ): readonly ts.RenameLocation[] | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        return undefined;
+      }
+
+      // Handle both overload forms of the API
+      const locations =
+        typeof preferences === "object"
+          ? oldLS.findRenameLocations(
+              fileName,
+              transformedPosition,
+              findInStrings,
+              findInComments,
+              preferences
+            )
+          : oldLS.findRenameLocations(
+              fileName,
+              transformedPosition,
+              findInStrings,
+              findInComments,
+              preferences as boolean | undefined
+            );
+
+      if (!locations) return locations;
+
+      const mapped: ts.RenameLocation[] = [];
+      for (const loc of locations) {
+        const targetMapper = getMapper(loc.fileName);
+        const mappedSpan = mapTextSpanToOriginal(loc.textSpan, targetMapper);
+
+        if (!mappedSpan) continue;
+
+        const result: ts.RenameLocation = {
+          ...loc,
+          textSpan: mappedSpan,
+        };
+
+        if (loc.contextSpan) {
+          result.contextSpan =
+            mapTextSpanToOriginal(loc.contextSpan, targetMapper) ?? loc.contextSpan;
+        }
+
+        mapped.push(result);
+      }
+
+      return mapped;
+    };
+
+    proxy.getDocumentHighlights = (
+      fileName: string,
+      position: number,
+      filesToSearch: string[]
+    ): ts.DocumentHighlights[] | undefined => {
+      const mapper = getMapper(fileName);
+      const transformedPosition = mapper.toTransformed(position);
+
+      if (transformedPosition === null) {
+        return undefined;
+      }
+
+      const highlights = oldLS.getDocumentHighlights(fileName, transformedPosition, filesToSearch);
+
+      if (!highlights) return highlights;
+
+      return highlights.map((docHighlight) => {
+        const targetMapper = getMapper(docHighlight.fileName);
+
+        const mappedSpans: ts.HighlightSpan[] = [];
+        for (const span of docHighlight.highlightSpans) {
+          const mappedTextSpan = mapTextSpanToOriginal(span.textSpan, targetMapper);
+          if (!mappedTextSpan) continue;
+
+          const result: ts.HighlightSpan = {
+            ...span,
+            textSpan: mappedTextSpan,
+          };
+
+          if (span.contextSpan) {
+            result.contextSpan =
+              mapTextSpanToOriginal(span.contextSpan, targetMapper) ?? span.contextSpan;
+          }
+
+          mappedSpans.push(result);
+        }
+
+        return {
+          fileName: docHighlight.fileName,
+          highlightSpans: mappedSpans,
+        };
+      });
+    };
+
+    log("Language service proxy created with transform-first architecture");
 
     return proxy;
   }
 
   return { create };
-}
-
-/**
- * Check if a node is an import (or part of an import) from a typesugar package.
- * Used to selectively suppress 6133 "unused variable" only for typesugar imports.
- */
-function isTypesugarImport(
-  ts: typeof import("typescript"),
-  node: ts.Node,
-  sourceFile: ts.SourceFile
-): boolean {
-  // Walk up to find the import declaration
-  let current: ts.Node | undefined = node;
-  while (current) {
-    if (ts.isImportDeclaration(current)) {
-      const moduleSpecifier = current.moduleSpecifier;
-      if (ts.isStringLiteral(moduleSpecifier)) {
-        const modulePath = moduleSpecifier.text;
-        return TYPESUGAR_PACKAGE_PREFIXES.some(
-          (prefix) => modulePath === prefix.replace(/\/$/, "") || modulePath.startsWith(prefix)
-        );
-      }
-      return false;
-    }
-    current = current.parent;
-  }
-  return false;
-}
-
-function findNodeAtPosition(
-  ts: typeof import("typescript"),
-  sourceFile: ts.SourceFile,
-  position: number
-): ts.Node | undefined {
-  function find(node: ts.Node): ts.Node | undefined {
-    if (position >= node.getStart(sourceFile) && position < node.getEnd()) {
-      return ts.forEachChild(node, find) ?? node;
-    }
-    return undefined;
-  }
-  return find(sourceFile);
-}
-
-function findAncestor(
-  ts: typeof import("typescript"),
-  node: ts.Node,
-  predicate: (node: ts.Node) => boolean
-): ts.Node | undefined {
-  let current: ts.Node | undefined = node;
-  while (current) {
-    if (predicate(current)) return current;
-    current = current.parent;
-  }
-  return undefined;
-}
-
-function getDecoratorName(
-  ts: typeof import("typescript"),
-  decorator: ts.Decorator
-): string | undefined {
-  const expr = decorator.expression;
-  if (ts.isIdentifier(expr)) return expr.text;
-  if (ts.isCallExpression(expr) && ts.isIdentifier(expr.expression)) {
-    return expr.expression.text;
-  }
-  return undefined;
-}
-
-function findDeriveContext(ts: typeof import("typescript"), node: ts.Node): boolean {
-  let current: ts.Node | undefined = node;
-  while (current) {
-    if (ts.isCallExpression(current)) {
-      if (ts.isIdentifier(current.expression) && current.expression.text === "derive") {
-        return true;
-      }
-    }
-    if (ts.isDecorator(current)) {
-      const name = getDecoratorName(ts, current);
-      if (name === "derive") return true;
-    }
-    current = current.parent;
-  }
-  return false;
-}
-
-/**
- * Check if a node is inside a @derive() decorator.
- * Used to suppress "Cannot find name" for derive macro arguments like Eq, Clone, Debug.
- */
-function isInDeriveDecorator(ts: typeof import("typescript"), node: ts.Node): boolean {
-  let current: ts.Node | undefined = node;
-  while (current) {
-    if (ts.isDecorator(current)) {
-      const name = getDecoratorName(ts, current);
-      return name === "derive";
-    }
-    current = current.parent;
-  }
-  return false;
-}
-
-function isNearMacroInvocation(
-  ts: typeof import("typescript"),
-  sourceFile: ts.SourceFile,
-  node: ts.Node
-): boolean {
-  let current: ts.Node | undefined = node;
-  while (current) {
-    if (ts.isCallExpression(current)) {
-      if (ts.isIdentifier(current.expression)) {
-        if (EXPRESSION_MACROS.has(current.expression.text)) return true;
-      }
-    }
-    if (ts.isTaggedTemplateExpression(current)) {
-      if (ts.isIdentifier(current.tag)) {
-        if (TAGGED_TEMPLATE_MACROS.has(current.tag.text)) return true;
-      }
-    }
-    if (ts.isBlock(current) || ts.isSourceFile(current)) {
-      for (const stmt of current.statements ?? []) {
-        if (ts.isExpressionStatement(stmt) && ts.isCallExpression(stmt.expression)) {
-          if (ts.isIdentifier(stmt.expression.expression)) {
-            if (EXPRESSION_MACROS.has(stmt.expression.expression.text)) return true;
-          }
-        }
-      }
-    }
-    current = current.parent;
-  }
-  return false;
-}
-
-function isExtensionMethodCall(
-  ts: typeof import("typescript"),
-  sourceFile: ts.SourceFile,
-  node: ts.Node
-): boolean {
-  if (ts.isIdentifier(node) && EXTENSION_METHOD_NAMES.has(node.text)) {
-    const parent = node.parent;
-    if (parent && ts.isPropertyAccessExpression(parent)) {
-      const grandParent = parent.parent;
-      if (grandParent && ts.isCallExpression(grandParent)) {
-        return true;
-      }
-      return true;
-    }
-  }
-
-  if (ts.isPropertyAccessExpression(node)) {
-    if (EXTENSION_METHOD_NAMES.has(node.name.text)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function getExtensionMethodCompletions(
-  ts: typeof import("typescript"),
-  sourceFile: ts.SourceFile,
-  node: ts.Node,
-  program: ts.Program | undefined
-): ts.CompletionEntry[] {
-  if (!program) return [];
-
-  let propAccess: ts.PropertyAccessExpression | undefined;
-
-  if (ts.isPropertyAccessExpression(node)) {
-    propAccess = node;
-  } else if (node.parent && ts.isPropertyAccessExpression(node.parent)) {
-    propAccess = node.parent;
-  }
-
-  if (!propAccess) return [];
-
-  const checker = program.getTypeChecker();
-  const receiverType = checker.getTypeAtLocation(propAccess.expression);
-
-  const entries: ts.CompletionEntry[] = [];
-
-  for (const [methodName, info] of Object.entries(TYPECLASS_EXTENSION_METHODS)) {
-    const existingProp = receiverType.getProperty(methodName);
-    if (existingProp) continue;
-
-    const returnType =
-      info.returnType === "self" ? checker.typeToString(receiverType) : info.returnType;
-
-    entries.push({
-      name: methodName,
-      kind: ts.ScriptElementKind.memberFunctionElement,
-      kindModifiers: "typesugar",
-      sortText: `1_ext_${methodName}`,
-      labelDetails: {
-        description: `(extension via ${info.typeclass}) → ${returnType}`,
-      },
-    });
-  }
-
-  return entries;
-}
-
-function getExtensionMethodHoverInfo(
-  ts: typeof import("typescript"),
-  sourceFile: ts.SourceFile,
-  node: ts.Identifier,
-  program: ts.Program | undefined
-): { displayText: string; documentation: string } | undefined {
-  if (!program) return undefined;
-
-  const methodName = node.text;
-  const info = TYPECLASS_EXTENSION_METHODS[methodName];
-  if (!info) return undefined;
-
-  const parent = node.parent;
-  if (!parent || !ts.isPropertyAccessExpression(parent)) return undefined;
-
-  const checker = program.getTypeChecker();
-  const receiverType = checker.getTypeAtLocation(parent.expression);
-  const existingProp = receiverType.getProperty(methodName);
-  if (existingProp) return undefined;
-
-  const typeName = checker.typeToString(receiverType);
-  const returnType = info.returnType === "self" ? typeName : info.returnType;
-
-  return {
-    displayText: `(extension method via ${info.typeclass}) ${typeName}.${methodName}(): ${returnType}`,
-    documentation:
-      `${info.description}\n\n` +
-      `Provided by the ${info.typeclass} typeclass. ` +
-      `At compile time, this is rewritten to:\n` +
-      `  ${info.typeclass}.summon<${typeName}>("${typeName}").${methodName}(...)`,
-  };
 }
 
 export default init;
