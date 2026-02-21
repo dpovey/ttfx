@@ -170,6 +170,47 @@ pnpm run package
 pnpm run test
 ```
 
+## Development & Testing
+
+The extension has a comprehensive test suite covering three layers:
+
+### Unit Tests (vitest)
+
+Tests run with mocked VS Code API, testing provider logic in isolation:
+
+```bash
+# Run unit tests
+pnpm --filter @typesugar/vscode test:unit
+
+# Watch mode
+pnpm --filter @typesugar/vscode test:watch
+```
+
+Test files: `test/manifest.test.ts`, `test/semantic-tokens.test.ts`, `test/codelens-inlay.test.ts`, `test/expansion.test.ts`, `test/error-scenarios.test.ts`
+
+### Integration Tests (@vscode/test-cli)
+
+Tests run in a VS Code Extension Development Host with the real VS Code API:
+
+```bash
+# Run integration tests (requires display or xvfb)
+pnpm --filter @typesugar/vscode test:integration
+
+# On Linux CI (headless)
+xvfb-run -a pnpm --filter @typesugar/vscode test:integration
+```
+
+Test files: `test/integration/activation.test.ts`, `test/integration/providers.test.ts`, `test/integration/commands.test.ts`
+
+### Test Fixtures
+
+The `test-fixtures/sample-project/` directory contains a minimal typesugar project used by both integration tests and as a reference for expected behavior:
+
+- `typesugar.manifest.json` — Manifest with known macros
+- `sample.ts` — Code exercising all macro types
+- `no-macros.ts` — Plain TypeScript (negative test)
+- `empty.ts` — Empty file (edge case)
+
 ## License
 
 MIT

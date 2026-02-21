@@ -56,10 +56,41 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+  test-vscode:
+    name: VS Code Extension Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: VS Code Unit Tests
+        run: pnpm --filter @typesugar/vscode test:unit
+
+      - name: VS Code Integration Tests
+        run: xvfb-run -a pnpm --filter @typesugar/vscode test:integration
+
+      - name: TS Plugin Tests
+        run: pnpm --filter @typesugar/ts-plugin test
+
   publish-dry-run:
     name: Publish (dry run)
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [test, lint, test-vscode]
     steps:
       - uses: actions/checkout@v4
 

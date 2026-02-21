@@ -1,0 +1,10 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../out/test/integration",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node"
+  },
+  "include": ["./**/*.ts"]
+}

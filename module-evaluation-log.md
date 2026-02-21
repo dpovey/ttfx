@@ -409,6 +409,8 @@ Evaluation of all typesugar modules across 4 dimensions:
 **Coherence**: 5/5 - Manifest-driven architecture adapts to custom macros without code changes. Properly integrates with transformer/pipeline. Follows VS Code best practices.
 **Summary**: Well-architected VS Code extension providing essential IDE support. Manifest-driven design is elegant. Main gaps: missing tests, heuristic expansion extraction.
 
+**Update (2026-02-22):** Test gap addressed — 83+ unit tests added covering ManifestLoader, SemanticTokensProvider, CodeLensProvider, InlayHintsProvider, ExpansionService, DiagnosticsManager, and error scenarios. Integration tests added for Extension Host activation, provider registration, and command execution. TS plugin tests added via language service harness.
+
 ---
 
 # SUMMARY
