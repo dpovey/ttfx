@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import * as ts from "typescript";
-import { clearOperatorMappings } from "../src/macros/operators.js";
+import { clearOperatorMappings } from "@typesugar/macros";
 
 describe("operator macro infrastructure", () => {
   beforeEach(() => {

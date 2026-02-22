@@ -14,8 +14,8 @@ import {
   defineAttributeMacro,
   defineTaggedTemplateMacro,
   defineTypeMacro,
-} from "../src/core/registry.js";
-import type { MacroRegistry, MacroContext } from "../src/core/types.js";
+} from "@typesugar/core";
+import type { MacroRegistry, MacroContext } from "@typesugar/core";
 
 describe("Import-scoped macro resolution - Registry", () => {
   let registry: MacroRegistry;
@@ -229,12 +229,19 @@ describe("Built-in macros have module field", () => {
 
   it("should have module set on all core expression macros", async () => {
     // Import the macros to trigger registration
-    const { comptimeMacro } = await import("../src/macros/comptime.js");
-    const { opsMacro, pipeMacro, composeMacro } = await import("../src/macros/operators.js");
-    const { typeInfoMacro, fieldNamesMacro, validatorMacro } =
-      await import("../src/macros/reflect.js");
-    const { summonMacro, extendMacro } = await import("../src/macros/typeclass.js");
-    const { specializeMacro, specializeInlineMacro } = await import("../src/macros/specialize.js");
+    const {
+      comptimeMacro,
+      opsMacro,
+      pipeMacro,
+      composeMacro,
+      typeInfoMacro,
+      fieldNamesMacro,
+      validatorMacro,
+      summonMacro,
+      extendMacro,
+      specializeMacro,
+      specializeInlineMacro,
+    } = await import("@typesugar/macros");
 
     for (const macro of [
       comptimeMacro,
@@ -254,10 +261,13 @@ describe("Built-in macros have module field", () => {
   });
 
   it("should have module set on all core attribute macros", async () => {
-    const { operatorsAttribute } = await import("../src/macros/operators.js");
-    const { reflectAttribute } = await import("../src/macros/reflect.js");
-    const { typeclassAttribute, instanceAttribute, derivingAttribute } =
-      await import("../src/macros/typeclass.js");
+    const {
+      operatorsAttribute,
+      reflectAttribute,
+      typeclassAttribute,
+      instanceAttribute,
+      derivingAttribute,
+    } = await import("@typesugar/macros");
 
     for (const macro of [
       operatorsAttribute,
@@ -280,7 +290,7 @@ describe("Built-in macros have module field", () => {
       DefaultDerive,
       JsonDerive,
       BuilderDerive,
-    } = await import("../src/macros/derive.js");
+    } = await import("@typesugar/macros");
 
     for (const macro of [
       EqDerive,

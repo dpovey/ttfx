@@ -22,7 +22,7 @@ import {
   getAllComprehensionInstances,
   type ComprehensionInstance,
 } from "../src/use-cases/comprehensions/index.js";
-import { globalRegistry } from "../src/core/registry.js";
+import { globalRegistry } from "@typesugar/core";
 
 // ============================================================================
 // Test helper: Applicative type with .map() and .ap()

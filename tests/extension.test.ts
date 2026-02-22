@@ -11,7 +11,7 @@ import {
   buildStandaloneExtensionCall,
   standaloneExtensionRegistry,
   type StandaloneExtensionInfo,
-} from "../src/macros/extension.js";
+} from "@typesugar/macros";
 import * as ts from "typescript";
 
 describe("standalone extension registry", () => {

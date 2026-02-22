@@ -4,12 +4,12 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
 import {
   staticAssertMacro,
   compileErrorMacro,
   compileWarningMacro,
-} from "../src/macros/static-assert.js";
+} from "@typesugar/macros";
 
 describe("static assertion and diagnostic macros", () => {
   let ctx: MacroContextImpl;

@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { jsToComptimeValue } from "../packages/comptime/src/index.js";
+import { jsToComptimeValue } from "@typesugar/macros";
 import type { ComptimeValue } from "@typesugar/core";
 
 describe("Comptime Value Conversion Edge Cases", () => {
@@ -250,10 +250,10 @@ describe("Comptime Value Conversion Edge Cases", () => {
   // ==========================================================================
   describe("Comptime macro runtime fallback", () => {
     it("Throws when called at runtime", async () => {
-      const { comptime } = await import("../packages/comptime/src/index.js");
+      const { comptime } = await import("@typesugar/macros");
 
-      expect(() => comptime(() => 42)).toThrow("called at runtime");
-      expect(() => comptime(5 as any)).toThrow("called at runtime");
+      expect(() => comptime(() => 42)).toThrow("must be processed by the typesugar transformer");
+      expect(() => comptime(5 as any)).toThrow("must be processed by the typesugar transformer");
     });
   });
 });

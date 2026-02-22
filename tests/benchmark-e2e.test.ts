@@ -17,9 +17,9 @@ import * as ts from "typescript";
 import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
-import { globalRegistry, defineExpressionMacro } from "../src/core/registry.js";
-import type { ExpressionMacro, MacroContext } from "../src/core/types.js";
-import macroTransformerFactory from "../src/transforms/macro-transformer.js";
+import { globalRegistry, defineExpressionMacro } from "@typesugar/core";
+import type { ExpressionMacro, MacroContext } from "@typesugar/core";
+import macroTransformerFactory from "@typesugar/transformer";
 
 // ---------------------------------------------------------------------------
 // Test infrastructure

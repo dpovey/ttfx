@@ -193,3 +193,15 @@ export {
   MacroExpansionCache,
   InMemoryExpansionCache,
 } from "./cache.js";
+
+// Macro Composition Pipeline
+export {
+  pipeline,
+  parenthesize,
+  voidify,
+  awaitify,
+  assertType,
+  debugStep,
+  MacroPipeline,
+  type PipelineStep,
+} from "./pipeline.js";

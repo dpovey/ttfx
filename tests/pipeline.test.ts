@@ -4,8 +4,8 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
-import { pipeline, parenthesize, voidify, awaitify } from "../src/core/pipeline.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
+import { pipeline, parenthesize, voidify, awaitify } from "@typesugar/core";
 
 describe("macro composition pipeline", () => {
   let ctx: MacroContextImpl;

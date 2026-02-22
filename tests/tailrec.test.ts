@@ -17,17 +17,17 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 30_000 });
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
-import { globalRegistry } from "../src/core/registry.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
+import { globalRegistry } from "@typesugar/core";
 
 // Import to register the tailrec macro
-import "../src/macros/tailrec.js";
+import "@typesugar/macros";
 
 // Import the macro definition directly
-import { tailrecAttribute } from "../src/macros/tailrec.js";
+import { tailrecAttribute } from "@typesugar/macros";
 
 // Import the runtime placeholder
-import { tailrec } from "../src/index.js";
+import { tailrec } from "typesugar";
 
 // ============================================================================
 // Helper: Create a macro context for testing

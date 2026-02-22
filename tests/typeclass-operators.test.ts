@@ -21,9 +21,9 @@ import {
   type TypeclassInfo,
   type TypeclassMethod,
   type SyntaxEntry,
-} from "../src/macros/typeclass.js";
-import { getOperatorString } from "../src/macros/operators.js";
-import { OPERATOR_SYMBOLS, type OperatorSymbol } from "../src/core/types.js";
+} from "@typesugar/macros";
+import { getOperatorString } from "@typesugar/macros";
+import { OPERATOR_SYMBOLS, type OperatorSymbol } from "@typesugar/core";
 
 // ============================================================================
 // OPERATOR_SYMBOLS and OperatorSymbol

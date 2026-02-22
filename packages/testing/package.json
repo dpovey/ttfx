@@ -45,6 +45,7 @@
   ],
   "dependencies": {
     "@typesugar/core": "workspace:*",
+    "@typesugar/macros": "workspace:*",
     "@typesugar/type-system": "workspace:*"
   },
   "peerDependencies": {

@@ -74,6 +74,7 @@
   ],
   "dependencies": {
     "@typesugar/core": "workspace:*",
+    "@typesugar/macros": "workspace:*",
     "@typesugar/transformer": "workspace:*",
     "@typesugar/comptime": "workspace:*",
     "@typesugar/reflect": "workspace:*",

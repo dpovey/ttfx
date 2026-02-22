@@ -24,16 +24,22 @@ import {
   resolveCapabilities,
   createRestrictedContext,
 } from "../core/capabilities.js";
-import { setCfgConfig } from "../macros/cfg.js";
-import { setContractConfig } from "@typesugar/contracts";
-import { clearDerivationCaches } from "../macros/auto-derive.js";
 import { MacroExpansionCache } from "../core/cache.js";
-
-// Import built-in macros to register them
-import "../macros/index.js";
-
-// Import extension method registry for implicit extension method resolution
 import {
+  formatResolutionTrace,
+  type ResolutionAttempt,
+  type ResolutionTrace,
+} from "../core/resolution-trace.js";
+
+// Import from @typesugar/macros for macro functionality
+// This also registers all built-in macros with the global registry
+import "@typesugar/macros";
+import {
+  // Config
+  setCfgConfig,
+  setContractConfig,
+  clearDerivationCaches,
+  // Typeclass system
   findExtensionMethod,
   typeclassRegistry,
   builtinDerivations,
@@ -43,29 +49,19 @@ import {
   tryExtractSumType,
   getSyntaxForOperator,
   findInstance,
-} from "../macros/typeclass.js";
-
-// Import operator string mapping
-import { getOperatorString } from "../macros/operators.js";
-
-// Standalone extensions for concrete types
-import {
+  // Operators
+  getOperatorString,
+  // Standalone extensions
   findStandaloneExtension,
   buildStandaloneExtensionCall,
   type StandaloneExtensionInfo,
-} from "../macros/extension.js";
-
-// Import @implicits implicit resolution with propagation
-import {
+  // Implicits
   transformImplicitsCall,
   getImplicitsFunction,
   buildImplicitScope,
   type ImplicitScope,
   type ImplicitsFunctionInfo,
-} from "../macros/implicits.js";
-
-// Import auto-specialization infrastructure
-import {
+  // Specialization
   isRegisteredInstance,
   getInstanceMethods,
   classifyInlineFailure,
@@ -80,17 +76,10 @@ import {
   type ResultAlgebra,
   type DictMethodMap,
   type DictMethod,
-} from "../macros/specialize.js";
-
-// Import HKT transformation for F<_> syntax
-import { isKindAnnotation, transformHKTDeclaration } from "../macros/hkt.js";
-
-// Import resolution trace types for informational diagnostics
-import {
-  formatResolutionTrace,
-  type ResolutionAttempt,
-  type ResolutionTrace,
-} from "../core/resolution-trace.js";
+  // HKT
+  isKindAnnotation,
+  transformHKTDeclaration,
+} from "@typesugar/macros";
 
 /**
  * Configuration for the transformer

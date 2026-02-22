@@ -109,7 +109,8 @@ import "./macros/decidable.js";
 // Re-export comptime for convenient use with contracts.
 // comptime() evaluates expressions at build time and integrates with
 // the prover's constant evaluation layer.
-export { comptime, comptimeMacro } from "@typesugar/comptime";
+// Note: comptime is available from @typesugar/macros or @typesugar/comptime
+// Users should import it directly from one of those packages
 
 // --- Runtime API ---
 export { requires } from "./macros/requires.js";

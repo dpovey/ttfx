@@ -4,9 +4,9 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
-import { globalRegistry } from "../src/core/registry.js";
-import { defineSyntaxMacro, defineRewrite } from "../src/macros/syntax-macro.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
+import { globalRegistry } from "@typesugar/core";
+import { defineSyntaxMacro, defineRewrite } from "@typesugar/macros";
 
 describe("pattern-based / declarative macros", () => {
   let ctx: MacroContextImpl;

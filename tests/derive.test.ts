@@ -8,16 +8,13 @@
 
 import { describe, it, expect } from "vitest";
 import { assert, typeAssert, type Equal } from "@typesugar/testing";
-import { deriveMacros, createDerivedFunctionName } from "../src/macros/derive.js";
-import { globalRegistry } from "../src/core/registry.js";
+import { deriveMacros, createDerivedFunctionName } from "@typesugar/macros";
+import { globalRegistry } from "@typesugar/core";
 import {
   builtinDerivations,
   typeclassRegistry,
   derivingAttribute,
-} from "../src/macros/typeclass.js";
-
-// Ensure all macros are registered
-import "../src/macros/index.js";
+} from "@typesugar/macros";
 
 describe("derive macro definitions", () => {
   it("should have Eq derive macro", () => {

@@ -7,14 +7,14 @@
 
 import { describe, it, expect } from "vitest";
 import * as ts from "typescript";
-import { createMacroContext } from "../src/core/context.js";
+import { createMacroContext } from "@typesugar/core";
 import {
   registerInstance,
   lookupInstance,
   summonHKTMacro,
   deriveMacro,
   implicitMacro,
-} from "../src/macros/implicit.js";
+} from "@typesugar/macros";
 
 describe("implicit instance registry", () => {
   it("should register and lookup instances", () => {

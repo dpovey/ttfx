@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from "vitest";
 import { assert, typeAssert, type Equal, type Extends } from "@typesugar/testing";
-import type { TypeInfo, FieldInfo, MethodInfo } from "../src/macros/reflect.js";
+import type { TypeInfo, FieldInfo, MethodInfo } from "@typesugar/macros";
 
 describe("TypeInfo structure", () => {
   describe("type metadata", () => {

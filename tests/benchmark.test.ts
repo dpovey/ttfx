@@ -12,11 +12,11 @@
 
 import { describe, it, expect, beforeAll } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
-import { globalRegistry } from "../src/core/registry.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
+import { globalRegistry } from "@typesugar/core";
 
 // Import macros so they register
-import "../src/macros/index.js";
+import "@typesugar/macros";
 
 function createTestContext(sourceText: string): MacroContextImpl {
   const sourceFile = ts.createSourceFile(

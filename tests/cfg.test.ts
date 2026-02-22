@@ -4,8 +4,8 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
-import { cfgMacro, setCfgConfig, evaluateCfgCondition } from "../src/macros/cfg.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
+import { cfgMacro, setCfgConfig, evaluateCfgCondition } from "@typesugar/macros";
 
 describe("conditional compilation", () => {
   let ctx: MacroContextImpl;

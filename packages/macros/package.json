@@ -41,7 +41,9 @@
   "dependencies": {
     "@typesugar/core": "workspace:*",
     "@typesugar/contracts": "workspace:*",
-    "@typesugar/mapper": "workspace:*",
+    "@typesugar/mapper": "workspace:*"
+  },
+  "devDependencies": {
     "@typesugar/testing": "workspace:*"
   },
   "peerDependencies": {

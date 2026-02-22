@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
 import {
   quote,
   quoteStatements,
@@ -23,7 +23,7 @@ import {
   raw,
   spread,
   SpreadSplice,
-} from "../src/macros/quote.js";
+} from "@typesugar/macros";
 
 describe("quasiquoting system", () => {
   let ctx: MacroContextImpl;

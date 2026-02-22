@@ -34,10 +34,11 @@ import "@typesugar/contracts";
 import "@typesugar/mapper";
 
 // --- Testing macros ---
-import "@typesugar/testing/macros";
+// NOTE: @typesugar/testing/macros is NOT imported here to avoid duplicate
+// registration of typeInfo macro. Import it separately when needed.
 
 // Re-export for programmatic use
-export { comptimeMacro } from "./comptime.js";
+export { comptimeMacro, jsToComptimeValue, type ComptimePermissions } from "./comptime.js";
 export {
   EqDerive,
   OrdDerive,
@@ -58,6 +59,9 @@ export {
   Json,
   Builder,
   TypeGuard,
+  // Additional exports for testing
+  deriveMacros,
+  createDerivedFunctionName,
 } from "./derive.js";
 export {
   operatorsAttribute,
@@ -66,6 +70,8 @@ export {
   composeMacro,
   registerOperators,
   getOperatorMethod,
+  getOperatorString,
+  clearOperatorMappings,
 } from "./operators.js";
 export {
   reflectAttribute,
@@ -86,31 +92,62 @@ export {
   extendMacro,
   typeclassRegistry,
   instanceRegistry,
+  extensionMethodRegistry,
   builtinDerivations,
   findInstance,
   getTypeclass,
+  findExtensionMethod,
+  getExtensionMethodsForType,
+  getAllExtensionMethods,
+  registerExtensionMethods,
   instanceVarName,
   createTypeclassDeriveMacro,
   generateStandardTypeclasses,
+  tryExtractSumType,
+  syntaxRegistry,
+  getSyntaxForOperator,
+  registerTypeclassSyntax,
+  clearSyntaxRegistry,
+  extractOpFromReturnType,
   type TypeclassInfo,
   type TypeclassMethod,
   type InstanceInfo,
+  type ExtensionMethodInfo,
   type BuiltinTypeclassDerivation,
+  type SyntaxEntry,
 } from "./typeclass.js";
 export {
   specializeMacro,
   specializeInlineMacro,
   registerInstanceMethods,
   getInstanceMethods,
+  isRegisteredInstance,
+  classifyInlineFailure,
+  classifyInlineFailureDetailed,
+  getInlineFailureHelp,
+  createSpecializedFunction,
+  flattenReturnsToExpression,
+  analyzeForFlattening,
+  SpecializationCache,
+  createHoistedSpecialization,
+  getResultAlgebra,
+  type ResultAlgebra,
   type DictMethodMap,
   type DictMethod,
+  type InlineFailureReason,
+  type InlineClassification,
+  type FlattenAnalysis,
+  type SpecializeOptions,
 } from "./specialize.js";
 export {
   summonHKTMacro,
   deriveMacro as deriveHKTMacro,
+  deriveMacro,
   implicitMacro,
   registerInstance as registerHKTInstance,
+  registerInstance,
   lookupInstance as lookupHKTInstance,
+  lookupInstance,
 } from "./implicit.js";
 
 // --- @implicits decorator with automatic propagation ---
@@ -240,6 +277,9 @@ export {
   ident,
   raw,
   spread,
+  SpreadSplice,
+  IdentSplice,
+  RawSplice,
   type QuoteSplice,
 } from "./quote.js";
 
@@ -339,12 +379,51 @@ export {
 } from "@typesugar/contracts";
 
 // --- Testing macros ---
+// NOTE: Testing macros (powerAssertMacro, comptimeAssertMacro, etc.) are
+// available from @typesugar/testing/macros but are NOT re-exported here
+// to avoid duplicate registration of the typeInfo macro.
+
+// ============================================================================
+// Runtime Stubs
+// ============================================================================
+// These are placeholder functions that the transformer replaces at compile time.
+// They provide type information and give meaningful errors if transformer isn't configured.
+
 export {
-  powerAssertMacro,
-  comptimeAssertMacro,
-  testCasesAttribute,
-  assertSnapshotMacro,
-  typeAssertMacro,
-  forAllMacro,
-  ArbitraryDerive,
-} from "@typesugar/testing/macros";
+  // Typeclass stubs
+  typeclass,
+  instance,
+  deriving,
+  summon,
+  extend,
+  // Extension registration stubs
+  registerExtensions,
+  registerExtension,
+  // Comptime stub
+  comptime,
+  // Derive stub
+  derive,
+  // Operator stubs
+  operators,
+  ops,
+  pipe,
+  compose,
+  // Specialize stub
+  specialize,
+  // Reflect stubs
+  reflect,
+  typeInfo,
+  fieldNames,
+  validator,
+  // Conditional compilation
+  cfg,
+  // File include stubs
+  includeStr,
+  includeJson,
+  // Static assert
+  static_assert,
+  // Tail recursion
+  tailrec,
+  // HKT
+  hkt,
+} from "./runtime-stubs.js";

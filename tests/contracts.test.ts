@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
 import {
   requiresMacro,
   ensuresMacro,

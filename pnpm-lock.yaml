@@ -27,12 +27,24 @@ importers:
       '@typesugar/contracts-refined':
         specifier: workspace:*
         version: link:packages/contracts-refined
+      '@typesugar/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@typesugar/fp':
+        specifier: workspace:*
+        version: link:packages/fp
+      '@typesugar/macros':
+        specifier: workspace:*
+        version: link:packages/macros
       '@typesugar/mapper':
         specifier: workspace:*
         version: link:packages/mapper
       '@typesugar/prettier-plugin':
         specifier: workspace:*
         version: link:packages/prettier-plugin
+      '@typesugar/std':
+        specifier: workspace:*
+        version: link:packages/std
       '@typesugar/strings':
         specifier: workspace:*
         version: link:packages/strings
@@ -109,18 +121,15 @@ importers:
 
   packages/comptime:
     dependencies:
-      '@typesugar/core':
+      '@typesugar/macros':
         specifier: workspace:*
-        version: link:../core
+        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
 
   packages/contracts:
     dependencies:
-      '@typesugar/comptime':
-        specifier: workspace:*
-        version: link:../comptime
       '@typesugar/core':
         specifier: workspace:*
         version: link:../core
@@ -166,9 +175,9 @@ importers:
 
   packages/derive:
     dependencies:
-      '@typesugar/core':
+      '@typesugar/macros':
         specifier: workspace:*
-        version: link:../core
+        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
@@ -345,12 +354,13 @@ importers:
       '@typesugar/mapper':
         specifier: workspace:*
         version: link:../mapper
-      '@typesugar/testing':
-        specifier: workspace:*
-        version: link:../testing
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
+    devDependencies:
+      '@typesugar/testing':
+        specifier: workspace:*
+        version: link:../testing
 
   packages/mapper:
     dependencies:
@@ -408,9 +418,9 @@ importers:
 
   packages/operators:
     dependencies:
-      '@typesugar/core':
+      '@typesugar/macros':
         specifier: workspace:*
-        version: link:../core
+        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
@@ -487,18 +497,18 @@ importers:
 
   packages/reflect:
     dependencies:
-      '@typesugar/core':
+      '@typesugar/macros':
         specifier: workspace:*
-        version: link:../core
+        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
 
   packages/specialize:
     dependencies:
-      '@typesugar/core':
+      '@typesugar/macros':
         specifier: workspace:*
-        version: link:../core
+        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
@@ -567,6 +577,9 @@ importers:
       '@typesugar/core':
         specifier: workspace:*
         version: link:../core
+      '@typesugar/macros':
+        specifier: workspace:*
+        version: link:../macros
       '@typesugar/type-system':
         specifier: workspace:*
         version: link:../type-system
@@ -641,9 +654,9 @@ importers:
 
   packages/typeclass:
     dependencies:
-      '@typesugar/core':
+      '@typesugar/macros':
         specifier: workspace:*
-        version: link:../core
+        version: link:../macros
       typescript:
         specifier: '>=5.0.0'
         version: 5.9.3
@@ -659,6 +672,9 @@ importers:
       '@typesugar/derive':
         specifier: workspace:*
         version: link:../derive
+      '@typesugar/macros':
+        specifier: workspace:*
+        version: link:../macros
       '@typesugar/operators':
         specifier: workspace:*
         version: link:../operators

@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
 import {
   classifyInlineFailure,
   classifyInlineFailureDetailed,
@@ -25,8 +25,8 @@ import {
   promiseResultAlgebra,
   unsafeResultAlgebra,
   type ResultAlgebra,
-} from "../src/macros/specialize.js";
-import { globalHygiene, HygieneContext } from "../src/core/hygiene.js";
+} from "@typesugar/macros";
+import { globalHygiene, HygieneContext } from "@typesugar/core";
 
 // ============================================================================
 // Phase 1: Early-Return Flattening Tests

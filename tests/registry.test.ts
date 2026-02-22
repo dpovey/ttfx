@@ -10,8 +10,8 @@ import {
   defineAttributeMacro,
   defineDeriveMacro,
   registerMacros,
-} from "../src/core/registry.js";
-import type { MacroRegistry, MacroContext } from "../src/core/types.js";
+} from "@typesugar/core";
+import type { MacroRegistry, MacroContext } from "@typesugar/core";
 
 describe("MacroRegistry", () => {
   let registry: MacroRegistry;

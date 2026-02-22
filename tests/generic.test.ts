@@ -9,19 +9,19 @@
 
 import { describe, it, expect } from "vitest";
 import { assert, typeAssert, type Equal } from "@typesugar/testing";
-import { DeriveTypeInfo, DeriveFieldInfo, DeriveVariantInfo } from "../src/core/types.js";
+import { DeriveTypeInfo, DeriveFieldInfo, DeriveVariantInfo } from "@typesugar/core";
 import {
   genericDerive,
   getGenericMeta,
   registerGenericMeta,
   GenericMeta,
-} from "../src/macros/generic.js";
-import { builtinDerivations, tryExtractSumType } from "../src/macros/typeclass.js";
-import { globalRegistry } from "../src/core/registry.js";
-import { deriveMacros } from "../src/macros/derive.js";
+} from "@typesugar/macros";
+import { builtinDerivations, tryExtractSumType } from "@typesugar/macros";
+import { globalRegistry } from "@typesugar/core";
+import { deriveMacros } from "@typesugar/macros";
 
 // Ensure all macros are registered
-import "../src/macros/index.js";
+import "@typesugar/macros";
 
 // ============================================================================
 // Test Types

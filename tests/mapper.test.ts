@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as ts from "typescript";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
 
 // Register macros manually
 import { transformIntoMacro } from "../packages/mapper/src/macros.js";

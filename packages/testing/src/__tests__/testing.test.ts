@@ -126,7 +126,8 @@ describe("testing macro registration", () => {
     const macro = globalRegistry.getExpression("staticAssert");
     expect(macro).toBeDefined();
     expect(macro!.name).toBe("staticAssert");
-    expect(macro!.module).toBe("@typesugar/testing");
+    // Note: staticAssert is now re-exported from @typesugar/macros
+    expect(macro!.module).toBe("typemacro");
   });
 
   it("should register comptimeAssert as an expression macro (backward compat)", () => {
@@ -656,19 +657,24 @@ describe("testing module integration", () => {
     expect(globalRegistry.getAttribute("testCases")).toBeDefined();
   });
 
-  it("all testing macros should be import-scoped to @typesugar/testing", () => {
-    const testingMacros = [
+  it("testing-specific macros should be import-scoped to @typesugar/testing", () => {
+    // Testing-specific macros that are defined in @typesugar/testing
+    const testingSpecificMacros = [
       globalRegistry.getExpression("assert"),
-      globalRegistry.getExpression("staticAssert"),
       globalRegistry.getExpression("assertSnapshot"),
       globalRegistry.getExpression("typeAssert"),
       globalRegistry.getExpression("forAll"),
       globalRegistry.getAttribute("testCases"),
     ];
 
-    for (const macro of testingMacros) {
+    for (const macro of testingSpecificMacros) {
       expect(macro).toBeDefined();
       expect(macro!.module).toBe("@typesugar/testing");
     }
+
+    // staticAssert is re-exported from @typesugar/macros (has module "typemacro")
+    const staticAssertMacro = globalRegistry.getExpression("staticAssert");
+    expect(staticAssertMacro).toBeDefined();
+    expect(staticAssertMacro!.module).toBe("typemacro");
   });
 });

@@ -362,69 +362,9 @@ function getArbitraryForBaseType(typeStr: string): string {
 // comptimeAssert() — Compile-Time Build Assertions
 // ============================================================================
 
-export const staticAssertMacro = defineExpressionMacro({
-  name: "staticAssert",
-  module: "@typesugar/testing",
-  description: "Assert a condition at compile time — fails the BUILD if the condition is false",
-
-  expand(
-    ctx: MacroContext,
-    callExpr: ts.CallExpression,
-    args: readonly ts.Expression[]
-  ): ts.Expression {
-    if (args.length < 1 || args.length > 2) {
-      ctx.reportError(
-        callExpr,
-        "staticAssert expects 1 or 2 arguments: staticAssert(expr) or staticAssert(expr, message)"
-      );
-      return callExpr;
-    }
-
-    const conditionExpr = args[0];
-    const messageExpr = args.length === 2 ? args[1] : undefined;
-
-    // Try to evaluate the condition at compile time
-    const result = ctx.evaluate(conditionExpr);
-
-    if (result.kind === "error") {
-      // Can't evaluate at compile time — report error
-      ctx.reportError(
-        callExpr,
-        `staticAssert: cannot evaluate condition at compile time: ${result.message}`
-      );
-      return callExpr;
-    }
-
-    // Check truthiness
-    const isTruthy =
-      (result.kind === "boolean" && result.value) ||
-      (result.kind === "number" && result.value !== 0) ||
-      (result.kind === "string" && result.value !== "") ||
-      result.kind === "array" ||
-      result.kind === "object";
-
-    if (!isTruthy) {
-      // Evaluate the message if provided
-      let message = "Compile-time assertion failed";
-      if (messageExpr) {
-        const msgResult = ctx.evaluate(messageExpr);
-        if (msgResult.kind === "string") {
-          message = msgResult.value;
-        }
-      }
-
-      // Get source location info
-      const sourceText = conditionExpr.getText
-        ? conditionExpr.getText(ctx.sourceFile)
-        : "<expression>";
-
-      ctx.reportError(callExpr, `${message}\n  Assertion: staticAssert(${sourceText})`);
-    }
-
-    // Replace with void 0 (no runtime cost)
-    return ctx.factory.createVoidExpression(ctx.factory.createNumericLiteral(0));
-  },
-});
+// Re-export staticAssertMacro from @typesugar/macros to avoid duplicate registration
+import { staticAssertMacro as _staticAssertMacro } from "@typesugar/macros";
+export const staticAssertMacro = _staticAssertMacro;
 
 // ============================================================================
 // @testCases — Parameterized Test Generation
@@ -1102,92 +1042,8 @@ export const assertTypeMacro = defineExpressionMacro({
 // typeInfo<T>() — Compile-Time Type Reflection
 // ============================================================================
 
-/**
- * Expression macro that extracts compile-time type information.
- * This is re-exported from the core reflect macros and registered
- * here for convenience in testing scenarios.
- */
-export const typeInfoMacro = defineExpressionMacro({
-  name: "typeInfo",
-  module: "@typesugar/testing",
-  description: "Get compile-time type information for enhanced assertion diagnostics",
-
-  expand(
-    ctx: MacroContext,
-    callExpr: ts.CallExpression,
-    _args: readonly ts.Expression[]
-  ): ts.Expression {
-    const factory = ctx.factory;
-    const typeArgs = callExpr.typeArguments;
-
-    if (!typeArgs || typeArgs.length !== 1) {
-      ctx.reportError(callExpr, "typeInfo requires exactly one type argument");
-      return callExpr;
-    }
-
-    const typeArg = typeArgs[0];
-    const type = ctx.typeChecker.getTypeFromTypeNode(typeArg);
-    const typeName = ctx.typeChecker.typeToString(type);
-    const properties = ctx.typeChecker.getPropertiesOfType(type);
-
-    // Determine the kind
-    let kind = "type";
-    const symbol = type.getSymbol();
-    if (symbol) {
-      const decls = symbol.getDeclarations();
-      if (decls && decls.length > 0) {
-        const decl = decls[0];
-        if (ts.isInterfaceDeclaration(decl)) kind = "interface";
-        else if (ts.isClassDeclaration(decl)) kind = "class";
-        else if (ts.isEnumDeclaration(decl)) kind = "enum";
-      }
-    }
-
-    // Build fields array
-    const fieldsArray = properties.map((prop) => {
-      const propType = ctx.typeChecker.getTypeOfSymbolAtLocation(prop, callExpr);
-      const decls = prop.getDeclarations();
-      const decl = decls?.[0];
-      const isReadonly =
-        decl && (ts.isPropertySignature(decl) || ts.isPropertyDeclaration(decl))
-          ? (decl.modifiers?.some((m) => m.kind === ts.SyntaxKind.ReadonlyKeyword) ?? false)
-          : false;
-
-      return factory.createObjectLiteralExpression(
-        [
-          factory.createPropertyAssignment("name", factory.createStringLiteral(prop.name)),
-          factory.createPropertyAssignment(
-            "type",
-            factory.createStringLiteral(ctx.typeChecker.typeToString(propType))
-          ),
-          factory.createPropertyAssignment(
-            "optional",
-            (prop.flags & ts.SymbolFlags.Optional) !== 0
-              ? factory.createTrue()
-              : factory.createFalse()
-          ),
-          factory.createPropertyAssignment(
-            "readonly",
-            isReadonly ? factory.createTrue() : factory.createFalse()
-          ),
-        ],
-        true
-      );
-    });
-
-    return factory.createObjectLiteralExpression(
-      [
-        factory.createPropertyAssignment("name", factory.createStringLiteral(typeName)),
-        factory.createPropertyAssignment("kind", factory.createStringLiteral(kind)),
-        factory.createPropertyAssignment(
-          "fields",
-          factory.createArrayLiteralExpression(fieldsArray, true)
-        ),
-      ],
-      true
-    );
-  },
-});
+// Re-export typeInfoMacro from @typesugar/macros to avoid duplicate registration
+export { typeInfoMacro } from "@typesugar/macros";
 
 // ============================================================================
 // Backward Compatibility Aliases
@@ -1209,13 +1065,13 @@ export const comptimeAssertMacro = {
 // Primary macros
 globalRegistry.register(assertMacro);
 globalRegistry.register(ArbitraryDerive);
-globalRegistry.register(staticAssertMacro);
+// Note: staticAssertMacro is re-exported from @typesugar/macros and already registered there
 globalRegistry.register(testCasesAttribute);
 globalRegistry.register(assertSnapshotMacro);
 globalRegistry.register(typeAssertMacro);
 globalRegistry.register(forAllMacro);
 globalRegistry.register(assertTypeMacro);
-globalRegistry.register(typeInfoMacro);
+// Note: typeInfoMacro is re-exported from @typesugar/macros and already registered there
 
 // Backward compatibility aliases
 globalRegistry.register(powerAssertMacro);

@@ -106,7 +106,7 @@ export { config, defineConfig, type TypesugarConfig, type ContractsConfig } from
 // Built-in Macros
 // ============================================================================
 
-export * from "./macros/index.js";
+export * from "@typesugar/macros";
 
 // ============================================================================
 // Use Case Modules

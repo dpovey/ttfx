@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { HygieneContext } from "../src/core/hygiene.js";
+import { HygieneContext } from "@typesugar/core";
 
 describe("macro hygiene system", () => {
   let hygiene: HygieneContext;

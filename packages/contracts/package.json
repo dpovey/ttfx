@@ -42,7 +42,6 @@
     "ensures"
   ],
   "dependencies": {
-    "@typesugar/comptime": "workspace:*",
     "@typesugar/core": "workspace:*",
     "@typesugar/type-system": "workspace:*"
   },

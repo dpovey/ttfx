@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import * as ts from "typescript";
-import { preserveSourceMap, ExpansionTracker, type RawSourceMap } from "../src/core/source-map.js";
+import { preserveSourceMap, ExpansionTracker, type RawSourceMap } from "@typesugar/core";
 
 describe("preserveSourceMap", () => {
   it("should copy source map range from original to new node", () => {

@@ -7,14 +7,14 @@ import * as ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { MacroContextImpl, createMacroContext } from "../src/core/context.js";
+import { MacroContextImpl, createMacroContext } from "@typesugar/core";
 import {
   includeStrMacro,
   includeBytesMacro,
   includeJsonMacro,
   getFileDependencies,
   clearFileDependencies,
-} from "../src/macros/include.js";
+} from "@typesugar/macros";
 
 describe("compile-time file I/O macros", () => {
   let ctx: MacroContextImpl;

@@ -14,10 +14,10 @@ import * as ts from "typescript";
 import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
-import macroTransformerFactory from "../src/transforms/macro-transformer.js";
+import macroTransformerFactory from "@typesugar/transformer";
 
 // Import comptime to register the macro
-import "../src/macros/comptime.js";
+import "@typesugar/macros";
 
 let tmpDir: string;
 
